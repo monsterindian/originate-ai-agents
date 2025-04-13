@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Filter, UserPlus, Building2, Users, FileText, Eye, CreditCard, MessageSquare } from "lucide-react";
+import { Search, Filter, UserPlus, Building2, Users, FileText, Eye, CreditCard, MessageSquare, Phone, Mail } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import BorrowerDetailModal from "@/components/modals/BorrowerDetailModal";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 const mockBorrowers = [
   {
@@ -23,7 +25,27 @@ const mockBorrowers = [
     phone: "(555) 123-4567",
     activeLoans: 1,
     totalBalance: "$1,250,000",
-    riskRating: "Low"
+    riskRating: "Low",
+    foundedYear: "1985",
+    employeeCount: "250+",
+    creditScore: "780",
+    annualRevenue: "$15M-$20M",
+    lastReviewDate: "2024-03-10",
+    relationshipManager: "Michael Rodriguez",
+    address: {
+      street: "123 Industrial Blvd",
+      city: "Chicago", 
+      state: "IL",
+      zipCode: "60007"
+    },
+    documents: [
+      { name: "Financial Statements", type: "pdf", uploadedAt: "2024-02-15" },
+      { name: "Tax Returns", type: "pdf", uploadedAt: "2024-02-15" },
+      { name: "Business License", type: "pdf", uploadedAt: "2023-12-01" }
+    ],
+    loans: [
+      { id: "L-10245", amount: "$1,250,000", status: "Current", origination: "2024-03-15" }
+    ]
   },
   {
     id: "B-7513",
@@ -35,7 +57,26 @@ const mockBorrowers = [
     phone: "(555) 234-5678",
     activeLoans: 1,
     totalBalance: "$750,000",
-    riskRating: "Low"
+    riskRating: "Low",
+    foundedYear: "2010",
+    employeeCount: "50-100",
+    creditScore: "765",
+    annualRevenue: "$5M-$10M",
+    lastReviewDate: "2024-02-20",
+    relationshipManager: "Sarah Johnson",
+    address: {
+      street: "456 Education Ave",
+      city: "Boston", 
+      state: "MA",
+      zipCode: "02108"
+    },
+    documents: [
+      { name: "Financial Statements", type: "pdf", uploadedAt: "2024-01-30" },
+      { name: "Business Plan", type: "pdf", uploadedAt: "2024-01-25" }
+    ],
+    loans: [
+      { id: "L-10246", amount: "$750,000", status: "Current", origination: "2024-02-20" }
+    ]
   },
   {
     id: "B-7514",
@@ -47,7 +88,27 @@ const mockBorrowers = [
     phone: "(555) 345-6789",
     activeLoans: 1,
     totalBalance: "$2,500,000",
-    riskRating: "Medium"
+    riskRating: "Medium",
+    foundedYear: "2015",
+    employeeCount: "100-250",
+    creditScore: "715",
+    annualRevenue: "$10M-$15M",
+    lastReviewDate: "2024-01-15",
+    relationshipManager: "David Thompson",
+    address: {
+      street: "789 Renewable Way",
+      city: "Denver", 
+      state: "CO",
+      zipCode: "80202"
+    },
+    documents: [
+      { name: "Financial Statements", type: "pdf", uploadedAt: "2023-12-15" },
+      { name: "Project Proposal", type: "pdf", uploadedAt: "2023-12-10" },
+      { name: "Environmental Impact Study", type: "pdf", uploadedAt: "2023-11-30" }
+    ],
+    loans: [
+      { id: "L-10247", amount: "$2,500,000", status: "Late (30 days)", origination: "2024-01-10" }
+    ]
   },
   {
     id: "B-7515",
@@ -59,7 +120,27 @@ const mockBorrowers = [
     phone: "(555) 456-7890",
     activeLoans: 1,
     totalBalance: "$3,750,000",
-    riskRating: "Low"
+    riskRating: "Low",
+    foundedYear: "2005",
+    employeeCount: "25-50",
+    creditScore: "790",
+    annualRevenue: "$5M-$10M",
+    lastReviewDate: "2024-03-05",
+    relationshipManager: "Lisa Rodriguez",
+    address: {
+      street: "101 Urban Heights",
+      city: "New York", 
+      state: "NY",
+      zipCode: "10001"
+    },
+    documents: [
+      { name: "Financial Statements", type: "pdf", uploadedAt: "2024-02-25" },
+      { name: "Property Portfolio", type: "pdf", uploadedAt: "2024-02-20" },
+      { name: "Insurance Documents", type: "pdf", uploadedAt: "2024-02-15" }
+    ],
+    loans: [
+      { id: "L-10248", amount: "$3,750,000", status: "Current", origination: "2024-03-01" }
+    ]
   },
   {
     id: "B-7516",
@@ -71,7 +152,26 @@ const mockBorrowers = [
     phone: "(555) 567-8901",
     activeLoans: 1,
     totalBalance: "$500,000",
-    riskRating: "Medium"
+    riskRating: "Medium",
+    foundedYear: "2018",
+    employeeCount: "50-100",
+    creditScore: "705",
+    annualRevenue: "$2M-$5M",
+    lastReviewDate: "2024-04-01",
+    relationshipManager: "Robert Carter",
+    address: {
+      street: "202 Transport Drive",
+      city: "Atlanta", 
+      state: "GA",
+      zipCode: "30308"
+    },
+    documents: [
+      { name: "Financial Statements", type: "pdf", uploadedAt: "2024-03-25" },
+      { name: "Fleet Information", type: "pdf", uploadedAt: "2024-03-20" }
+    ],
+    loans: [
+      { id: "L-10249", amount: "$500,000", status: "Current", origination: "2024-04-05" }
+    ]
   }
 ];
 
@@ -94,19 +194,95 @@ const Borrowers = () => {
   const [tab, setTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBorrower, setSelectedBorrower] = useState<any | null>(null);
+  const [filteredBorrowers, setFilteredBorrowers] = useState(mockBorrowers);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check for query parameters to automatically open a borrower's details
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const borrowerId = params.get('id');
+    
+    if (borrowerId) {
+      const borrower = mockBorrowers.find(b => b.id === borrowerId);
+      if (borrower) {
+        setSelectedBorrower(borrower);
+      } else {
+        toast.error(`Borrower with ID ${borrowerId} not found`);
+      }
+    }
+  }, [location.search]);
+
+  // Filter borrowers based on search term
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredBorrowers(mockBorrowers);
+    } else {
+      const lowercaseSearch = searchTerm.toLowerCase();
+      const filtered = mockBorrowers.filter(
+        borrower => 
+          borrower.name.toLowerCase().includes(lowercaseSearch) || 
+          borrower.id.toLowerCase().includes(lowercaseSearch) ||
+          borrower.industry.toLowerCase().includes(lowercaseSearch) ||
+          borrower.contactPerson.toLowerCase().includes(lowercaseSearch) ||
+          borrower.email.toLowerCase().includes(lowercaseSearch)
+      );
+      setFilteredBorrowers(filtered);
+    }
+  }, [searchTerm]);
 
   const handleViewBorrower = (borrower: any) => {
     setSelectedBorrower(borrower);
   };
 
   const handleNewLoanApplication = (borrower: any) => {
-    toast.success(`Starting new loan application for ${borrower.name}`);
-    // In a real app, this would navigate to a new loan application form
+    toast(
+      <div className="space-y-2">
+        <p className="font-semibold">New Loan Application</p>
+        <p>Starting new loan application for {borrower.name}</p>
+        <p className="text-sm text-muted-foreground">Customer since: {borrower.foundedYear}</p>
+        <p className="text-sm text-muted-foreground">Credit Score: {borrower.creditScore}</p>
+        <div className="flex gap-2 mt-2">
+          <Button size="sm" onClick={() => navigate(`/applications?action=new&borrowerId=${borrower.id}`)}>
+            Continue
+          </Button>
+        </div>
+      </div>,
+      { duration: 5000 }
+    );
   };
 
   const handleContactBorrower = (borrower: any) => {
-    toast.info(`Contacting ${borrower.name} at ${borrower.email}`);
-    // In a real app, this would open a communication interface
+    toast(
+      <div className="space-y-2">
+        <p className="font-semibold">Contact {borrower.name}</p>
+        <p>Primary Contact: {borrower.contactPerson}</p>
+        <div className="flex flex-col gap-1 mt-2">
+          <div className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            <span>{borrower.email}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Phone className="h-4 w-4" />
+            <span>{borrower.phone}</span>
+          </div>
+        </div>
+        <div className="flex gap-2 mt-3">
+          <Button size="sm" onClick={() => toast.success(`Email sent to ${borrower.email}`)}>
+            Send Email
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => toast.success(`Call initiated to ${borrower.phone}`)}>
+            Call
+          </Button>
+        </div>
+      </div>,
+      { duration: 6000 }
+    );
+  };
+
+  const handleAddBorrower = () => {
+    toast.info("Opening new borrower registration form");
+    navigate('/borrowers/new');
   };
 
   return (
@@ -120,7 +296,7 @@ const Borrowers = () => {
             </p>
           </div>
           <div>
-            <Button>
+            <Button onClick={handleAddBorrower}>
               <UserPlus className="mr-2 h-4 w-4" />
               Add Borrower
             </Button>
@@ -202,7 +378,7 @@ const Borrowers = () => {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => toast.info("Opening advanced filter options")}>
                     <Filter className="mr-2 h-4 w-4" />
                     Filter
                   </Button>
@@ -225,7 +401,7 @@ const Borrowers = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockBorrowers.map((borrower) => (
+                    {filteredBorrowers.map((borrower) => (
                       <TableRow key={borrower.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -272,16 +448,28 @@ const Borrowers = () => {
               <TabsContent value="corporate">
                 <div className="flex flex-col items-center justify-center py-8">
                   <Building2 className="h-16 w-16 text-muted-foreground/50" />
-                  <h3 className="mt-4 text-lg font-semibold">Corporate View Coming Soon</h3>
-                  <p className="text-muted-foreground text-sm mt-2">This view is currently under development.</p>
+                  <h3 className="mt-4 text-lg font-semibold">Corporate Filter</h3>
+                  <p className="text-muted-foreground text-sm mt-2">Showing only corporate entities.</p>
+                  <Button className="mt-4" onClick={() => {
+                    setTab("all");
+                    setSearchTerm("Corporation");
+                  }}>
+                    View Corporate Borrowers
+                  </Button>
                 </div>
               </TabsContent>
               
               <TabsContent value="individual">
                 <div className="flex flex-col items-center justify-center py-8">
                   <Users className="h-16 w-16 text-muted-foreground/50" />
-                  <h3 className="mt-4 text-lg font-semibold">Individual View Coming Soon</h3>
-                  <p className="text-muted-foreground text-sm mt-2">This view is currently under development.</p>
+                  <h3 className="mt-4 text-lg font-semibold">Individual Filter</h3>
+                  <p className="text-muted-foreground text-sm mt-2">Showing only individual borrowers.</p>
+                  <Button className="mt-4" onClick={() => {
+                    setTab("all");
+                    setSearchTerm("Partnership");
+                  }}>
+                    View Individual Borrowers
+                  </Button>
                 </div>
               </TabsContent>
             </Tabs>

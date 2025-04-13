@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress"; 
 import { 
   Search, Filter, Clock, FileCheck, AlertTriangle, FileX, Eye, 
-  UserCheck, ArrowRight, Download, Loader2, CheckCircle, RefreshCw
+  UserCheck, ArrowRight, Download, Loader2, CheckCircle, RefreshCw, PlusCircle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
@@ -19,7 +20,6 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { getMockLoanApplications, formatCurrency, getApplicationCountByStatus } from "@/services/mockDataService";
 import { LoanApplication, LoanStatus } from "@/types";
@@ -60,19 +60,48 @@ const Applications = () => {
   const [loading, setLoading] = useState(true);
   const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
+    // Check for query parameters
+    const params = new URLSearchParams(location.search);
+    const action = params.get('action');
+    const borrowerId = params.get('borrowerId');
+    const applicationId = params.get('id');
+    
+    if (action === 'new') {
+      if (borrowerId) {
+        // Simulate starting a new application for specific borrower
+        toast.success(`Starting new application for borrower ID: ${borrowerId}`);
+        // In a real app, you would navigate to a form or modal for creating a new application
+      } else {
+        toast.info("Starting new application");
+        // In a real app, you would navigate to a form or modal for creating a new application
+      }
+    }
+    
     // Load applications with a small delay to simulate API call
     setLoading(true);
     const timer = setTimeout(() => {
       const apps = getMockLoanApplications();
       setApplications(apps);
       setFilteredApplications(apps);
+      
+      // If an application ID was provided, open that application
+      if (applicationId) {
+        const app = apps.find(app => app.id === applicationId);
+        if (app) {
+          setSelectedApplication(app);
+        } else {
+          toast.error(`Application ${applicationId} not found`);
+        }
+      }
+      
       setLoading(false);
     }, 500);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [location.search]);
   
   // Filter applications when search term or status filter changes
   useEffect(() => {
@@ -96,40 +125,72 @@ const Applications = () => {
   };
 
   const handleViewBorrower = (application: LoanApplication) => {
-    toast.info(`Viewing borrower details for ${application.borrower.companyName || `${application.borrower.firstName} ${application.borrower.lastName}`}`);
-    // In a real application, this would navigate to the borrower page with the corresponding ID
+    const borrowerName = application.borrower.companyName || `${application.borrower.firstName} ${application.borrower.lastName}`;
+    toast.info(`Viewing borrower details for ${borrowerName}`);
+    // Navigate to the borrower page with the corresponding ID
     navigate(`/borrowers?id=${application.borrowerId}`);
   };
 
   const handleSendToAgent = (application: LoanApplication) => {
-    let agentType: string;
-    
     // Determine which agent the application should be sent to based on its status
+    let agentType: string;
+    let agentName: string;
+    
     switch(application.status) {
       case "draft":
       case "submitted":
-        agentType = "Intake";
+        agentType = "intake";
+        agentName = "Intake Agent";
         break;
       case "reviewing":
       case "information_needed":
-        agentType = "Processing";
+        agentType = "processing";
+        agentName = "Processing Agent";
         break;
       case "underwriting":
-        agentType = "Underwriting";
+        agentType = "underwriting";
+        agentName = "Underwriting Agent";
         break;
       default:
-        agentType = "Decision";
+        agentType = "decision";
+        agentName = "Decision Agent";
     }
     
-    toast.success(`Application ${application.id} sent to ${agentType} agent for processing`);
-    
-    // Navigate to the corresponding agent page
-    navigate(`/agents/${agentType.toLowerCase()}`);
+    toast(
+      <div className="space-y-2">
+        <p className="font-semibold">Sending Application to {agentName}</p>
+        <p>Application {application.id} is being processed</p>
+        <p className="text-sm text-muted-foreground">Status: {application.displayStatus}</p>
+        <div className="flex gap-2 mt-2">
+          <Button size="sm" onClick={() => navigate(`/agents/${agentType}?applicationId=${application.id}`)}>
+            View Agent Dashboard
+          </Button>
+        </div>
+      </div>,
+      { duration: 5000 }
+    );
   };
   
   const handleDownloadApplication = (application: LoanApplication) => {
     toast.success(`Generating PDF for application ${application.id}`);
-    // This would generate and download a PDF in a real application
+    
+    // Show a more detailed toast after a brief delay
+    setTimeout(() => {
+      toast(
+        <div className="space-y-2">
+          <p className="font-semibold">Application PDF Generated</p>
+          <p>Application ID: {application.id}</p>
+          <p>Borrower: {application.borrower.companyName || `${application.borrower.firstName} ${application.borrower.lastName}`}</p>
+          <p>Amount: {formatCurrency(application.amount)}</p>
+          <div className="flex gap-2 mt-2">
+            <Button size="sm" onClick={() => toast.success(`PDF downloaded successfully`)}>
+              Download PDF
+            </Button>
+          </div>
+        </div>,
+        { duration: 5000 }
+      );
+    }, 1500);
   };
   
   const handleRefreshData = () => {
@@ -144,6 +205,11 @@ const Applications = () => {
       setLoading(false);
       toast.success("Application data refreshed successfully");
     }, 800);
+  };
+
+  const handleCreateNewApplication = () => {
+    toast.info("Starting new loan application process");
+    navigate('/applications?action=new');
   };
   
   return (
@@ -161,7 +227,8 @@ const Applications = () => {
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </Button>
-            <Button onClick={() => toast.info("Creating new application...")}>
+            <Button onClick={handleCreateNewApplication}>
+              <PlusCircle className="mr-2 h-4 w-4" />
               New Application
             </Button>
           </div>
@@ -261,7 +328,7 @@ const Applications = () => {
                     <SelectItem value="Funded">Funded</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => toast.info("Opening advanced filters panel")}>
                   <Filter className="mr-2 h-4 w-4" />
                   More Filters
                 </Button>
@@ -363,7 +430,12 @@ const Applications = () => {
                 
                 {filteredApplications.length > 10 && (
                   <div className="mt-4 flex items-center justify-center">
-                    <Button variant="outline" onClick={() => toast.info("Loading more applications...")}>
+                    <Button variant="outline" onClick={() => {
+                      toast.info("Loading more applications...");
+                      setTimeout(() => {
+                        toast.success("Additional applications loaded");
+                      }, 800);
+                    }}>
                       Load More Applications
                     </Button>
                   </div>
