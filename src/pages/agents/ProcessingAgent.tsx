@@ -12,6 +12,8 @@ import { Search, CheckCircle, AlertCircle, Clock, FileText, Loader2, FileCheck, 
 import OpenAIStatusIndicator from "@/components/agents/OpenAIStatusIndicator";
 import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
 import { toast } from "sonner";
+import { getMockLoanApplications, getMockLoanApplicationById } from "@/services/mockDataService";
+import { LoanApplication } from "@/types";
 
 // Mock data specific to the processing agent
 const mockProcessingTasks = [
@@ -120,7 +122,7 @@ const documentStatuses = [
 const ProcessingAgent = () => {
   const [tab, setTab] = useState("applications");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
   const [processingTask, setProcessingTask] = useState<string | null>(null);
   const [processingProgress, setProcessingProgress] = useState(0);
 
@@ -143,8 +145,90 @@ const ProcessingAgent = () => {
     }
   }, [processingTask]);
 
-  const handleViewApplication = (application: any) => {
-    setSelectedApplication(application);
+  // Fetch real application data when viewing an application
+  const handleViewApplication = (task: any) => {
+    // Attempt to fetch a real application from mock data
+    const realApp = getMockLoanApplicationById(task.id);
+    
+    if (realApp) {
+      setSelectedApplication(realApp);
+    } else {
+      // Create a proper LoanApplication object from the mock task
+      const mockApplication: LoanApplication = {
+        id: task.id,
+        borrowerId: `B-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        borrower: {
+          id: `B-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+          firstName: task.borrower.split(' ')[0] || "John",
+          lastName: task.borrower.split(' ').slice(1).join(' ') || "Doe",
+          companyName: task.borrower,
+          email: `info@${task.borrower.toLowerCase().replace(/\s+/g, '')}.com`,
+          phone: `(${Math.floor(Math.random() * 900) + 100})-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
+          address: {
+            street: "123 Main St",
+            city: "Anytown",
+            state: "CA",
+            zipCode: "12345",
+            country: "USA"
+          },
+          creditScore: Math.floor(Math.random() * 300) + 550,
+          creditRating: "Good",
+          dateCreated: new Date().toISOString().split('T')[0],
+          dateUpdated: new Date().toISOString().split('T')[0]
+        },
+        assetClass: task.assetClass?.toLowerCase().includes("equipment") ? "equipment_finance" : 
+                  task.assetClass?.toLowerCase().includes("capital") ? "sme_loan" : "commercial_real_estate",
+        amount: Math.floor(Math.random() * 500000) + 50000,
+        term: 36,
+        interestRate: 5.25,
+        purpose: "Business Expansion",
+        completeness: task.completeness || 50,
+        risk: task.priority === "High" ? "High" : task.priority === "Medium" ? "Medium" : "Low",
+        displayStatus: task.status || "In Review",
+        status: "reviewing",
+        documents: [
+          {
+            id: "DOC-1",
+            name: "Business Registration",
+            type: "Registration",
+            url: "http://example.com/doc1",
+            uploadedBy: "system",
+            uploadedAt: new Date().toISOString().split('T')[0],
+            status: "verified",
+            aiAnalysisComplete: true,
+            aiAnalysisSummary: "Document appears to be authentic."
+          },
+          {
+            id: "DOC-2",
+            name: "Financial Statements",
+            type: "Financial",
+            url: "http://example.com/doc2",
+            uploadedBy: "user",
+            uploadedAt: new Date().toISOString().split('T')[0],
+            status: "pending",
+            aiAnalysisComplete: false
+          }
+        ],
+        notes: [
+          {
+            id: "NOTE-1",
+            content: "Initial review completed. Awaiting additional documentation.",
+            createdBy: "Agent",
+            createdAt: new Date().toISOString().split('T')[0],
+            isAgentNote: true
+          }
+        ],
+        dateCreated: new Date().toISOString().split('T')[0],
+        dateUpdated: new Date().toISOString().split('T')[0],
+        dateSubmitted: task.dateSubmitted,
+        agentAssignments: {
+          intakeAgentId: "intake-123",
+          processingAgentId: "processing-456"
+        }
+      };
+      
+      setSelectedApplication(mockApplication);
+    }
   };
 
   const handleVerifyDocuments = (appId: string) => {

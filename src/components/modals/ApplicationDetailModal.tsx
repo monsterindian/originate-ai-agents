@@ -122,14 +122,39 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
     // In a real app, this would open the email client or phone dialer
   };
   
+  // Helper to safely render address
+  const renderAddress = () => {
+    if (!application.borrower.address) {
+      return "No address on file";
+    }
+    
+    const { street, city, state, zipCode } = application.borrower.address;
+    return (
+      <>
+        {street}<br />
+        {city}, {state} {zipCode}
+      </>
+    );
+  };
+  
+  // Check if we have a status icon for this status
+  const statusIcon = application.displayStatus && statusIcons[application.displayStatus] 
+    ? statusIcons[application.displayStatus] 
+    : <Clock className="h-4 w-4 text-slate-500" />;
+  
+  // Check if we have a status variant for this status
+  const statusVariant = application.displayStatus && statusVariants[application.displayStatus]
+    ? statusVariants[application.displayStatus] as any
+    : "default";
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span>Application {application.id}</span>
-            <Badge variant={statusVariants[application.displayStatus] as any}>
-              {statusIcons[application.displayStatus]} 
+            <Badge variant={statusVariant}>
+              {statusIcon}
               <span className="ml-1">{application.displayStatus}</span>
             </Badge>
           </DialogTitle>
@@ -367,8 +392,7 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                       <div>
                         <div className="text-sm text-muted-foreground">Address:</div>
                         <div className="font-medium">
-                          {application.borrower.address.street}<br />
-                          {application.borrower.address.city}, {application.borrower.address.state} {application.borrower.address.zipCode}
+                          {renderAddress()}
                         </div>
                       </div>
                       {application.borrower.relationshipManager && (
