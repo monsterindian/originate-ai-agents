@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Filter, UserPlus, Building2, Users, FileText } from "lucide-react";
+import { Search, Filter, UserPlus, Building2, Users, FileText, Eye, CreditCard, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import BorrowerDetailModal from "@/components/modals/BorrowerDetailModal";
+import { toast } from "sonner";
 
 const mockBorrowers = [
   {
@@ -91,6 +93,21 @@ const getBadgeColor = (rating: string) => {
 const Borrowers = () => {
   const [tab, setTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBorrower, setSelectedBorrower] = useState<any | null>(null);
+
+  const handleViewBorrower = (borrower: any) => {
+    setSelectedBorrower(borrower);
+  };
+
+  const handleNewLoanApplication = (borrower: any) => {
+    toast.success(`Starting new loan application for ${borrower.name}`);
+    // In a real app, this would navigate to a new loan application form
+  };
+
+  const handleContactBorrower = (borrower: any) => {
+    toast.info(`Contacting ${borrower.name} at ${borrower.email}`);
+    // In a real app, this would open a communication interface
+  };
 
   return (
     <MainLayout>
@@ -204,6 +221,7 @@ const Borrowers = () => {
                       <TableHead>Active Loans</TableHead>
                       <TableHead>Total Balance</TableHead>
                       <TableHead>Risk Rating</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -232,6 +250,19 @@ const Borrowers = () => {
                         <TableCell>
                           <Badge variant={getBadgeColor(borrower.riskRating) as any}>{borrower.riskRating}</Badge>
                         </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleViewBorrower(borrower)} title="View Borrower">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleNewLoanApplication(borrower)} title="New Loan Application">
+                              <CreditCard className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleContactBorrower(borrower)} title="Contact Borrower">
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -257,6 +288,14 @@ const Borrowers = () => {
           </CardContent>
         </Card>
       </div>
+
+      {selectedBorrower && (
+        <BorrowerDetailModal
+          isOpen={!!selectedBorrower}
+          onClose={() => setSelectedBorrower(null)}
+          borrower={selectedBorrower}
+        />
+      )}
     </MainLayout>
   );
 };

@@ -6,7 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, FileText, Filter, Download } from "lucide-react";
+import { BarChart, FileText, Filter, Download, Eye, UserCheck, MessageSquare, AlertCircle } from "lucide-react";
+import LoanDetailModal from "@/components/modals/LoanDetailModal";
+import { toast } from "sonner";
 
 const mockLoans = [
   {
@@ -68,6 +70,26 @@ const mockLoans = [
 
 const Loans = () => {
   const [tab, setTab] = useState("active");
+  const [selectedLoan, setSelectedLoan] = useState<any | null>(null);
+  
+  const handleViewLoan = (loan: any) => {
+    setSelectedLoan(loan);
+  };
+
+  const handleViewBorrower = (loan: any) => {
+    toast.info(`Viewing borrower details for ${loan.borrower}`);
+    // In a real app, this would navigate to the borrower details page
+  };
+
+  const handleContactBorrower = (loan: any) => {
+    toast.info(`Contacting borrower ${loan.borrower}`);
+    // In a real app, this would open a communication interface
+  };
+
+  const handleFlagLoan = (loan: any) => {
+    toast.warning(`Loan ${loan.id} flagged for review`);
+    // In a real app, this would mark the loan for special attention
+  };
   
   return (
     <MainLayout>
@@ -162,6 +184,7 @@ const Loans = () => {
                       <TableHead>Payment Status</TableHead>
                       <TableHead>Asset Class</TableHead>
                       <TableHead>Origination Date</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -179,6 +202,24 @@ const Loans = () => {
                         </TableCell>
                         <TableCell>{loan.assetClass}</TableCell>
                         <TableCell>{loan.origination}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleViewLoan(loan)} title="View Loan Details">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleViewBorrower(loan)} title="View Borrower">
+                              <UserCheck className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleContactBorrower(loan)} title="Contact Borrower">
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                            {loan.paymentStatus !== "Current" && (
+                              <Button variant="ghost" size="icon" onClick={() => handleFlagLoan(loan)} title="Flag for Review">
+                                <AlertCircle className="h-4 w-4 text-amber-500" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -204,6 +245,14 @@ const Loans = () => {
           </CardContent>
         </Card>
       </div>
+
+      {selectedLoan && (
+        <LoanDetailModal
+          isOpen={!!selectedLoan}
+          onClose={() => setSelectedLoan(null)}
+          loan={selectedLoan}
+        />
+      )}
     </MainLayout>
   );
 };

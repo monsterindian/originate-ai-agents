@@ -1,19 +1,424 @@
 
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Search, CheckCircle, AlertCircle, Clock, FileText, Loader2, FileCheck, ArrowRight, Eye } from "lucide-react";
+import OpenAIStatusIndicator from "@/components/agents/OpenAIStatusIndicator";
+import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
+import { toast } from "sonner";
+
+// Mock data specific to the processing agent
+const mockProcessingTasks = [
+  {
+    id: "APP-3846",
+    borrower: "Tech Solutions Inc",
+    status: "Document Collection",
+    dateSubmitted: "2024-04-07",
+    completeness: 45,
+    priority: "High",
+    missingDocuments: ["Financial Statements", "Business Plan"],
+    estimatedCompletion: "2024-04-17",
+    assetClass: "Equipment"
+  },
+  {
+    id: "APP-3847",
+    borrower: "Metro Medical Services",
+    status: "Initial Review",
+    dateSubmitted: "2024-04-10",
+    completeness: 30,
+    priority: "Medium",
+    missingDocuments: ["Tax Returns", "Proof of Collateral", "Business License"],
+    estimatedCompletion: "2024-04-20",
+    assetClass: "Business"
+  },
+  {
+    id: "APP-3849",
+    borrower: "Coastal Shipping Co",
+    status: "Document Verification",
+    dateSubmitted: "2024-04-08",
+    completeness: 60,
+    priority: "Medium",
+    missingDocuments: ["Property Appraisal"],
+    estimatedCompletion: "2024-04-15",
+    assetClass: "Working Capital"
+  }
+];
+
+const documentStatuses = [
+  { 
+    id: "DOC-1", 
+    appId: "APP-3846", 
+    name: "Business Registration", 
+    status: "verified", 
+    uploadDate: "2024-04-07", 
+    aiVerified: true 
+  },
+  { 
+    id: "DOC-2", 
+    appId: "APP-3846", 
+    name: "Identity Verification", 
+    status: "verified", 
+    uploadDate: "2024-04-07", 
+    aiVerified: true 
+  },
+  { 
+    id: "DOC-3", 
+    appId: "APP-3846", 
+    name: "Financial Statements", 
+    status: "pending", 
+    uploadDate: "-", 
+    aiVerified: false 
+  },
+  { 
+    id: "DOC-4", 
+    appId: "APP-3847", 
+    name: "Business Registration", 
+    status: "verified", 
+    uploadDate: "2024-04-10", 
+    aiVerified: true 
+  },
+  { 
+    id: "DOC-5", 
+    appId: "APP-3847", 
+    name: "Tax Returns", 
+    status: "pending", 
+    uploadDate: "-", 
+    aiVerified: false 
+  },
+  { 
+    id: "DOC-6", 
+    appId: "APP-3849", 
+    name: "Business Registration", 
+    status: "verified", 
+    uploadDate: "2024-04-08", 
+    aiVerified: true 
+  },
+  { 
+    id: "DOC-7", 
+    appId: "APP-3849", 
+    name: "Financial Statements", 
+    status: "verified", 
+    uploadDate: "2024-04-09", 
+    aiVerified: true 
+  },
+  { 
+    id: "DOC-8", 
+    appId: "APP-3849", 
+    name: "Property Appraisal", 
+    status: "pending", 
+    uploadDate: "-", 
+    aiVerified: false 
+  }
+];
 
 const ProcessingAgent = () => {
+  const [tab, setTab] = useState("applications");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
+  const [processingTask, setProcessingTask] = useState<string | null>(null);
+  const [processingProgress, setProcessingProgress] = useState(0);
+
+  // Simulate AI document processing
+  useEffect(() => {
+    if (processingTask) {
+      const interval = setInterval(() => {
+        setProcessingProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(interval);
+            toast.success(`Document verification complete for ${processingTask}`);
+            setProcessingTask(null);
+            return 0;
+          }
+          return prev + 10;
+        });
+      }, 500);
+      
+      return () => clearInterval(interval);
+    }
+  }, [processingTask]);
+
+  const handleViewApplication = (application: any) => {
+    setSelectedApplication(application);
+  };
+
+  const handleVerifyDocuments = (appId: string) => {
+    setProcessingTask(appId);
+    toast.info(`AI document verification started for ${appId}`);
+  };
+
+  const handleSendToUnderwriting = (appId: string) => {
+    toast.success(`Application ${appId} sent to Underwriting Agent`);
+    // In a real app, this would update the application status and route it to underwriting
+  };
+
+  const handleRequestDocument = (appId: string, document: string) => {
+    toast.info(`Document request sent for ${document} on application ${appId}`);
+    // In a real app, this would send a notification to the borrower
+  };
+
+  const getPriorityBadge = (priority: string) => {
+    if (priority === "High") return <Badge variant="destructive">High</Badge>;
+    if (priority === "Medium") return <Badge variant="secondary">Medium</Badge>;
+    return <Badge variant="outline">Low</Badge>;
+  };
+
+  const getStatusBadge = (status: string) => {
+    if (status === "verified") return <Badge variant="success">Verified</Badge>;
+    return <Badge variant="outline">Pending</Badge>;
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight">Processing Agent</h1>
-        <p className="text-muted-foreground">
-          AI agent for handling loan processing tasks
-        </p>
-        <div className="border rounded-lg p-8 text-center bg-card">
-          <h2 className="text-2xl font-semibold mb-4">Processing Agent Dashboard</h2>
-          <p className="text-muted-foreground mb-6">Automated document verification, validation, and processing status tracking.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Processing Agent</h1>
+            <p className="text-muted-foreground">
+              AI agent for handling loan processing tasks
+            </p>
+          </div>
+          <OpenAIStatusIndicator />
         </div>
+
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm font-medium">Active Applications</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{mockProcessingTasks.length}</div>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                <span>In document collection phase</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm font-medium">Documents Processed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {documentStatuses.filter(doc => doc.status === "verified").length}
+              </div>
+              <div className="flex items-center gap-1 text-xs text-green-500">
+                <CheckCircle className="h-3 w-3" />
+                <span>Verified documents</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm font-medium">Documents Pending</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {documentStatuses.filter(doc => doc.status === "pending").length}
+              </div>
+              <div className="flex items-center gap-1 text-xs text-amber-500">
+                <AlertCircle className="h-3 w-3" />
+                <span>Awaiting upload or verification</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm font-medium">Average Processing Time</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">2.3 days</div>
+              <div className="flex items-center gap-1 text-xs text-green-500">
+                <CheckCircle className="h-3 w-3" />
+                <span>Faster than target</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Processing Agent Dashboard</CardTitle>
+            <CardDescription>Automated document verification, validation, and processing status tracking.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={tab} onValueChange={setTab} className="w-full">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                <TabsList>
+                  <TabsTrigger value="applications">Applications</TabsTrigger>
+                  <TabsTrigger value="documents">Documents</TabsTrigger>
+                </TabsList>
+                
+                <div className="relative w-full sm:w-60">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search..."
+                    className="pl-8 w-full"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <TabsContent value="applications" className="w-full">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Application ID</TableHead>
+                      <TableHead>Borrower</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Missing Documents</TableHead>
+                      <TableHead>Est. Completion</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {mockProcessingTasks.map((task) => (
+                      <TableRow key={task.id}>
+                        <TableCell className="font-medium">{task.id}</TableCell>
+                        <TableCell>
+                          <div>
+                            <div>{task.borrower}</div>
+                            <div className="text-xs text-muted-foreground">{task.assetClass}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{task.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="w-full">
+                            <Progress value={task.completeness} className="h-2" />
+                            <div className="text-xs text-muted-foreground mt-1">{task.completeness}% complete</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{getPriorityBadge(task.priority)}</TableCell>
+                        <TableCell>
+                          <div className="max-w-[200px]">
+                            {task.missingDocuments.length > 0 ? (
+                              <div className="text-sm text-amber-600">
+                                Missing {task.missingDocuments.length} document(s)
+                              </div>
+                            ) : (
+                              <div className="text-sm text-green-600">All documents received</div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>{task.estimatedCompletion}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleViewApplication(task)} title="View Application">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleVerifyDocuments(task.id)}
+                              disabled={!!processingTask}
+                              title="Verify Documents"
+                            >
+                              <FileCheck className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleSendToUnderwriting(task.id)}
+                              disabled={task.completeness < 70}
+                              title="Send to Underwriting"
+                            >
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                
+                {processingTask && (
+                  <div className="mt-4 p-4 border rounded-md bg-muted/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <div className="font-medium">Processing Documents for {processingTask}</div>
+                    </div>
+                    <Progress value={processingProgress} className="h-2" />
+                    <div className="text-xs text-muted-foreground mt-1">AI document verification in progress...</div>
+                  </div>
+                )}
+              </TabsContent>
+              
+              <TabsContent value="documents" className="w-full">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Document ID</TableHead>
+                      <TableHead>Application</TableHead>
+                      <TableHead>Document Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Upload Date</TableHead>
+                      <TableHead>AI Verified</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {documentStatuses.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="font-medium">{doc.id}</TableCell>
+                        <TableCell>{doc.appId}</TableCell>
+                        <TableCell>{doc.name}</TableCell>
+                        <TableCell>{getStatusBadge(doc.status)}</TableCell>
+                        <TableCell>{doc.uploadDate}</TableCell>
+                        <TableCell>
+                          {doc.aiVerified ? (
+                            <div className="flex items-center text-green-600">
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              <span>Yes</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center text-muted-foreground">
+                              <Clock className="h-4 w-4 mr-1" />
+                              <span>Pending</span>
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {doc.status === "pending" ? (
+                            <Button size="sm" variant="outline" onClick={() => handleRequestDocument(doc.appId, doc.name)}>
+                              Request Document
+                            </Button>
+                          ) : (
+                            <Button size="sm" variant="outline">
+                              <FileText className="h-4 w-4 mr-2" />
+                              View
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
+
+      {selectedApplication && (
+        <ApplicationDetailModal 
+          isOpen={!!selectedApplication} 
+          onClose={() => setSelectedApplication(null)} 
+          application={selectedApplication} 
+        />
+      )}
     </MainLayout>
   );
 };

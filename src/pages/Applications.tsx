@@ -6,8 +6,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress"; 
-import { Search, Filter, Clock, FileCheck, AlertTriangle, FileX } from "lucide-react";
+import { Search, Filter, Clock, FileCheck, AlertTriangle, FileX, Eye, UserCheck, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const mockApplications = [
   {
@@ -73,6 +76,36 @@ const statusIcons = {
 
 const Applications = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
+  const navigate = useNavigate();
+  
+  const handleViewApplication = (application: any) => {
+    setSelectedApplication(application);
+  };
+
+  const handleViewBorrower = (application: any) => {
+    toast.info(`Viewing borrower details for ${application.borrower}`);
+    // In a real application, this would navigate to the borrower page with the corresponding ID
+  };
+
+  const handleSendToAgent = (application: any, agentType: string) => {
+    toast.success(`Application ${application.id} sent to ${agentType} agent`);
+    
+    // Navigate to the corresponding agent page
+    switch(agentType) {
+      case "Processing":
+        navigate("/agents/processing");
+        break;
+      case "Underwriting":
+        navigate("/agents/underwriting");
+        break;
+      case "Decision":
+        navigate("/agents/decision");
+        break;
+      default:
+        break;
+    }
+  };
   
   return (
     <MainLayout>
@@ -164,6 +197,7 @@ const Applications = () => {
                   <TableHead>Completeness</TableHead>
                   <TableHead>Asset Class</TableHead>
                   <TableHead>Date Submitted</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -187,6 +221,24 @@ const Applications = () => {
                     </TableCell>
                     <TableCell>{app.assetClass}</TableCell>
                     <TableCell>{app.dateSubmitted}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleViewApplication(app)} title="View Application">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleViewBorrower(app)} title="View Borrower">
+                          <UserCheck className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleSendToAgent(app, app.status === "Document Collection" ? "Processing" : app.status === "Credit Review" ? "Underwriting" : "Decision")}
+                          title={`Send to ${app.status === "Document Collection" ? "Processing" : app.status === "Credit Review" ? "Underwriting" : "Decision"} Agent`}
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -194,6 +246,14 @@ const Applications = () => {
           </CardContent>
         </Card>
       </div>
+
+      {selectedApplication && (
+        <ApplicationDetailModal 
+          isOpen={!!selectedApplication} 
+          onClose={() => setSelectedApplication(null)} 
+          application={selectedApplication} 
+        />
+      )}
     </MainLayout>
   );
 };
