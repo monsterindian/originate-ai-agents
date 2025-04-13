@@ -25,10 +25,12 @@ export type Borrower = {
   id: string;
   firstName: string;
   lastName: string;
+  companyName?: string;
   email: string;
   phone: string;
-  dateOfBirth: string;
-  ssn: string;
+  dateOfBirth?: string;
+  ssn?: string;
+  taxId?: string;
   address: {
     street: string;
     city: string;
@@ -37,14 +39,19 @@ export type Borrower = {
     country: string;
   };
   creditScore?: number;
+  creditRating?: string;
   income?: number;
+  annualRevenue?: number;
   employmentStatus?: string;
+  industry?: string;
+  yearsInBusiness?: number;
   employmentInfo?: {
     employer: string;
     position: string;
     startDate: string;
     endDate?: string;
   };
+  relationshipManager?: string;
   dateCreated: string;
   dateUpdated: string;
 };
@@ -58,6 +65,9 @@ export type LoanApplicationDTO = {
   term: number; // in months
   interestRate?: number;
   purpose: string;
+  completeness: number;
+  displayStatus: string;
+  risk?: "Low" | "Medium" | "High";
   collateral?: {
     type: string;
     value: number;
@@ -69,6 +79,8 @@ export type LoanApplicationDTO = {
   dateCreated: string;
   dateUpdated: string;
   dateSubmitted?: string;
+  dateReviewed?: string;
+  dateUnderwritten?: string;
   dateApproved?: string;
   dateFunded?: string;
   dateClosed?: string;
@@ -138,5 +150,35 @@ export type DashboardSummary = {
     action: string;
     details: string;
     agentId?: string;
+  }[];
+  totalPortfolioValue?: number;
+  approvalRate?: number;
+};
+
+export type Loan = {
+  id: string;
+  applicationId: string;
+  borrowerId: string;
+  borrower: Borrower;
+  amount: number;
+  interestRate: number;
+  term: number;
+  monthlyPayment: number;
+  originationDate: string;
+  maturityDate: string;
+  status: "active" | "paid_off" | "defaulted" | "modified";
+  paymentStatus: "current" | "late_30" | "late_60" | "late_90" | "default";
+  assetClass: AssetClass;
+  collateral?: {
+    type: string;
+    value: number;
+    description: string;
+  };
+  lastPaymentDate?: string;
+  nextPaymentDate?: string;
+  paymentHistory?: {
+    date: string;
+    amount: number;
+    status: "on_time" | "late" | "missed";
   }[];
 };

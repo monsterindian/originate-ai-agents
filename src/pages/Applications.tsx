@@ -1,110 +1,149 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress"; 
-import { Search, Filter, Clock, FileCheck, AlertTriangle, FileX, Eye, UserCheck, ArrowRight } from "lucide-react";
+import { 
+  Search, Filter, Clock, FileCheck, AlertTriangle, FileX, Eye, 
+  UserCheck, ArrowRight, Download, Loader2, CheckCircle, RefreshCw
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
-const mockApplications = [
-  {
-    id: "APP-3845",
-    borrower: "Sunrise Properties LLC",
-    amount: "$2,200,000",
-    purpose: "Property Acquisition",
-    status: "In Underwriting",
-    dateSubmitted: "2024-04-05",
-    completeness: 75,
-    assetClass: "Commercial Real Estate"
-  },
-  {
-    id: "APP-3846",
-    borrower: "Tech Solutions Inc",
-    amount: "$550,000",
-    purpose: "Equipment Purchase",
-    status: "Document Collection",
-    dateSubmitted: "2024-04-07",
-    completeness: 45,
-    assetClass: "Equipment"
-  },
-  {
-    id: "APP-3847",
-    borrower: "Metro Medical Services",
-    amount: "$1,200,000",
-    purpose: "Expansion",
-    status: "Initial Review",
-    dateSubmitted: "2024-04-10",
-    completeness: 30,
-    assetClass: "Business"
-  },
-  {
-    id: "APP-3848",
-    borrower: "Evergreen Developments",
-    amount: "$4,500,000",
-    purpose: "Construction",
-    status: "Pending Approval",
-    dateSubmitted: "2024-04-01",
-    completeness: 95,
-    assetClass: "Construction"
-  },
-  {
-    id: "APP-3849",
-    borrower: "Coastal Shipping Co",
-    amount: "$850,000",
-    purpose: "Working Capital",
-    status: "Credit Review",
-    dateSubmitted: "2024-04-08",
-    completeness: 60,
-    assetClass: "Working Capital"
-  }
-];
+import { getMockLoanApplications, formatCurrency, getApplicationCountByStatus } from "@/services/mockDataService";
+import { LoanApplication, LoanStatus } from "@/types";
 
 const statusIcons = {
-  "Initial Review": <Clock className="h-4 w-4 text-blue-500" />,
-  "Document Collection": <FileCheck className="h-4 w-4 text-amber-500" />,
-  "Credit Review": <AlertTriangle className="h-4 w-4 text-orange-500" />,
+  "Draft": <Clock className="h-4 w-4 text-slate-500" />,
+  "Submitted": <Clock className="h-4 w-4 text-blue-500" />,
+  "In Review": <Clock className="h-4 w-4 text-blue-500" />,
+  "Information Needed": <AlertTriangle className="h-4 w-4 text-amber-500" />,
   "In Underwriting": <FileCheck className="h-4 w-4 text-indigo-500" />,
-  "Pending Approval": <FileCheck className="h-4 w-4 text-green-500" />,
-  "Rejected": <FileX className="h-4 w-4 text-red-500" />
+  "Approved": <CheckCircle className="h-4 w-4 text-green-500" />,
+  "Conditionally Approved": <AlertTriangle className="h-4 w-4 text-green-500" />,
+  "Rejected": <FileX className="h-4 w-4 text-red-500" />,
+  "Funding In Progress": <Loader2 className="h-4 w-4 text-blue-500" />,
+  "Funded": <CheckCircle className="h-4 w-4 text-green-500" />,
+  "Closed": <CheckCircle className="h-4 w-4 text-slate-500" />
+};
+
+const statusVariants: Record<string, "default" | "secondary" | "destructive" | "outline" | "success" | "warning"> = {
+  "Draft": "outline",
+  "Submitted": "default",
+  "In Review": "default",
+  "Information Needed": "warning",
+  "In Underwriting": "secondary",
+  "Approved": "success",
+  "Conditionally Approved": "warning",
+  "Rejected": "destructive",
+  "Funding In Progress": "default",
+  "Funded": "success",
+  "Closed": "outline"
 };
 
 const Applications = () => {
+  const [applications, setApplications] = useState<LoanApplication[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<LoanApplication[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+  const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
   const navigate = useNavigate();
   
-  const handleViewApplication = (application: any) => {
+  useEffect(() => {
+    // Load applications with a small delay to simulate API call
+    setLoading(true);
+    const timer = setTimeout(() => {
+      const apps = getMockLoanApplications();
+      setApplications(apps);
+      setFilteredApplications(apps);
+      setLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Filter applications when search term or status filter changes
+  useEffect(() => {
+    const filteredBySearch = applications.filter(app => {
+      const borrowerName = app.borrower.companyName || `${app.borrower.firstName} ${app.borrower.lastName}`;
+      const searchLower = searchTerm.toLowerCase();
+      return app.id.toLowerCase().includes(searchLower) || 
+             borrowerName.toLowerCase().includes(searchLower) ||
+             app.purpose.toLowerCase().includes(searchLower);
+    });
+    
+    const filteredByStatus = statusFilter === "all" 
+      ? filteredBySearch
+      : filteredBySearch.filter(app => app.displayStatus === statusFilter);
+    
+    setFilteredApplications(filteredByStatus);
+  }, [searchTerm, statusFilter, applications]);
+  
+  const handleViewApplication = (application: LoanApplication) => {
     setSelectedApplication(application);
   };
 
-  const handleViewBorrower = (application: any) => {
-    toast.info(`Viewing borrower details for ${application.borrower}`);
+  const handleViewBorrower = (application: LoanApplication) => {
+    toast.info(`Viewing borrower details for ${application.borrower.companyName || `${application.borrower.firstName} ${application.borrower.lastName}`}`);
     // In a real application, this would navigate to the borrower page with the corresponding ID
+    navigate(`/borrowers?id=${application.borrowerId}`);
   };
 
-  const handleSendToAgent = (application: any, agentType: string) => {
-    toast.success(`Application ${application.id} sent to ${agentType} agent`);
+  const handleSendToAgent = (application: LoanApplication) => {
+    let agentType: string;
     
-    // Navigate to the corresponding agent page
-    switch(agentType) {
-      case "Processing":
-        navigate("/agents/processing");
+    // Determine which agent the application should be sent to based on its status
+    switch(application.status) {
+      case "draft":
+      case "submitted":
+        agentType = "Intake";
         break;
-      case "Underwriting":
-        navigate("/agents/underwriting");
+      case "reviewing":
+      case "information_needed":
+        agentType = "Processing";
         break;
-      case "Decision":
-        navigate("/agents/decision");
+      case "underwriting":
+        agentType = "Underwriting";
         break;
       default:
-        break;
+        agentType = "Decision";
     }
+    
+    toast.success(`Application ${application.id} sent to ${agentType} agent for processing`);
+    
+    // Navigate to the corresponding agent page
+    navigate(`/agents/${agentType.toLowerCase()}`);
+  };
+  
+  const handleDownloadApplication = (application: LoanApplication) => {
+    toast.success(`Generating PDF for application ${application.id}`);
+    // This would generate and download a PDF in a real application
+  };
+  
+  const handleRefreshData = () => {
+    setLoading(true);
+    toast.info("Refreshing application data...");
+    
+    // Simulate API refresh
+    setTimeout(() => {
+      const apps = getMockLoanApplications();
+      setApplications(apps);
+      setFilteredApplications(apps);
+      setLoading(false);
+      toast.success("Application data refreshed successfully");
+    }, 800);
   };
   
   return (
@@ -117,8 +156,14 @@ const Applications = () => {
               Manage and review loan applications
             </p>
           </div>
-          <div>
-            <Button>New Application</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleRefreshData}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+            <Button onClick={() => toast.info("Creating new application...")}>
+              New Application
+            </Button>
           </div>
         </div>
 
@@ -128,8 +173,8 @@ const Applications = () => {
               <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">5</div>
-              <p className="text-xs text-muted-foreground">This month</p>
+              <div className="text-2xl font-bold">{applications.length}</div>
+              <p className="text-xs text-muted-foreground">All time</p>
             </CardContent>
           </Card>
           
@@ -138,8 +183,10 @@ const Applications = () => {
               <CardTitle className="text-sm font-medium">Ready for Decision</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1</div>
-              <p className="text-xs text-muted-foreground">Application pending approval</p>
+              <div className="text-2xl font-bold">
+                {getApplicationCountByStatus(["underwriting"])}
+              </div>
+              <p className="text-xs text-muted-foreground">Applications in final stages</p>
             </CardContent>
           </Card>
           
@@ -148,7 +195,9 @@ const Applications = () => {
               <CardTitle className="text-sm font-medium">In Process</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">4</div>
+              <div className="text-2xl font-bold">
+                {getApplicationCountByStatus(["submitted", "reviewing", "information_needed", "underwriting"])}
+              </div>
               <p className="text-xs text-muted-foreground">In various stages</p>
             </CardContent>
           </Card>
@@ -158,8 +207,22 @@ const Applications = () => {
               <CardTitle className="text-sm font-medium">Approval Rate</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">75%</div>
-              <p className="text-xs text-muted-foreground">Last 30 days</p>
+              <div className="text-2xl font-bold">
+                {(() => {
+                  const decided = applications.filter(app => 
+                    ["approved", "conditionally_approved", "rejected"].includes(app.status)
+                  );
+                  
+                  if (decided.length === 0) return "N/A";
+                  
+                  const approved = decided.filter(app => 
+                    ["approved", "conditionally_approved"].includes(app.status)
+                  );
+                  
+                  return `${Math.round((approved.length / decided.length) * 100)}%`;
+                })()}
+              </div>
+              <p className="text-xs text-muted-foreground">For decided applications</p>
             </CardContent>
           </Card>
         </div>
@@ -180,69 +243,133 @@ const Applications = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button variant="outline" size="sm">
-                <Filter className="mr-2 h-4 w-4" />
-                Filter
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="Draft">Draft</SelectItem>
+                    <SelectItem value="Submitted">Submitted</SelectItem>
+                    <SelectItem value="In Review">In Review</SelectItem>
+                    <SelectItem value="Information Needed">Information Needed</SelectItem>
+                    <SelectItem value="In Underwriting">In Underwriting</SelectItem>
+                    <SelectItem value="Approved">Approved</SelectItem>
+                    <SelectItem value="Conditionally Approved">Conditionally Approved</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
+                    <SelectItem value="Funded">Funded</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm">
+                  <Filter className="mr-2 h-4 w-4" />
+                  More Filters
+                </Button>
+              </div>
             </div>
             
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Application ID</TableHead>
-                  <TableHead>Borrower</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Purpose</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Completeness</TableHead>
-                  <TableHead>Asset Class</TableHead>
-                  <TableHead>Date Submitted</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {mockApplications.map((app) => (
-                  <TableRow key={app.id}>
-                    <TableCell className="font-medium">{app.id}</TableCell>
-                    <TableCell>{app.borrower}</TableCell>
-                    <TableCell>{app.amount}</TableCell>
-                    <TableCell>{app.purpose}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {statusIcons[app.status as keyof typeof statusIcons]}
-                        <Badge variant="outline">{app.status}</Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <Progress value={app.completeness} className="h-2" />
-                        <span className="text-xs text-muted-foreground">{app.completeness}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{app.assetClass}</TableCell>
-                    <TableCell>{app.dateSubmitted}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleViewApplication(app)} title="View Application">
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleViewBorrower(app)} title="View Borrower">
-                          <UserCheck className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleSendToAgent(app, app.status === "Document Collection" ? "Processing" : app.status === "Credit Review" ? "Underwriting" : "Decision")}
-                          title={`Send to ${app.status === "Document Collection" ? "Processing" : app.status === "Credit Review" ? "Underwriting" : "Decision"} Agent`}
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2">Loading applications...</span>
+              </div>
+            ) : (
+              <>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Application ID</TableHead>
+                        <TableHead>Borrower</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Purpose</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Completeness</TableHead>
+                        <TableHead>Asset Class</TableHead>
+                        <TableHead>Date Submitted</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredApplications.length > 0 ? (
+                        filteredApplications.slice(0, 10).map((app) => (
+                          <TableRow key={app.id}>
+                            <TableCell className="font-medium">{app.id}</TableCell>
+                            <TableCell>
+                              {app.borrower.companyName || `${app.borrower.firstName} ${app.borrower.lastName}`}
+                            </TableCell>
+                            <TableCell>{formatCurrency(app.amount)}</TableCell>
+                            <TableCell>{app.purpose}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {statusIcons[app.displayStatus]}
+                                <Badge variant={statusVariants[app.displayStatus]}>{app.displayStatus}</Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-col gap-1">
+                                <Progress value={app.completeness} className="h-2" />
+                                <span className="text-xs text-muted-foreground">{app.completeness}%</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {(() => {
+                                const assetClassDisplay: Record<string, string> = {
+                                  "residential_mortgage": "Residential",
+                                  "commercial_real_estate": "Commercial RE",
+                                  "auto_loan": "Auto",
+                                  "personal_loan": "Personal",
+                                  "sme_loan": "SME",
+                                  "equipment_finance": "Equipment",
+                                  "other": "Other"
+                                };
+                                return assetClassDisplay[app.assetClass] || app.assetClass;
+                              })()}
+                            </TableCell>
+                            <TableCell>{app.dateSubmitted || "Not submitted"}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <Button variant="ghost" size="icon" onClick={() => handleViewApplication(app)} title="View Application">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleViewBorrower(app)} title="View Borrower">
+                                  <UserCheck className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" onClick={() => handleDownloadApplication(app)} title="Download Application">
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleSendToAgent(app)}
+                                  title="Send to Agent"
+                                >
+                                  <ArrowRight className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center py-4">
+                            No applications found matching your criteria.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                {filteredApplications.length > 10 && (
+                  <div className="mt-4 flex items-center justify-center">
+                    <Button variant="outline" onClick={() => toast.info("Loading more applications...")}>
+                      Load More Applications
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
