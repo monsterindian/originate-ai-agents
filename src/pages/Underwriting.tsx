@@ -1,135 +1,135 @@
 
 import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Search, Filter, Clock, AlertTriangle, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { 
+  Search, Filter, Download, AlertCircle, CheckCircle2, Clock, ArrowUpDown, 
+  FileText, UserCheck, Building, BarChart4, PiggyBank, ShieldCheck
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const mockApplications = [
   {
-    id: "APP-3845",
-    borrower: "Sunrise Properties LLC",
-    amount: "$2,200,000",
-    dateSubmitted: "2024-04-05",
-    stage: "Credit Review",
+    id: "APP-2023-0523",
+    borrower: "Quantum Holdings LLC",
+    amount: "$2,500,000",
+    type: "Commercial Real Estate",
+    status: "In Progress",
+    progress: 65,
+    date: "May 23, 2023",
+    notes: "Missing tax returns for 2021-2022"
+  },
+  {
+    id: "APP-2023-0518",
+    borrower: "Atlas Logistics Inc.",
+    amount: "$1,800,000",
+    type: "Equipment Finance",
+    status: "Complete",
+    progress: 100,
+    date: "May 18, 2023",
+    notes: "All documentation verified"
+  },
+  {
+    id: "APP-2023-0511",
+    borrower: "Meridian Healthcare Partners",
+    amount: "$4,200,000",
+    type: "Commercial Real Estate",
+    status: "In Progress",
+    progress: 85,
+    date: "May 11, 2023",
+    notes: "Pending environmental assessment"
+  },
+  {
+    id: "APP-2023-0505",
+    borrower: "SunCoast Hospitality Group",
+    amount: "$3,750,000",
+    type: "Commercial Real Estate",
+    status: "Pending Review",
+    progress: 40,
+    date: "May 5, 2023",
+    notes: "Waiting for property appraisal"
+  },
+  {
+    id: "APP-2023-0429",
+    borrower: "GreenField Agricultural Supplies",
+    amount: "$950,000",
+    type: "Working Capital",
+    status: "In Progress",
     progress: 75,
-    assigned: "AI Agent",
+    date: "April 29, 2023",
+    notes: "Pending business plan review"
+  }
+];
+
+const mockTasks = [
+  {
+    id: "TASK-001",
+    application: "APP-2023-0523",
+    task: "Financial Statement Analysis",
+    assignee: "John Anderson",
+    dueDate: "May 30, 2023",
     priority: "High",
-    daysInStage: 3
+    status: "In Progress"
   },
   {
-    id: "APP-3848",
-    borrower: "Evergreen Developments",
-    amount: "$4,500,000",
-    dateSubmitted: "2024-04-01",
-    stage: "Final Approval",
-    progress: 95,
-    assigned: "Maria Chen",
-    priority: "Critical",
-    daysInStage: 1
+    id: "TASK-002",
+    application: "APP-2023-0523",
+    task: "Tax Return Verification",
+    assignee: "Sarah Miller",
+    dueDate: "May 29, 2023",
+    priority: "High",
+    status: "Pending"
   },
   {
-    id: "APP-3846",
-    borrower: "Tech Solutions Inc",
-    amount: "$550,000",
-    dateSubmitted: "2024-04-07",
-    stage: "Initial Review",
-    progress: 45,
-    assigned: "AI Agent",
+    id: "TASK-003",
+    application: "APP-2023-0511",
+    task: "Environmental Assessment Review",
+    assignee: "Robert Chen",
+    dueDate: "May 28, 2023",
     priority: "Medium",
-    daysInStage: 2
+    status: "In Progress"
   },
   {
-    id: "APP-3849",
-    borrower: "Coastal Shipping Co",
-    amount: "$850,000",
-    dateSubmitted: "2024-04-08",
-    stage: "Document Verification",
-    progress: 60,
-    assigned: "James Wilson",
+    id: "TASK-004",
+    application: "APP-2023-0505",
+    task: "Property Appraisal",
+    assignee: "Jennifer Taylor",
+    dueDate: "May 27, 2023",
     priority: "Medium",
-    daysInStage: 2
+    status: "Completed"
   },
   {
-    id: "APP-3847",
-    borrower: "Metro Medical Services",
-    amount: "$1,200,000",
-    dateSubmitted: "2024-04-10",
-    stage: "Initial Review",
-    progress: 30,
-    assigned: "AI Agent",
+    id: "TASK-005",
+    application: "APP-2023-0429",
+    task: "Business Plan Review",
+    assignee: "Michael Rodriguez",
+    dueDate: "May 26, 2023",
     priority: "Low",
-    daysInStage: 1
+    status: "In Progress"
   }
 ];
 
-const mockCompletedApplications = [
-  {
-    id: "APP-3830",
-    borrower: "Mountain View Resorts",
-    amount: "$3,400,000",
-    dateSubmitted: "2024-03-27",
-    decision: "Approved",
-    completionDate: "2024-04-05",
-    underwriter: "Sarah Johnson"
-  },
-  {
-    id: "APP-3832",
-    borrower: "Downtown Retail Inc",
-    amount: "$1,200,000",
-    dateSubmitted: "2024-03-29",
-    decision: "Rejected",
-    completionDate: "2024-04-07",
-    underwriter: "AI Agent"
-  },
-  {
-    id: "APP-3835",
-    borrower: "Harbor Storage LLC",
-    amount: "$800,000",
-    dateSubmitted: "2024-03-31",
-    decision: "Approved with Conditions",
-    completionDate: "2024-04-08",
-    underwriter: "James Wilson"
-  }
-];
-
-const getBadgeColor = (priority: string) => {
-  if (priority === "Critical") return "destructive";
-  if (priority === "High") return "warning";
-  if (priority === "Medium") return "default";
-  return "secondary";
+const getStatusColor = (status: string) => {
+  if (status === "Complete" || status === "Completed") return "default";
+  if (status === "In Progress") return "secondary";
+  if (status === "Pending" || status === "Pending Review") return "outline";
+  return "destructive";
 };
 
-const getDecisionBadge = (decision: string) => {
-  if (decision === "Approved") return <Badge variant="success">Approved</Badge>;
-  if (decision === "Rejected") return <Badge variant="destructive">Rejected</Badge>;
-  return <Badge variant="warning">Approved with Conditions</Badge>;
-};
-
-const getProgressColor = (progress: number) => {
-  if (progress < 50) return "bg-blue-500";
-  if (progress < 80) return "bg-amber-500";
-  return "bg-green-500";
-};
-
-const getInitials = (name: string) => {
-  if (name === "AI Agent") return "AI";
-  return name
-    .split(' ')
-    .map(part => part[0])
-    .join('')
-    .toUpperCase()
-    .substring(0, 2);
+const getPriorityColor = (priority: string) => {
+  if (priority === "Low") return "default";
+  if (priority === "Medium") return "secondary";
+  return "destructive";
 };
 
 const Underwriting = () => {
-  const [tab, setTab] = useState("active");
+  const [tab, setTab] = useState("applications");
   const [searchTerm, setSearchTerm] = useState("");
   
   return (
@@ -139,17 +139,17 @@ const Underwriting = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Underwriting</h1>
             <p className="text-muted-foreground">
-              Review and process loan applications through underwriting
+              Manage and review loan applications in the underwriting process
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Filter className="mr-2 h-4 w-4" />
-              Filter
+            <Button variant="outline" size="sm">
+              <Download className="mr-2 h-4 w-4" />
+              Export
             </Button>
-            <Button>
-              <Loader2 className="mr-2 h-4 w-4" />
-              Assign
+            <Button size="sm">
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Review Applications
             </Button>
           </div>
         </div>
@@ -157,87 +157,110 @@ const Underwriting = () => {
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="py-3">
-              <CardTitle className="text-sm font-medium">Active Applications</CardTitle>
+              <CardTitle className="text-sm font-medium">Open Applications</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">5</div>
-              <p className="text-xs text-muted-foreground">In underwriting process</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm font-medium">Critical Priority</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">1</div>
-              <div className="flex items-center gap-1 text-xs text-red-500">
-                <AlertTriangle className="h-3 w-3" />
-                <span>Needs immediate attention</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm font-medium">Avg. Process Time</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">3.2 days</div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="text-2xl font-bold">12</div>
+              <div className="flex items-center gap-1 text-xs text-amber-500">
                 <Clock className="h-3 w-3" />
-                <span>Last 30 days</span>
+                <span>4 require attention</span>
               </div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="py-3">
-              <CardTitle className="text-sm font-medium">AI-Processed</CardTitle>
+              <CardTitle className="text-sm font-medium">Assigned Tasks</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">60%</div>
-              <p className="text-xs text-muted-foreground">Of all applications</p>
+              <div className="text-2xl font-bold">23</div>
+              <div className="flex items-center gap-1 text-xs text-red-500">
+                <AlertCircle className="h-3 w-3" />
+                <span>7 past due</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm font-medium">Completed Reviews</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">8</div>
+              <div className="flex items-center gap-1 text-xs text-green-500">
+                <CheckCircle2 className="h-3 w-3" />
+                <span>This month</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm font-medium">Avg. Review Time</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">5.2 days</div>
+              <div className="flex items-center gap-1 text-xs text-green-500">
+                <CheckCircle2 className="h-3 w-3" />
+                <span>-1.3 days from last month</span>
+              </div>
             </CardContent>
           </Card>
         </div>
         
         <Card>
           <CardHeader>
-            <CardTitle>Underwriting Workspace</CardTitle>
-            <CardDescription>Access all tools needed for credit analysis and risk assessment.</CardDescription>
+            <CardTitle>Underwriting Dashboard</CardTitle>
+            <CardDescription>Manage applications in the underwriting process and assigned tasks.</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs value={tab} onValueChange={setTab} className="w-full">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                 <TabsList>
-                  <TabsTrigger value="active">In Process</TabsTrigger>
-                  <TabsTrigger value="completed">Completed</TabsTrigger>
+                  <TabsTrigger value="applications">Applications</TabsTrigger>
+                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
                 </TabsList>
                 
-                <div className="relative w-full sm:w-80">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search applications..."
-                    className="pl-8 w-full"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:w-60">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search..."
+                      className="pl-8 w-full"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <Select defaultValue="all">
+                    <SelectTrigger className="w-[120px]">
+                      <Filter className="mr-2 h-4 w-4" />
+                      <SelectValue placeholder="Filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="inprogress">In Progress</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="complete">Complete</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               
-              <TabsContent value="active" className="w-full">
+              <TabsContent value="applications" className="w-full">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Application ID</TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          ID <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </TableHead>
                       <TableHead>Borrower</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Current Stage</TableHead>
+                      <TableHead>Loan Details</TableHead>
                       <TableHead>Progress</TableHead>
-                      <TableHead>Assigned To</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Time in Stage</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Notes</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -245,29 +268,50 @@ const Underwriting = () => {
                     {mockApplications.map((app) => (
                       <TableRow key={app.id}>
                         <TableCell className="font-medium">{app.id}</TableCell>
-                        <TableCell>{app.borrower}</TableCell>
-                        <TableCell>{app.amount}</TableCell>
-                        <TableCell>{app.stage}</TableCell>
                         <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <Progress value={app.progress} className={`h-2 ${getProgressColor(app.progress)}`} />
-                            <span className="text-xs text-muted-foreground">{app.progress}%</span>
+                          <div className="flex items-center gap-2">
+                            <Building className="h-4 w-4 text-muted-foreground" />
+                            {app.borrower}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <div>{app.amount}</div>
+                            <div className="text-muted-foreground">{app.type}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="w-full">
+                            <div className="flex justify-between text-xs mb-1">
+                              <span>Review Progress</span>
+                              <span>{app.progress}%</span>
+                            </div>
+                            <Progress value={app.progress} className="h-2" />
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusColor(app.status) as "default" | "secondary" | "outline" | "destructive"}>
+                            {app.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{app.date}</TableCell>
+                        <TableCell>
+                          <div className="max-w-[200px] truncate" title={app.notes}>
+                            {app.notes}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarFallback className="text-xs">{getInitials(app.assigned)}</AvatarFallback>
-                            </Avatar>
-                            <span>{app.assigned}</span>
+                            <Button variant="ghost" size="icon" title="View Application">
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" title="View Borrower">
+                              <UserCheck className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" title="View Financial Analysis">
+                              <BarChart4 className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getBadgeColor(app.priority) as any}>{app.priority}</Badge>
-                        </TableCell>
-                        <TableCell>{app.daysInStage} day{app.daysInStage !== 1 ? 's' : ''}</TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm">Review</Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -275,41 +319,52 @@ const Underwriting = () => {
                 </Table>
               </TabsContent>
               
-              <TabsContent value="completed">
+              <TabsContent value="tasks" className="w-full">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Application ID</TableHead>
-                      <TableHead>Borrower</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Date Submitted</TableHead>
-                      <TableHead>Decision</TableHead>
-                      <TableHead>Completion Date</TableHead>
-                      <TableHead>Underwriter</TableHead>
+                      <TableHead>
+                        <div className="flex items-center gap-1">
+                          Task <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </TableHead>
+                      <TableHead>Application</TableHead>
+                      <TableHead>Assignee</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockCompletedApplications.map((app) => (
-                      <TableRow key={app.id}>
-                        <TableCell className="font-medium">{app.id}</TableCell>
-                        <TableCell>{app.borrower}</TableCell>
-                        <TableCell>{app.amount}</TableCell>
-                        <TableCell>{app.dateSubmitted}</TableCell>
+                    {mockTasks.map((task) => (
+                      <TableRow key={task.id}>
+                        <TableCell className="font-medium">{task.task}</TableCell>
+                        <TableCell>{task.application}</TableCell>
+                        <TableCell>{task.assignee}</TableCell>
+                        <TableCell>{task.dueDate}</TableCell>
                         <TableCell>
-                          {getDecisionBadge(app.decision)}
+                          <Badge variant={getPriorityColor(task.priority) as "default" | "secondary" | "destructive"}>
+                            {task.priority}
+                          </Badge>
                         </TableCell>
-                        <TableCell>{app.completionDate}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusColor(task.status) as "default" | "secondary" | "outline" | "destructive"}>
+                            {task.status}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarFallback className="text-xs">{getInitials(app.underwriter)}</AvatarFallback>
-                            </Avatar>
-                            <span>{app.underwriter}</span>
+                            <Button variant="ghost" size="icon" title="View Task">
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" title="View Application">
+                              <PiggyBank className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" title="Assign Task">
+                              <UserCheck className="h-4 w-4" />
+                            </Button>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm">View</Button>
                         </TableCell>
                       </TableRow>
                     ))}

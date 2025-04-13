@@ -1,14 +1,14 @@
 
 import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { BarChart, LineChart } from "@/components/ui/chart";
+import { BarChart, LineChart } from "@/components/ui/charts";
 import { Search, Filter, Download, AlertCircle, TrendingUp, TrendingDown, AlertTriangle, ShieldAlert, BarChart4 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 

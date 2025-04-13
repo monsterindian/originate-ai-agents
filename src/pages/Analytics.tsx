@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, BarChart, PieChart, PieArcSeries, PieArc } from "@/components/ui/chart";
+import { LineChart, BarChart, PieChart } from "@/components/ui/charts";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, Download, BarChart as BarChartIcon, PieChart as PieChartIcon, LineChart as LineChartIcon, TrendingUp } from "lucide-react";
@@ -186,13 +185,13 @@ const Analytics = () => {
                     </CardHeader>
                     <CardContent className="flex items-center justify-center">
                       <div className="h-80 w-80">
-                        <PieChart data={mockAssetClassData} dataKey="name" series={mockAssetClassData.map(item => (
-                          {
-                            arcLabel: (item) => `${item.data.name.split(' ')[0]}: ${item.value}%`,
-                            arcLabelMinAngle: 45,
-                            data: [{name: item.name, value: item.value}]
-                          }
-                        ))} />
+                        <PieChart
+                          data={mockAssetClassData}
+                          dataKey="name"
+                          categories={["value"]}
+                          colors={["#8B5CF6", "#22C55E", "#F59E0B", "#EF4444", "#0EA5E9"]}
+                          valueFormatter={(value) => `${value}%`}
+                        />
                       </div>
                     </CardContent>
                   </Card>
@@ -205,7 +204,13 @@ const Analytics = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="h-80">
-                        <PieChart data={mockPerformanceData} dataKey="name" colors={["#22C55E", "#F59E0B", "#EF4444", "#8B5CF6"]} />
+                        <PieChart
+                          data={mockPerformanceData}
+                          dataKey="name"
+                          categories={["value"]}
+                          colors={["#22C55E", "#F59E0B", "#EF4444", "#8B5CF6"]}
+                          valueFormatter={(value) => `${value}%`}
+                        />
                       </div>
                     </CardContent>
                   </Card>
