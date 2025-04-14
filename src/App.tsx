@@ -11,10 +11,6 @@ import IntakeAgent from "./pages/agents/IntakeAgent";
 import NotFound from "./pages/NotFound";
 import Applications from "./pages/Applications";
 import Borrowers from "./pages/Borrowers";
-import Loans from "./pages/Loans";
-import Underwriting from "./pages/Underwriting";
-import RiskAnalysis from "./pages/RiskAnalysis";
-import Analytics from "./pages/Analytics";
 import ProcessingAgent from "./pages/agents/ProcessingAgent";
 import UnderwritingAgent from "./pages/agents/UnderwritingAgent";
 import DecisionAgent from "./pages/agents/DecisionAgent";
@@ -39,10 +35,6 @@ const App = () => (
           
           <Route path="/applications" element={<Applications />} />
           <Route path="/borrowers" element={<Borrowers />} />
-          <Route path="/loans" element={<Loans />} />
-          <Route path="/underwriting" element={<Underwriting />} />
-          <Route path="/risk" element={<RiskAnalysis />} />
-          <Route path="/analytics" element={<Analytics />} />
           
           <Route path="*" element={<NotFound />} />
         </Routes>

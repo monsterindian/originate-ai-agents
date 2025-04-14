@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -6,13 +5,9 @@ import {
   Home, 
   Users, 
   FileText, 
-  AlertCircle, 
-  BarChart, 
   Settings, 
   Menu, 
   ChevronLeft,
-  Briefcase,
-  FileSearch,
   Bot,
   Database
 } from "lucide-react";
@@ -57,10 +52,6 @@ const Sidebar = () => {
           <NavItem to="/" icon={<Home size={20} />} label="Dashboard" collapsed={collapsed} />
           <NavItem to="/applications" icon={<FileText size={20} />} label="Applications" collapsed={collapsed} />
           <NavItem to="/borrowers" icon={<Users size={20} />} label="Borrowers" collapsed={collapsed} />
-          <NavItem to="/loans" icon={<Briefcase size={20} />} label="Loans" collapsed={collapsed} />
-          <NavItem to="/underwriting" icon={<FileSearch size={20} />} label="Underwriting" collapsed={collapsed} />
-          <NavItem to="/risk" icon={<AlertCircle size={20} />} label="Risk Analysis" collapsed={collapsed} />
-          <NavItem to="/analytics" icon={<BarChart size={20} />} label="Analytics" collapsed={collapsed} />
         </div>
       </div>
 
