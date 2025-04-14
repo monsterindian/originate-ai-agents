@@ -630,7 +630,7 @@ const CashFlowAnalysisAgent = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <AgentStatusIndicator status="active" type="analysis" />
+            <AgentStatusIndicator active={true} type="analysis" />
             <OpenAIStatusIndicator status="connected" />
           </div>
         </div>
@@ -1075,65 +1075,85 @@ const CashFlowAnalysisAgent = () => {
                           [Projected Cash Flow Chart - {selectedPeriod} Months]
                         </div>
                       </div>
+                      
                       <div>
-                        <h3 className="text-lg font-medium mb-4">Debt Service Coverage</h3>
-                        <div className="h-[350px] bg-muted/40 rounded-md border flex items-center justify-center">
-                          [Projected DSCR Chart]
+                        <h3 className="text-lg font-medium mb-4">Projected Financial Metrics</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium">Annual Revenue</div>
+                              <div className="text-xs text-muted-foreground">Projected for next 12 months</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold">${cashFlowAnalysis.projections.annualRevenue.toLocaleString()}</div>
+                              <div className={`text-xs ${cashFlowAnalysis.projections.annualGrowthRate > 0 ? "text-green-500" : "text-amber-500"}`}>
+                                {cashFlowAnalysis.projections.annualGrowthRate > 0 ? '+' : ''}{cashFlowAnalysis.projections.annualGrowthRate}% growth
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium">Operating Cash Flow</div>
+                              <div className="text-xs text-muted-foreground">Projected for next 12 months</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold">${cashFlowAnalysis.projections.operatingCashFlow.toLocaleString()}</div>
+                              <div className={`text-xs ${cashFlowAnalysis.historicalData.operatingCashFlowTrend > 0 ? "text-green-500" : "text-amber-500"}`}>
+                                {cashFlowAnalysis.historicalData.operatingCashFlowTrend > 0 ? '+' : ''}{cashFlowAnalysis.historicalData.operatingCashFlowTrend}% vs. current
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium">Free Cash Flow</div>
+                              <div className="text-xs text-muted-foreground">After capital expenditures</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold">${cashFlowAnalysis.projections.freeCashFlow.toLocaleString()}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {((cashFlowAnalysis.projections.freeCashFlow / cashFlowAnalysis.projections.operatingCashFlow) * 100).toFixed(0)}% of operating cash flow
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium">DSCR with New Loan</div>
+                              <div className="text-xs text-muted-foreground">Including proposed debt</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold">{cashFlowAnalysis.projections.debtServiceCoverageRatio.toFixed(2)}x</div>
+                              <div className={`text-xs ${cashFlowAnalysis.projections.debtServiceCoverageRatio >= 1.25 ? "text-green-500" : "text-amber-500"}`}>
+                                {cashFlowAnalysis.projections.debtServiceCoverageRatio >= 1.25 ? "Acceptable" : "Below target"}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-0.5">
+                              <div className="text-sm font-medium">Monthly Payment Capacity</div>
+                              <div className="text-xs text-muted-foreground">Maximum sustainable payment</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold">${cashFlowAnalysis.projections.loanPaymentCapacity.toLocaleString()}/month</div>
+                              <div className="text-xs text-muted-foreground">
+                                Based on 50% of projected operating cash flow
+                              </div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
                     
                     <div>
-                      <h3 className="text-lg font-medium mb-4">Projected Financial Metrics</h3>
-                      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                        <Card className="bg-background/50">
-                          <CardContent className="pt-6">
-                            <div className="text-sm text-muted-foreground mb-2">Annual Revenue</div>
-                            <div className="text-2xl font-bold">${cashFlowAnalysis.projections.annualRevenue.toLocaleString()}</div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              Growth: {cashFlowAnalysis.projections.annualGrowthRate}% per year
-                            </div>
-                          </CardContent>
-                        </Card>
-                        
-                        <Card className="bg-background/50">
-                          <CardContent className="pt-6">
-                            <div className="text-sm text-muted-foreground mb-2">Operating Cash Flow</div>
-                            <div className="text-2xl font-bold">${cashFlowAnalysis.projections.operatingCashFlow.toLocaleString()}</div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              {((cashFlowAnalysis.projections.operatingCashFlow / cashFlowAnalysis.projections.annualRevenue) * 100).toFixed(1)}% of revenue
-                            </div>
-                          </CardContent>
-                        </Card>
-                        
-                        <Card className="bg-background/50">
-                          <CardContent className="pt-6">
-                            <div className="text-sm text-muted-foreground mb-2">DSCR</div>
-                            <div className="text-2xl font-bold">{cashFlowAnalysis.projections.debtServiceCoverageRatio.toFixed(2)}x</div>
-                            <div className={`text-xs mt-1 ${cashFlowAnalysis.projections.debtServiceCoverageRatio >= 1.25 ? "text-green-500" : "text-amber-500"}`}>
-                              {cashFlowAnalysis.projections.debtServiceCoverageRatio >= 1.5 ? "Strong" : 
-                               cashFlowAnalysis.projections.debtServiceCoverageRatio >= 1.25 ? "Adequate" : "Weak"}
-                            </div>
-                          </CardContent>
-                        </Card>
-                        
-                        <Card className="bg-background/50">
-                          <CardContent className="pt-6">
-                            <div className="text-sm text-muted-foreground mb-2">Loan Payment Capacity</div>
-                            <div className="text-2xl font-bold">${cashFlowAnalysis.projections.loanPaymentCapacity.toLocaleString()}</div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              per month
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </div>
-                    
-                    <div>
                       <h3 className="text-lg font-medium mb-4">Stress Testing Results</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {cashFlowAnalysis.stressTestingSummary}
-                      </p>
+                      <div className="bg-muted/40 p-4 rounded-md border mb-6">
+                        <p className="text-sm">
+                          {cashFlowAnalysis.stressTestingSummary}
+                        </p>
+                      </div>
                       
                       <div className="overflow-x-auto">
                         <table className="w-full border-collapse">
@@ -1143,53 +1163,52 @@ const CashFlowAnalysisAgent = () => {
                               <th className="text-right py-2 px-4 font-medium">Revenue Impact</th>
                               <th className="text-right py-2 px-4 font-medium">DSCR Impact</th>
                               <th className="text-right py-2 px-4 font-medium">Cash Buffer Impact</th>
-                              <th className="text-left py-2 px-4 font-medium">Outcome</th>
+                              <th className="text-left py-2 px-4 font-medium">Risk Assessment</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr className="border-b">
+                              <td className="py-3 px-4">Baseline</td>
+                              <td className="py-3 px-4 text-right">$0</td>
+                              <td className="py-3 px-4 text-right">{cashFlowAnalysis.projections.debtServiceCoverageRatio.toFixed(2)}x</td>
+                              <td className="py-3 px-4 text-right">{cashFlowAnalysis.volatilityMetrics.cashBufferMonths.toFixed(1)} months</td>
+                              <td className="py-3 px-4">
+                                <Badge variant={cashFlowAnalysis.cashFlowHealth === "Strong" ? "success" : 
+                                              cashFlowAnalysis.cashFlowHealth === "Moderate" ? "warning" : "destructive"}>
+                                  {cashFlowAnalysis.cashFlowHealth === "Strong" ? "Low Risk" : 
+                                   cashFlowAnalysis.cashFlowHealth === "Moderate" ? "Medium Risk" : "High Risk"}
+                                </Badge>
+                              </td>
+                            </tr>
+                            <tr className="border-b">
                               <td className="py-3 px-4">10% Revenue Decrease</td>
-                              <td className="py-3 px-4 text-right text-red-500">
-                                -${Math.round(cashFlowAnalysis.projections.annualRevenue * 0.1).toLocaleString()}
-                              </td>
-                              <td className="py-3 px-4 text-right">
-                                {(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.85).toFixed(2)}x
-                              </td>
-                              <td className="py-3 px-4 text-right">
-                                {Math.round(cashFlowAnalysis.volatilityMetrics.cashBufferMonths * 0.8).toFixed(1)} months
-                              </td>
-                              <td className={`py-3 px-4 ${(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.85) >= 1.1 ? "text-green-500" : "text-amber-500"}`}>
-                                {(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.85) >= 1.1 ? "Sustainable" : "Stressed"}
+                              <td className="py-3 px-4 text-right text-red-500">-${Math.round(cashFlowAnalysis.projections.annualRevenue * 0.1).toLocaleString()}</td>
+                              <td className="py-3 px-4 text-right">{(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.85).toFixed(2)}x</td>
+                              <td className="py-3 px-4 text-right">{(cashFlowAnalysis.volatilityMetrics.cashBufferMonths * 0.8).toFixed(1)} months</td>
+                              <td className="py-3 px-4">
+                                <Badge variant={cashFlowAnalysis.cashFlowHealth === "Strong" ? "warning" : "destructive"}>
+                                  {cashFlowAnalysis.cashFlowHealth === "Strong" ? "Medium Risk" : "High Risk"}
+                                </Badge>
                               </td>
                             </tr>
                             <tr className="border-b">
                               <td className="py-3 px-4">20% Revenue Decrease</td>
-                              <td className="py-3 px-4 text-right text-red-500">
-                                -${Math.round(cashFlowAnalysis.projections.annualRevenue * 0.2).toLocaleString()}
-                              </td>
-                              <td className="py-3 px-4 text-right">
-                                {(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.7).toFixed(2)}x
-                              </td>
-                              <td className="py-3 px-4 text-right">
-                                {Math.round(cashFlowAnalysis.volatilityMetrics.cashBufferMonths * 0.6).toFixed(1)} months
-                              </td>
-                              <td className={`py-3 px-4 ${(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.7) >= 1.1 ? "text-green-500" : "text-red-500"}`}>
-                                {(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.7) >= 1.1 ? "Manageable" : "High Risk"}
+                              <td className="py-3 px-4 text-right text-red-500">-${Math.round(cashFlowAnalysis.projections.annualRevenue * 0.2).toLocaleString()}</td>
+                              <td className="py-3 px-4 text-right">{(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.7).toFixed(2)}x</td>
+                              <td className="py-3 px-4 text-right">{(cashFlowAnalysis.volatilityMetrics.cashBufferMonths * 0.6).toFixed(1)} months</td>
+                              <td className="py-3 px-4">
+                                <Badge variant="destructive">High Risk</Badge>
                               </td>
                             </tr>
                             <tr>
                               <td className="py-3 px-4">25% Expense Increase</td>
-                              <td className="py-3 px-4 text-right">
-                                $0
-                              </td>
-                              <td className="py-3 px-4 text-right">
-                                {(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.75).toFixed(2)}x
-                              </td>
-                              <td className="py-3 px-4 text-right">
-                                {Math.round(cashFlowAnalysis.volatilityMetrics.cashBufferMonths * 0.7).toFixed(1)} months
-                              </td>
-                              <td className={`py-3 px-4 ${(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.75) >= 1.1 ? "text-amber-500" : "text-red-500"}`}>
-                                {(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.75) >= 1.1 ? "Stressed" : "High Risk"}
+                              <td className="py-3 px-4 text-right">$0</td>
+                              <td className="py-3 px-4 text-right">{(cashFlowAnalysis.projections.debtServiceCoverageRatio * 0.75).toFixed(2)}x</td>
+                              <td className="py-3 px-4 text-right">{(cashFlowAnalysis.volatilityMetrics.cashBufferMonths * 0.7).toFixed(1)} months</td>
+                              <td className="py-3 px-4">
+                                <Badge variant={cashFlowAnalysis.cashFlowHealth === "Strong" ? "warning" : "destructive"}>
+                                  {cashFlowAnalysis.cashFlowHealth === "Strong" ? "Medium Risk" : "High Risk"}
+                                </Badge>
                               </td>
                             </tr>
                           </tbody>
@@ -1199,30 +1218,26 @@ const CashFlowAnalysisAgent = () => {
                   </TabsContent>
                   
                   <TabsContent value="recommendations" className="space-y-6">
-                    <div className="bg-muted/40 p-6 rounded-md border">
-                      <div className="flex flex-col md:flex-row gap-6">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-medium mb-3">Funding Recommendation</h3>
-                          <div className="space-y-3">
-                            <div>
-                              <div className="text-sm font-medium">Recommended Funding Source</div>
-                              <div className="text-lg">{cashFlowAnalysis.recommendedFundingSource}</div>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium">Loan Structure</div>
-                              <div className="text-lg">{cashFlowAnalysis.recommendedLoanStructure}</div>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium">Recommended Interest Rate</div>
-                              <div className="text-lg">{cashFlowAnalysis.recommendedInterestRate}%</div>
-                            </div>
+                    <div>
+                      <h3 className="text-lg font-medium mb-4">Funding Recommendation</h3>
+                      <div className="bg-muted/40 p-4 rounded-md border">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-start">
+                            <div className="text-sm font-medium">Recommended Funding Source</div>
+                            <div className="font-semibold">{cashFlowAnalysis.recommendedFundingSource}</div>
                           </div>
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-medium mb-3">Rationale</h3>
-                          <p className="text-sm">
-                            {cashFlowAnalysis.fundingRationale}
-                          </p>
+                          <div className="flex justify-between items-start">
+                            <div className="text-sm font-medium">Recommended Loan Structure</div>
+                            <div className="font-semibold">{cashFlowAnalysis.recommendedLoanStructure}</div>
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <div className="text-sm font-medium">Recommended Interest Rate</div>
+                            <div className="font-semibold">{cashFlowAnalysis.recommendedInterestRate}%</div>
+                          </div>
+                          <div className="pt-2">
+                            <div className="text-sm font-medium mb-1">Rationale</div>
+                            <p className="text-sm">{cashFlowAnalysis.fundingRationale}</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1230,66 +1245,55 @@ const CashFlowAnalysisAgent = () => {
                     <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
                       <div>
                         <h3 className="text-lg font-medium mb-4">Risk Factors</h3>
-                        <ul className="space-y-2">
-                          {cashFlowAnalysis.riskFactors.map((risk, idx) => (
-                            <li key={idx} className="flex items-start gap-2 text-sm">
-                              <AlertCircle className={`h-4 w-4 mt-0.5 ${
-                                risk.includes("Strong") || risk.includes("Positive") 
-                                  ? "text-green-500" 
-                                  : risk.includes("Moderate") || risk.includes("Mixed")
-                                  ? "text-amber-500"
-                                  : "text-red-500"
-                              }`} />
-                              <span>{risk}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-medium mb-4">Mitigation Strategies</h3>
-                        <ul className="space-y-2">
-                          {cashFlowAnalysis.mitigationStrategies.map((strategy, idx) => (
-                            <li key={idx} className="flex items-start gap-2 text-sm">
-                              <CheckCircle className="h-4 w-4 text-green-500 mt-0.5" />
-                              <span>{strategy}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Cash Flow Improvement Recommendations</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {cashFlowAnalysis.improvementRecommendations.map((rec, idx) => (
-                            <div key={idx} className="bg-muted/40 p-4 rounded-md border">
-                              <h4 className="text-md font-medium mb-2 flex items-center gap-2">
-                                {idx === 0 ? <CreditCard className="h-4 w-4" /> : 
-                                 idx === 1 ? <TrendingUp className="h-4 w-4" /> : 
-                                 idx === 2 ? <Wallet className="h-4 w-4" /> :
-                                 <FileText className="h-4 w-4" />}
-                                {rec.title}
-                              </h4>
-                              <p className="text-sm text-muted-foreground mb-2">{rec.description}</p>
-                              <div className="flex flex-wrap gap-2 mt-1">
-                                {rec.tags.map((tag, tagIdx) => (
-                                  <Badge key={tagIdx} variant="outline">{tag}</Badge>
-                                ))}
-                              </div>
+                        <div className="space-y-3">
+                          {cashFlowAnalysis.riskFactors.map((factor, idx) => (
+                            <div key={idx} className="bg-muted/40 p-3 rounded-md border">
+                              <p className={`text-sm ${
+                                factor.includes('Strong') || factor.includes('Positive') || factor.includes('Low') ? 'text-green-600' : 
+                                factor.includes('Moderate') || factor.includes('Flat') ? 'text-amber-600' : 'text-red-600'
+                              }`}>
+                                {factor}
+                              </p>
                             </div>
                           ))}
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-medium mb-4">Mitigation Strategies</h3>
+                        <div className="space-y-3">
+                          {cashFlowAnalysis.mitigationStrategies.map((strategy, idx) => (
+                            <div key={idx} className="bg-muted/40 p-3 rounded-md border">
+                              <p className="text-sm">{strategy}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                     
-                    <div className="flex justify-center pt-4">
-                      <Button onClick={handleDownloadSummary}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Download Complete Analysis
-                      </Button>
+                    <div>
+                      <h3 className="text-lg font-medium mb-4">Cash Flow Improvement Recommendations</h3>
+                      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                        {cashFlowAnalysis.improvementRecommendations.map((rec, idx) => (
+                          <Card key={idx}>
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-base">{rec.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="pb-3">
+                              <p className="text-sm text-muted-foreground">{rec.description}</p>
+                            </CardContent>
+                            <CardFooter className="pt-0">
+                              <div className="flex flex-wrap gap-1">
+                                {rec.tags.map((tag, tagIdx) => (
+                                  <Badge key={tagIdx} variant="outline" className="text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </CardFooter>
+                          </Card>
+                        ))}
+                      </div>
                     </div>
                   </TabsContent>
                 </Tabs>

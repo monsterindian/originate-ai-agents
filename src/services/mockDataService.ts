@@ -1,5 +1,6 @@
+
 import { faker } from "@faker-js/faker";
-import { LoanApplication, LoanStatus, AssetClass, Borrower, LoanApplicationDTO, CashFlowAnalysis, CashFlowHealth, RepaymentCapacity, CashFlowHistoricalData, CashFlowVolatilityMetrics, CashFlowProjections, CashFlowImprovementRecommendation } from "@/types";
+import { LoanApplication, LoanStatus, AssetClass, Borrower, LoanApplicationDTO, CashFlowAnalysis, CashFlowHealth, RepaymentCapacity, CashFlowHistoricalData, CashFlowVolatilityMetrics, CashFlowProjections, CashFlowImprovementRecommendation, DashboardSummary } from "@/types";
 
 // Function to generate a random LoanStatus
 const getRandomLoanStatus = (): LoanStatus => {
@@ -102,6 +103,7 @@ const createRandomLoanApplication = (): LoanApplicationDTO => {
       underwritingAgentId: faker.string.uuid(),
       decisionAgentId: faker.string.uuid(),
       fundingAgentId: faker.string.uuid(),
+      cashFlowAnalysisAgentId: faker.string.uuid(),
     },
     recommendedFundingSourceId: faker.string.uuid(),
   };
@@ -119,6 +121,18 @@ export const getMockLoanApplications = (count: number = 500): LoanApplication[] 
     };
     applications.push(application);
   }
+  return applications;
+};
+
+// Function to get a specific loan application by ID
+export const getMockLoanApplicationById = (id: string): LoanApplication | undefined => {
+  const applications = getMockLoanApplications(20);
+  return applications.find(app => app.id === id) || applications[0]; // Fallback to the first app if not found
+};
+
+// Function to get applications for a specific agent type
+export const getApplicationsForAgentType = (agentType: string, count: number = 10): LoanApplication[] => {
+  const applications = getMockLoanApplications(count);
   return applications;
 };
 
@@ -363,7 +377,7 @@ const generateSeasonalityInsights = (assetClass: AssetClass): string[] => {
         "Q4 typically includes annual reconciliations and adjustments"
       ];
     
-    case "retail_financing":
+    case "auto_loan":
       return [
         ...baseInsights,
         "Significant revenue increase (35-40%) during holiday season (Nov-Dec)",
@@ -540,6 +554,81 @@ const generateImprovementRecommendations = (
   }
   
   return recommendations.slice(0, 4);
+};
+
+// Generate mock dashboard summary data
+export const getMockDashboardSummary = (): DashboardSummary => {
+  // Create a count of applications by status
+  const applicationsByStatus: Record<LoanStatus, number> = {
+    draft: faker.number.int({ min: 20, max: 50 }),
+    submitted: faker.number.int({ min: 30, max: 60 }),
+    reviewing: faker.number.int({ min: 15, max: 40 }),
+    information_needed: faker.number.int({ min: 10, max: 30 }),
+    underwriting: faker.number.int({ min: 5, max: 25 }),
+    approved: faker.number.int({ min: 10, max: 30 }),
+    conditionally_approved: faker.number.int({ min: 5, max: 15 }),
+    rejected: faker.number.int({ min: 5, max: 20 }),
+    funding: faker.number.int({ min: 5, max: 15 }),
+    funded: faker.number.int({ min: 10, max: 40 }),
+    closed: faker.number.int({ min: 5, max: 20 }),
+  };
+
+  // Create a count of applications by asset class
+  const applicationsByAssetClass: Record<AssetClass, number> = {
+    residential_mortgage: faker.number.int({ min: 40, max: 100 }),
+    commercial_real_estate: faker.number.int({ min: 20, max: 60 }),
+    auto_loan: faker.number.int({ min: 10, max: 50 }),
+    personal_loan: faker.number.int({ min: 30, max: 80 }),
+    sme_loan: faker.number.int({ min: 15, max: 40 }),
+    equipment_finance: faker.number.int({ min: 10, max: 30 }),
+    other: faker.number.int({ min: 5, max: 20 }),
+  };
+
+  // Generate recent activity
+  const recentActivityCount = faker.number.int({ min: 5, max: 10 });
+  const recentActivity = [];
+  
+  for (let i = 0; i < recentActivityCount; i++) {
+    const action = faker.helpers.arrayElement([
+      'Application Submitted',
+      'Application Approved',
+      'Application Rejected',
+      'Documents Uploaded',
+      'Credit Check Completed',
+      'Loan Funded',
+      'Application Updated',
+      'Notes Added',
+      'Status Changed',
+      'Agent Assigned',
+    ]);
+    
+    recentActivity.push({
+      timestamp: faker.date.recent().toISOString(),
+      action,
+      details: `${action} for Application ${faker.string.alphanumeric(8).toUpperCase()}`,
+      agentId: faker.datatype.boolean() ? faker.string.uuid() : undefined,
+    });
+  }
+
+  // Sort activities by timestamp (most recent first)
+  recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+  // Calculate total applications
+  const totalApplications = Object.values(applicationsByStatus).reduce((sum, count) => sum + count, 0);
+
+  return {
+    totalApplications,
+    applicationsToday: faker.number.int({ min: 3, max: 15 }),
+    pendingReview: applicationsByStatus.reviewing + applicationsByStatus.information_needed,
+    approvedToday: faker.number.int({ min: 1, max: 8 }),
+    fundedToday: faker.number.int({ min: 0, max: 5 }),
+    rejectedToday: faker.number.int({ min: 0, max: 3 }),
+    applicationsByStatus,
+    applicationsByAssetClass,
+    recentActivity,
+    totalPortfolioValue: faker.number.int({ min: 5000000, max: 20000000 }),
+    approvalRate: faker.number.float({ min: 0.6, max: 0.85, precision: 0.01 }),
+  };
 };
 
 // Fix the handleGenerateReport function in Underwriting.tsx

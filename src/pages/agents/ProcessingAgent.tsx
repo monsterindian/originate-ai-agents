@@ -1,595 +1,337 @@
+
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Search, CheckCircle, AlertCircle, Clock, FileText, Loader2, FileCheck, ArrowRight, Eye, Download, UserCheck, MessagesSquare } from "lucide-react";
-import OpenAIStatusIndicator from "@/components/agents/OpenAIStatusIndicator";
-import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
-import DocumentGenerator from "@/components/DocumentGenerator";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { getMockLoanApplications, getMockLoanApplicationById } from "@/services/mockDataService";
-import { Document, LoanApplication, LoanStatus } from "@/types";
-import { useNavigate } from "react-router-dom";
-
-const mockProcessingTasks = [
-  {
-    id: "APP-3846",
-    borrower: "Tech Solutions Inc",
-    status: "Document Collection",
-    dateSubmitted: "2024-04-07",
-    completeness: 45,
-    priority: "High",
-    missingDocuments: ["Financial Statements", "Business Plan"],
-    estimatedCompletion: "2024-04-17",
-    assetClass: "Equipment",
-    amount: "$850,000",
-    purpose: "Equipment Purchase"
-  },
-  {
-    id: "APP-3847",
-    borrower: "Metro Medical Services",
-    status: "Initial Review",
-    dateSubmitted: "2024-04-10",
-    completeness: 30,
-    priority: "Medium",
-    missingDocuments: ["Tax Returns", "Proof of Collateral", "Business License"],
-    estimatedCompletion: "2024-04-20",
-    assetClass: "Business",
-    amount: "$1,200,000",
-    purpose: "Business Expansion"
-  },
-  {
-    id: "APP-3849",
-    borrower: "Coastal Shipping Co",
-    status: "Document Verification",
-    dateSubmitted: "2024-04-08",
-    completeness: 60,
-    priority: "Medium",
-    missingDocuments: ["Property Appraisal"],
-    estimatedCompletion: "2024-04-15",
-    assetClass: "Working Capital",
-    amount: "$750,000",
-    purpose: "Working Capital"
-  }
-];
-
-const documentStatuses = [
-  { 
-    id: "DOC-1", 
-    appId: "APP-3846", 
-    name: "Business Registration", 
-    status: "verified", 
-    uploadDate: "2024-04-07", 
-    aiVerified: true 
-  },
-  { 
-    id: "DOC-2", 
-    appId: "APP-3846", 
-    name: "Identity Verification", 
-    status: "verified", 
-    uploadDate: "2024-04-07", 
-    aiVerified: true 
-  },
-  { 
-    id: "DOC-3", 
-    appId: "APP-3846", 
-    name: "Financial Statements", 
-    status: "pending", 
-    uploadDate: "-", 
-    aiVerified: false 
-  },
-  { 
-    id: "DOC-4", 
-    appId: "APP-3847", 
-    name: "Business Registration", 
-    status: "verified", 
-    uploadDate: "2024-04-10", 
-    aiVerified: true 
-  },
-  { 
-    id: "DOC-5", 
-    appId: "APP-3847", 
-    name: "Tax Returns", 
-    status: "pending", 
-    uploadDate: "-", 
-    aiVerified: false 
-  },
-  { 
-    id: "DOC-6", 
-    appId: "APP-3849", 
-    name: "Business Registration", 
-    status: "verified", 
-    uploadDate: "2024-04-08", 
-    aiVerified: true 
-  },
-  { 
-    id: "DOC-7", 
-    appId: "APP-3849", 
-    name: "Financial Statements", 
-    status: "verified", 
-    uploadDate: "2024-04-09", 
-    aiVerified: true 
-  },
-  { 
-    id: "DOC-8", 
-    appId: "APP-3849", 
-    name: "Property Appraisal", 
-    status: "pending", 
-    uploadDate: "-", 
-    aiVerified: false 
-  }
-];
+import { Check, Clock, Info, X, ListFilter, CheckCircle, AlertCircle, FileText } from "lucide-react";
+import { getMockLoanApplications } from "@/services/mockDataService";
+import { LoanApplication } from "@/types";
 
 const ProcessingAgent = () => {
-  const [tab, setTab] = useState("applications");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
-  const [processingTask, setProcessingTask] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const applicationId = searchParams.get("applicationId");
+  const [application, setApplication] = useState<LoanApplication | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
-  const [showDocumentGenerator, setShowDocumentGenerator] = useState<{show: boolean, appId: string} | null>(null);
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("documents");
 
   useEffect(() => {
-    if (processingTask) {
-      const interval = setInterval(() => {
-        setProcessingProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            toast.success(`Document verification complete for ${processingTask}`);
-            setProcessingTask(null);
-            return 0;
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // If applicationId is provided, fetch that specific application
+        if (applicationId) {
+          const allApplications = getMockLoanApplications(50);
+          const app = allApplications.find(a => a.id === applicationId);
+          if (app) {
+            setApplication(app);
+          } else {
+            toast.error(`Application ${applicationId} not found`);
           }
-          return prev + 10;
-        });
-      }, 500);
-      
-      return () => clearInterval(interval);
-    }
-  }, [processingTask]);
-
-  const handleViewApplication = (task: any) => {
-    const realApp = getMockLoanApplicationById(task.id);
-    
-    if (realApp) {
-      setSelectedApplication(realApp);
-    } else {
-      const mockApplication: LoanApplication = {
-        id: task.id,
-        borrowerId: `B-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-        borrower: {
-          id: `B-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-          firstName: task.borrower.split(' ')[0] || "John",
-          lastName: task.borrower.split(' ').slice(1).join(' ') || "Doe",
-          companyName: task.borrower,
-          email: `info@${task.borrower.toLowerCase().replace(/\s+/g, '')}.com`,
-          phone: `(${Math.floor(Math.random() * 900) + 100})-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-          address: {
-            street: "123 Main St",
-            city: "Anytown",
-            state: "CA",
-            zipCode: "12345",
-            country: "USA"
-          },
-          creditScore: Math.floor(Math.random() * 300) + 550,
-          creditRating: "Good",
-          dateCreated: new Date().toISOString().split('T')[0],
-          dateUpdated: new Date().toISOString().split('T')[0]
-        },
-        assetClass: task.assetClass?.toLowerCase().includes("equipment") ? "equipment_finance" : 
-                  task.assetClass?.toLowerCase().includes("capital") ? "sme_loan" : "commercial_real_estate",
-        amount: typeof task.amount === 'string' ? 
-                parseInt(task.amount.replace(/[$,]/g, '')) : 
-                Math.floor(Math.random() * 500000) + 50000,
-        term: 36,
-        interestRate: 5.25,
-        purpose: task.purpose || "Business Expansion",
-        completeness: task.completeness || 50,
-        displayStatus: task.status || "In Review",
-        risk: task.priority === "High" ? "High" : task.priority === "Medium" ? "Medium" : "Low",
-        status: "reviewing" as LoanStatus,
-        documents: documentStatuses
-          .filter(doc => doc.appId === task.id)
-          .map(doc => ({
-            id: doc.id,
-            name: doc.name,
-            type: doc.name.includes("Registration") ? "Registration" : 
-                 doc.name.includes("Verification") ? "Identity" : 
-                 doc.name.includes("Financial") ? "Financial" : 
-                 doc.name.includes("Tax") ? "Tax" : "Other",
-            url: "http://example.com/doc1",
-            uploadedBy: "borrower",
-            uploadedAt: doc.uploadDate !== "-" ? doc.uploadDate : new Date().toISOString().split('T')[0],
-            status: doc.status === "verified" ? "verified" : doc.status === "rejected" ? "rejected" : "pending",
-            aiAnalysisComplete: doc.aiVerified,
-            aiAnalysisSummary: doc.aiVerified ? "Document appears to be authentic." : undefined
-          })) as Document[],
-        notes: [
-          {
-            id: "NOTE-1",
-            content: "Initial review completed. Awaiting additional documentation.",
-            createdBy: "Agent",
-            createdAt: new Date().toISOString().split('T')[0],
-            isAgentNote: true
-          }
-        ],
-        dateCreated: new Date().toISOString().split('T')[0],
-        dateUpdated: new Date().toISOString().split('T')[0],
-        dateSubmitted: task.dateSubmitted,
-        agentAssignments: {
-          intakeAgentId: "intake-123",
-          processingAgentId: "processing-456"
         }
-      };
-      
-      setSelectedApplication(mockApplication);
-    }
-  };
+      } catch (error) {
+        console.error("Failed to fetch application:", error);
+        toast.error("Failed to load application data. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleVerifyDocuments = (appId: string) => {
-    setProcessingTask(appId);
-    toast.info(`AI document verification started for ${appId}`);
-  };
+    fetchData();
+  }, [applicationId]);
 
-  const handleSendToUnderwriting = (appId: string) => {
-    toast.success(`Application ${appId} sent to Underwriting Agent`);
-    navigate(`/agents/underwriting?applicationId=${appId}`);
-  };
-
-  const handleRequestDocument = (appId: string, document: string) => {
-    toast.info(`Document request sent for ${document} on application ${appId}`);
+  const startProcessing = () => {
+    setIsProcessing(true);
+    setProcessingProgress(0);
     
-    setTimeout(() => {
-      toast(
-        <div className="space-y-2">
-          <p className="font-semibold">Document Request Sent</p>
-          <p>Request for {document} has been sent to the borrower</p>
-          <div className="flex gap-2 mt-2">
-            <Button size="sm" onClick={() => navigate(`/applications?id=${appId}`)}>
-              View Application
-            </Button>
+    // Simulate processing progress
+    const interval = setInterval(() => {
+      setProcessingProgress(prev => {
+        const newProgress = prev + Math.random() * 10;
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setIsProcessing(false);
+          
+          // Update application status after processing
+          if (application) {
+            setApplication(prev => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                status: "reviewing",
+                displayStatus: "In Review",
+                documents: prev.documents.map(doc => ({
+                  ...doc,
+                  status: Math.random() > 0.2 ? "verified" : "pending",
+                  aiAnalysisComplete: true,
+                  aiAnalysisSummary: "Document verified with 97% confidence. Information matches application data."
+                })),
+                notes: [
+                  ...prev.notes,
+                  {
+                    id: Date.now().toString(),
+                    content: "Automated processing completed. Documents verified and ready for underwriting review.",
+                    createdBy: "Processing Agent",
+                    createdAt: new Date().toISOString(),
+                    isAgentNote: true
+                  }
+                ]
+              };
+            });
+            
+            toast.success("Processing completed successfully");
+          }
+          
+          return 100;
+        }
+        return newProgress;
+      });
+    }, 300);
+    
+    return () => clearInterval(interval);
+  };
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="h-full flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em]" />
+            <p className="mt-4 text-lg">Loading application data...</p>
           </div>
-        </div>,
-        { duration: 5000 }
-      );
-    }, 1000);
-  };
-  
-  const handleGenerateDocumentSummary = (appId: string) => {
-    const app = mockProcessingTasks.find(task => task.id === appId);
-    if (!app) return;
-    
-    setShowDocumentGenerator({
-      show: true,
-      appId
-    });
-  };
-  
-  const handleViewBorrower = (borrower: string) => {
-    const borrowerId = "B-" + borrower.split(" ")[0].toUpperCase();
-    navigate(`/borrowers?id=${borrowerId}`);
-  };
+        </div>
+      </MainLayout>
+    );
+  }
 
-  const getPriorityBadge = (priority: string) => {
-    if (priority === "High") return <Badge variant="destructive">High</Badge>;
-    if (priority === "Medium") return <Badge variant="secondary">Medium</Badge>;
-    return <Badge variant="outline">Low</Badge>;
-  };
-
-  const getStatusBadge = (status: string) => {
-    if (status === "verified") return <Badge variant="success">Verified</Badge>;
-    return <Badge variant="outline">Pending</Badge>;
-  };
+  // If no application is provided, show a placeholder
+  if (!application) {
+    return (
+      <MainLayout>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Processing Agent</h1>
+              <p className="text-muted-foreground">
+                Process and verify application documents
+              </p>
+            </div>
+          </div>
+          
+          <Card className="border-dashed border-muted">
+            <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <FileText className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No Application Selected</h3>
+              <p className="text-muted-foreground max-w-md mb-4">
+                Please select an application from the Applications dashboard to process its documents.
+              </p>
+              <Button onClick={() => window.location.href = "/applications"}>
+                Browse Applications
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Processing Agent</h1>
             <p className="text-muted-foreground">
-              AI agent for handling loan processing tasks
+              Process and verify application documents
             </p>
           </div>
-          <OpenAIStatusIndicator />
+          
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">
+              {application.displayStatus || application.status}
+            </Badge>
+            
+            <Button 
+              variant="default" 
+              disabled={isProcessing || application.status !== "submitted"}
+              onClick={startProcessing}
+            >
+              <Check className="mr-2 h-4 w-4" />
+              Process Documents
+            </Button>
+          </div>
         </div>
 
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm font-medium">Active Applications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{mockProcessingTasks.length}</div>
-              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                <span>In document collection phase</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm font-medium">Documents Processed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {documentStatuses.filter(doc => doc.status === "verified").length}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-green-500">
-                <CheckCircle className="h-3 w-3" />
-                <span>Verified documents</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm font-medium">Documents Pending</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {documentStatuses.filter(doc => doc.status === "pending").length}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-amber-500">
-                <AlertCircle className="h-3 w-3" />
-                <span>Awaiting upload or verification</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="py-3">
-              <CardTitle className="text-sm font-medium">Average Processing Time</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">2.3 days</div>
-              <div className="flex items-center gap-1 text-xs text-green-500">
-                <CheckCircle className="h-3 w-3" />
-                <span>Faster than target</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
+        {/* Application Info */}
         <Card>
-          <CardHeader>
-            <CardTitle>Processing Agent Dashboard</CardTitle>
-            <CardDescription>Automated document verification, validation, and processing status tracking.</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <span>{application.id}</span>
+              <Badge variant="outline">
+                {application.assetClass.replace("_", " ")}
+              </Badge>
+            </CardTitle>
+            <CardDescription>
+              {application.borrower.companyName || `${application.borrower.firstName} ${application.borrower.lastName}`} - 
+              ${application.amount.toLocaleString()} {application.purpose}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={tab} onValueChange={setTab} className="w-full">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
-                <TabsList>
-                  <TabsTrigger value="applications">Applications</TabsTrigger>
-                  <TabsTrigger value="documents">Documents</TabsTrigger>
-                </TabsList>
-                
-                <div className="relative w-full sm:w-60">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search..."
-                    className="pl-8 w-full"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+            {isProcessing ? (
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Processing documents...</span>
+                  <span>{Math.round(processingProgress)}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2.5">
+                  <div className="bg-primary h-2.5 rounded-full" style={{ width: `${processingProgress}%` }}></div>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Extracting data, verifying information, checking for compliance...
                 </div>
               </div>
-              
-              <TabsContent value="applications" className="w-full">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Application ID</TableHead>
-                      <TableHead>Borrower</TableHead>
-                      <TableHead>Loan Details</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Progress</TableHead>
-                      <TableHead>Priority</TableHead>
-                      <TableHead>Missing Documents</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mockProcessingTasks.filter(task => 
-                      task.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      task.borrower.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      task.status.toLowerCase().includes(searchTerm.toLowerCase())
-                    ).map((task) => (
-                      <TableRow key={task.id}>
-                        <TableCell className="font-medium">{task.id}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div>{task.borrower}</div>
-                            <div className="text-xs text-muted-foreground">{task.assetClass}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div>{task.amount}</div>
-                            <div className="text-xs text-muted-foreground">{task.purpose}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{task.status}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="w-full">
-                            <Progress value={task.completeness} className="h-2" />
-                            <div className="text-xs text-muted-foreground mt-1">{task.completeness}% complete</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getPriorityBadge(task.priority)}</TableCell>
-                        <TableCell>
-                          <div className="max-w-[200px]">
-                            {task.missingDocuments.length > 0 ? (
-                              <div className="text-sm text-amber-600">
-                                Missing {task.missingDocuments.length} document(s)
-                              </div>
-                            ) : (
-                              <div className="text-sm text-green-600">All documents received</div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => handleViewApplication(task)} title="View Application">
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleVerifyDocuments(task.id)}
-                              disabled={!!processingTask}
-                              title="Verify Documents"
-                            >
-                              <FileCheck className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleGenerateDocumentSummary(task.id)}
-                              title="Generate Document Summary"
-                            >
-                              <FileText className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => handleSendToUnderwriting(task.id)}
-                              disabled={task.completeness < 70}
-                              title="Send to Underwriting"
-                            >
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                
-                {processingTask && (
-                  <div className="mt-4 p-4 border rounded-md bg-muted/50">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <div className="font-medium">Processing Documents for {processingTask}</div>
-                    </div>
-                    <Progress value={processingProgress} className="h-2" />
-                    <div className="text-xs text-muted-foreground mt-1">AI document verification in progress...</div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <div className="text-sm text-muted-foreground">Status</div>
+                    <div className="font-medium">{application.displayStatus || application.status}</div>
                   </div>
-                )}
-                
-                {showDocumentGenerator && (
-                  <div className="mt-4 p-4 border rounded-md">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-medium">Generate Document Summary for {showDocumentGenerator.appId}</h3>
-                      <Button variant="outline" size="sm" onClick={() => setShowDocumentGenerator(null)}>
-                        Close
-                      </Button>
+                  <div className="space-y-1">
+                    <div className="text-sm text-muted-foreground">Submitted Date</div>
+                    <div className="font-medium">
+                      {application.dateSubmitted 
+                        ? new Date(application.dateSubmitted).toLocaleDateString() 
+                        : "Not submitted"}
                     </div>
-                    
-                    <DocumentGenerator 
-                      documentType="application" 
-                      applicationData={{
-                        ...mockProcessingTasks.find(t => t.id === showDocumentGenerator.appId),
-                        borrower: {
-                          companyName: mockProcessingTasks.find(t => t.id === showDocumentGenerator.appId)?.borrower,
-                          address: {
-                            street: "123 Business Ave",
-                            city: "Commerce City",
-                            state: "CA",
-                            zipCode: "90001",
-                            country: "USA"
-                          }
-                        }
-                      }}
-                      onClose={() => setShowDocumentGenerator(null)}
-                    />
                   </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="documents" className="w-full">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Document ID</TableHead>
-                      <TableHead>Application</TableHead>
-                      <TableHead>Document Name</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Upload Date</TableHead>
-                      <TableHead>AI Verified</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {documentStatuses.filter(doc => 
-                      doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      doc.appId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      doc.name.toLowerCase().includes(searchTerm.toLowerCase())
-                    ).map((doc) => (
-                      <TableRow key={doc.id}>
-                        <TableCell className="font-medium">{doc.id}</TableCell>
-                        <TableCell>{doc.appId}</TableCell>
-                        <TableCell>{doc.name}</TableCell>
-                        <TableCell>{getStatusBadge(doc.status)}</TableCell>
-                        <TableCell>{doc.uploadDate}</TableCell>
-                        <TableCell>
-                          {doc.aiVerified ? (
-                            <div className="flex items-center text-green-600">
-                              <CheckCircle className="h-4 w-4 mr-1" />
-                              <span>Yes</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center text-muted-foreground">
-                              <Clock className="h-4 w-4 mr-1" />
-                              <span>Pending</span>
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {doc.status === "pending" ? (
-                              <Button size="sm" variant="outline" onClick={() => handleRequestDocument(doc.appId, doc.name)}>
-                                <MessagesSquare className="h-4 w-4 mr-2" />
-                                Request Document
-                              </Button>
-                            ) : (
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="outline">
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Download
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TabsContent>
-            </Tabs>
+                  <div className="space-y-1">
+                    <div className="text-sm text-muted-foreground">Documents</div>
+                    <div className="font-medium">
+                      {application.documents.length} ({application.documents.filter(d => d.status === "verified").length} verified)
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-4 text-sm border rounded-md p-3 bg-muted/30">
+                  <div className="flex items-center">
+                    <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Processing time:</span>
+                    <span className="ml-1 font-medium">~2 minutes</span>
+                  </div>
+                  
+                  <div className="flex items-center md:ml-auto">
+                    <Info className="mr-2 h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Completeness score:</span>
+                    <span className="ml-1 font-medium">{application.completeness}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
+        
+        {/* Documents Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold tracking-tight">Documents</h2>
+            <Button variant="outline" size="sm" disabled={isProcessing}>
+              <ListFilter className="mr-2 h-4 w-4" />
+              Filter
+            </Button>
+          </div>
+          
+          {application.documents.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="py-8 text-center">
+                <AlertCircle className="mx-auto h-8 w-8 text-muted-foreground" />
+                <h3 className="mt-2 text-lg font-semibold">No Documents Uploaded</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  This application doesn't have any documents uploaded yet.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {application.documents.map((doc) => (
+                <Card key={doc.id} className="overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span>{doc.name}</span>
+                      {doc.status === "verified" ? (
+                        <Badge variant="success" className="flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          Verified
+                        </Badge>
+                      ) : doc.status === "rejected" ? (
+                        <Badge variant="destructive" className="flex items-center gap-1">
+                          <X className="h-3 w-3" />
+                          Rejected
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Pending
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    <CardDescription className="flex items-center gap-2">
+                      <span>{doc.type}</span>
+                      <span>•</span>
+                      <span>Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}</span>
+                    </CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent className="pb-2">
+                    {doc.aiAnalysisComplete && doc.aiAnalysisSummary && (
+                      <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-md">
+                        <p className="font-medium text-xs uppercase mb-1">AI Analysis:</p>
+                        <p>{doc.aiAnalysisSummary}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                  
+                  <CardFooter className="pt-2">
+                    <Button variant="ghost" size="sm" disabled={isProcessing}>View Document</Button>
+                    
+                    {doc.status === "pending" && (
+                      <div className="ml-auto flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-green-600" 
+                          disabled={isProcessing}
+                        >
+                          <Check className="mr-1 h-3 w-3" />
+                          Verify
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-red-600" 
+                          disabled={isProcessing}
+                        >
+                          <X className="mr-1 h-3 w-3" />
+                          Reject
+                        </Button>
+                      </div>
+                    )}
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-
-      {selectedApplication && (
-        <ApplicationDetailModal 
-          isOpen={!!selectedApplication} 
-          onClose={() => setSelectedApplication(null)} 
-          application={selectedApplication} 
-        />
-      )}
     </MainLayout>
   );
 };
