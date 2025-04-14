@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,6 +56,10 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
   const [performingAction, setPerformingAction] = useState<string | null>(null);
   const [selectedDocumentType, setSelectedDocumentType] = useState<'application' | 'risk-assessment' | 'approval' | 'rejection' | 'funding' | null>(null);
   
+  // Handle possible undefined values
+  const documents = application.documents || [];
+  const notes = application.notes || [];
+  
   const formatDate = (dateString?: string) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -65,11 +70,13 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
   };
   
   const getBorrowerName = () => {
+    if (!application.borrower) return "Unknown Borrower";
     return application.borrower.companyName || 
-           `${application.borrower.firstName} ${application.borrower.lastName}`;
+           `${application.borrower.firstName || ''} ${application.borrower.lastName || ''}`.trim() || "Unknown";
   };
   
   const formatAssetClass = (assetClass: string) => {
+    if (!assetClass) return "Unknown";
     return assetClass
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -115,10 +122,15 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
   };
   
   const handleContactBorrower = (method: "email" | "phone") => {
+    if (!application.borrower) {
+      toast.error("Borrower information not available");
+      return;
+    }
+    
     if (method === "email") {
-      toast.success(`Opening email to ${application.borrower.email}`);
+      toast.success(`Opening email to ${application.borrower.email || "borrower"}`);
     } else {
-      toast.success(`Initiating call to ${application.borrower.phone}`);
+      toast.success(`Initiating call to ${application.borrower.phone || "borrower"}`);
     }
     // In a real app, this would open the email client or phone dialer
   };
@@ -128,15 +140,15 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
   };
   
   const renderAddress = () => {
-    if (!application.borrower.address) {
+    if (!application.borrower || !application.borrower.address) {
       return "No address on file";
     }
     
     const { street, city, state, zipCode } = application.borrower.address;
     return (
       <>
-        {street}<br />
-        {city}, {state} {zipCode}
+        {street || "No street"}<br />
+        {city || "No city"}, {state || "No state"} {zipCode || "No zip code"}
       </>
     );
   };
@@ -300,7 +312,7 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                         >
                           {application.risk} Risk
                         </Badge>
-                        {application.borrower.creditScore && (
+                        {application.borrower && application.borrower.creditScore && (
                           <div className="mt-2 text-sm">
                             <span className="text-muted-foreground">Credit Score: </span>
                             <span className="font-medium">{application.borrower.creditScore}</span>
@@ -382,156 +394,166 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
               </TabsContent>
               
               <TabsContent value="borrower" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Borrower Information</CardTitle>
-                    <CardDescription>
-                      {application.borrower.companyName ? "Business Profile" : "Individual Profile"}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <h3 className="font-medium mb-2 flex items-center">
-                          {application.borrower.companyName ? (
-                            <><Building className="h-4 w-4 mr-2" /> Company Details</>
-                          ) : (
-                            <><User className="h-4 w-4 mr-2" /> Personal Details</>
-                          )}
-                        </h3>
-                        <div className="space-y-3">
+                {application.borrower ? (
+                  <>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Borrower Information</CardTitle>
+                        <CardDescription>
+                          {application.borrower.companyName ? "Business Profile" : "Individual Profile"}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <div className="text-sm text-muted-foreground">
-                              {application.borrower.companyName ? "Company Name" : "Full Name"}:
-                            </div>
-                            <div className="font-medium">
-                              {application.borrower.companyName || `${application.borrower.firstName} ${application.borrower.lastName}`}
+                            <h3 className="font-medium mb-2 flex items-center">
+                              {application.borrower.companyName ? (
+                                <><Building className="h-4 w-4 mr-2" /> Company Details</>
+                              ) : (
+                                <><User className="h-4 w-4 mr-2" /> Personal Details</>
+                              )}
+                            </h3>
+                            <div className="space-y-3">
+                              <div>
+                                <div className="text-sm text-muted-foreground">
+                                  {application.borrower.companyName ? "Company Name" : "Full Name"}:
+                                </div>
+                                <div className="font-medium">
+                                  {application.borrower.companyName || `${application.borrower.firstName || ''} ${application.borrower.lastName || ''}`.trim() || "N/A"}
+                                </div>
+                              </div>
+                              {!application.borrower.companyName && application.borrower.dateOfBirth && (
+                                <div>
+                                  <div className="text-sm text-muted-foreground">Date of Birth:</div>
+                                  <div className="font-medium">{formatDate(application.borrower.dateOfBirth)}</div>
+                                </div>
+                              )}
+                              {application.borrower.companyName && application.borrower.yearsInBusiness && (
+                                <div>
+                                  <div className="text-sm text-muted-foreground">Years in Business:</div>
+                                  <div className="font-medium">{application.borrower.yearsInBusiness} years</div>
+                                </div>
+                              )}
+                              {application.borrower.companyName && application.borrower.industry && (
+                                <div>
+                                  <div className="text-sm text-muted-foreground">Industry:</div>
+                                  <div className="font-medium">{application.borrower.industry}</div>
+                                </div>
+                              )}
+                              {application.borrower.taxId && (
+                                <div>
+                                  <div className="text-sm text-muted-foreground">Tax ID:</div>
+                                  <div className="font-medium">{application.borrower.taxId}</div>
+                                </div>
+                              )}
+                              {application.borrower.creditScore && (
+                                <div>
+                                  <div className="text-sm text-muted-foreground">Credit Score:</div>
+                                  <div className="font-medium">{application.borrower.creditScore} {application.borrower.creditRating ? `(${application.borrower.creditRating})` : ''}</div>
+                                </div>
+                              )}
                             </div>
                           </div>
-                          {!application.borrower.companyName && application.borrower.dateOfBirth && (
-                            <div>
-                              <div className="text-sm text-muted-foreground">Date of Birth:</div>
-                              <div className="font-medium">{formatDate(application.borrower.dateOfBirth)}</div>
+                          
+                          <div>
+                            <h3 className="font-medium mb-2 flex items-center">
+                              <Mail className="h-4 w-4 mr-2" /> Contact Information
+                            </h3>
+                            <div className="space-y-3">
+                              <div>
+                                <div className="text-sm text-muted-foreground">Email:</div>
+                                <div className="font-medium">{application.borrower.email || "N/A"}</div>
+                              </div>
+                              <div>
+                                <div className="text-sm text-muted-foreground">Phone:</div>
+                                <div className="font-medium">{application.borrower.phone || "N/A"}</div>
+                              </div>
+                              <div>
+                                <div className="text-sm text-muted-foreground">Address:</div>
+                                <div className="font-medium">
+                                  {renderAddress()}
+                                </div>
+                              </div>
+                              {application.borrower.relationshipManager && (
+                                <div>
+                                  <div className="text-sm text-muted-foreground">Relationship Manager:</div>
+                                  <div className="font-medium">{application.borrower.relationshipManager}</div>
+                                </div>
+                              )}
                             </div>
-                          )}
-                          {application.borrower.companyName && application.borrower.yearsInBusiness && (
-                            <div>
-                              <div className="text-sm text-muted-foreground">Years in Business:</div>
-                              <div className="font-medium">{application.borrower.yearsInBusiness} years</div>
-                            </div>
-                          )}
-                          {application.borrower.companyName && application.borrower.industry && (
-                            <div>
-                              <div className="text-sm text-muted-foreground">Industry:</div>
-                              <div className="font-medium">{application.borrower.industry}</div>
-                            </div>
-                          )}
-                          {application.borrower.taxId && (
-                            <div>
-                              <div className="text-sm text-muted-foreground">Tax ID:</div>
-                              <div className="font-medium">{application.borrower.taxId}</div>
-                            </div>
-                          )}
-                          {application.borrower.creditScore && (
-                            <div>
-                              <div className="text-sm text-muted-foreground">Credit Score:</div>
-                              <div className="font-medium">{application.borrower.creditScore} ({application.borrower.creditRating})</div>
-                            </div>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div>
-                        <h3 className="font-medium mb-2 flex items-center">
-                          <Mail className="h-4 w-4 mr-2" /> Contact Information
-                        </h3>
-                        <div className="space-y-3">
-                          <div>
-                            <div className="text-sm text-muted-foreground">Email:</div>
-                            <div className="font-medium">{application.borrower.email}</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">Phone:</div>
-                            <div className="font-medium">{application.borrower.phone}</div>
-                          </div>
-                          <div>
-                            <div className="text-sm text-muted-foreground">Address:</div>
-                            <div className="font-medium">
-                              {renderAddress()}
-                            </div>
-                          </div>
-                          {application.borrower.relationshipManager && (
-                            <div>
-                              <div className="text-sm text-muted-foreground">Relationship Manager:</div>
-                              <div className="font-medium">{application.borrower.relationshipManager}</div>
-                            </div>
-                          )}
+                        
+                        <div className="flex items-center justify-end gap-2 mt-4">
+                          <Button variant="outline" onClick={() => handleContactBorrower("email")}>
+                            <Mail className="mr-2 h-4 w-4" />
+                            Email Borrower
+                          </Button>
+                          <Button variant="outline" onClick={() => handleContactBorrower("phone")}>
+                            <Phone className="mr-2 h-4 w-4" />
+                            Call Borrower
+                          </Button>
+                          <Button onClick={() => {
+                            toast.success("Opening borrower profile");
+                            // In a real app, this would navigate to the borrower detail page
+                          }}>
+                            <Link className="mr-2 h-4 w-4" />
+                            View Full Profile
+                          </Button>
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                     
-                    <div className="flex items-center justify-end gap-2 mt-4">
-                      <Button variant="outline" onClick={() => handleContactBorrower("email")}>
-                        <Mail className="mr-2 h-4 w-4" />
-                        Email Borrower
-                      </Button>
-                      <Button variant="outline" onClick={() => handleContactBorrower("phone")}>
-                        <Phone className="mr-2 h-4 w-4" />
-                        Call Borrower
-                      </Button>
-                      <Button onClick={() => {
-                        toast.success("Opening borrower profile");
-                        // In a real app, this would navigate to the borrower detail page
-                      }}>
-                        <Link className="mr-2 h-4 w-4" />
-                        View Full Profile
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {application.borrower.companyName && application.borrower.annualRevenue && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Financial Information</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm text-muted-foreground">Annual Revenue:</div>
-                          <div className="font-medium">{formatCurrency(application.borrower.annualRevenue)}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {!application.borrower.companyName && application.borrower.employmentInfo && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-base">Employment Information</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm text-muted-foreground">Employer:</div>
-                          <div className="font-medium">{application.borrower.employmentInfo.employer}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-muted-foreground">Position:</div>
-                          <div className="font-medium">{application.borrower.employmentInfo.position}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-muted-foreground">Start Date:</div>
-                          <div className="font-medium">{formatDate(application.borrower.employmentInfo.startDate)}</div>
-                        </div>
-                        {application.borrower.income && (
-                          <div>
-                            <div className="text-sm text-muted-foreground">Annual Income:</div>
-                            <div className="font-medium">{formatCurrency(application.borrower.income)}</div>
+                    {application.borrower.companyName && application.borrower.annualRevenue && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Financial Information</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <div className="text-sm text-muted-foreground">Annual Revenue:</div>
+                              <div className="font-medium">{formatCurrency(application.borrower.annualRevenue)}</div>
+                            </div>
                           </div>
-                        )}
-                      </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                    
+                    {!application.borrower.companyName && application.borrower.employmentInfo && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-base">Employment Information</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <div className="text-sm text-muted-foreground">Employer:</div>
+                              <div className="font-medium">{application.borrower.employmentInfo.employer || "N/A"}</div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-muted-foreground">Position:</div>
+                              <div className="font-medium">{application.borrower.employmentInfo.position || "N/A"}</div>
+                            </div>
+                            <div>
+                              <div className="text-sm text-muted-foreground">Start Date:</div>
+                              <div className="font-medium">{formatDate(application.borrower.employmentInfo.startDate)}</div>
+                            </div>
+                            {application.borrower.income && (
+                              <div>
+                                <div className="text-sm text-muted-foreground">Annual Income:</div>
+                                <div className="font-medium">{formatCurrency(application.borrower.income)}</div>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
+                ) : (
+                  <Card>
+                    <CardContent className="py-8 text-center text-muted-foreground">
+                      No borrower information available for this application.
                     </CardContent>
                   </Card>
                 )}
@@ -545,8 +567,8 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {application.documents.length > 0 ? (
-                        application.documents.map((doc) => (
+                      {documents.length > 0 ? (
+                        documents.map((doc) => (
                           <div key={doc.id}>
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
@@ -638,8 +660,8 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                     <CardDescription>Communication history and notes</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {application.notes.length > 0 ? (
-                      application.notes.map((note) => (
+                    {notes.length > 0 ? (
+                      notes.map((note) => (
                         <div key={note.id} className="bg-muted p-3 rounded-md space-y-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -653,7 +675,7 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                               </span>
                             </div>
                             <span className="text-xs text-muted-foreground">
-                              {formatDate(note.createdAt)} · {new Date(note.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              {formatDate(note.createdAt)} · {note.createdAt ? new Date(note.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Unknown time'}
                             </span>
                           </div>
                           <p className="text-sm">{note.content}</p>
@@ -664,6 +686,13 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                         No notes have been added yet.
                       </div>
                     )}
+                    
+                    <div className="flex justify-end mt-4">
+                      <Button onClick={handleAddNote}>
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Add New Note
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -728,9 +757,9 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                             <div className="text-sm text-muted-foreground mt-1">
                               <span className="font-medium">System Integrations:</span> Credit bureau data was retrieved, bank statements were analyzed through financial data API, and tax documents were processed for income verification.
                             </div>
-                            {application.documents.length > 0 && (
+                            {documents.length > 0 && (
                               <div className="text-sm text-muted-foreground mt-1">
-                                <span className="font-medium">Documents Verified:</span> {application.documents.filter(doc => doc.status === 'verified').length} out of {application.documents.length} required documents.
+                                <span className="font-medium">Documents Verified:</span> {documents.filter(doc => doc.status === 'verified').length} out of {documents.length} required documents.
                               </div>
                             )}
                             <div className="text-xs text-muted-foreground flex items-center mt-1">
@@ -755,7 +784,7 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                               </span>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              Full underwriting analysis completed with {application.risk} risk assessment.
+                              Full underwriting analysis completed with {application.risk || "unknown"} risk assessment.
                             </p>
                             <div className="text-sm text-muted-foreground">
                               <span className="font-medium">Action Performed:</span> In-depth risk analysis conducted including cash flow analysis, stress testing, industry risk assessment, and collateral valuation. The debt service coverage ratio was calculated and assessed against policy requirements.
@@ -825,9 +854,9 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                                   : "Deferral conditions specified with timeline for reconsideration."
                               }
                             </div>
-                            {(application.status === "approved" || application.status === "conditionally_approved") && (
+                            {(application.status === "approved" || application.status === "conditionally_approved") && application.interestRate && (
                               <div className="text-sm text-muted-foreground mt-1">
-                                <span className="font-medium">Terms Generated:</span> Interest rate of {application.interestRate}% with {application.term} month term. {
+                                <span className="font-medium">Terms Generated:</span> Interest rate of {application.interestRate}% with {application.term || "N/A"} month term. {
                                   application.status === "conditionally_approved" && "Conditional requirements include additional collateral documentation and verification of stated income."
                                 }
                               </div>
@@ -846,7 +875,7 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                         </div>
                       )}
                       
-                      {application.status === "funded" && (
+                      {application.status === "funded" && application.dateFunded && (
                         <div className="flex">
                           <div className="flex flex-col items-center mr-4">
                             <div className="h-2.5 w-2.5 rounded-full bg-green-500"></div>
@@ -884,3 +913,4 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
 };
 
 export default ApplicationDetailModal;
+
