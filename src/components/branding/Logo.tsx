@@ -25,7 +25,7 @@ const Logo: React.FC<LogoProps> = ({
   return (
     <div className={`flex items-center ${className}`}>
       <img 
-        src="/lovable-uploads/edcddb56-2301-42a1-af3b-591dd6cb4b37.png" 
+        src="/lovable-uploads/0d3ec1fe-d1d5-42dd-83cd-4ff52a00544a.png" 
         alt="gaigentic Logo" 
         className={`${getSizeClass()}`}
       />

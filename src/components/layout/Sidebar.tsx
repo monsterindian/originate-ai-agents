@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -9,7 +10,8 @@ import {
   Menu, 
   ChevronLeft,
   Bot,
-  Database
+  Database,
+  ShieldAlert
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -82,6 +84,13 @@ const Sidebar = () => {
             to="/agents/underwriting" 
             icon={<Bot size={20} />} 
             label="Underwriting Agent" 
+            collapsed={collapsed}
+            extra={<AgentStatusIndicator active />}
+          />
+          <NavItem 
+            to="/agents/fraud-risk" 
+            icon={<ShieldAlert size={20} />} 
+            label="Fraud Risk Agent" 
             collapsed={collapsed}
             extra={<AgentStatusIndicator active />}
           />
