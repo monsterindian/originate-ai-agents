@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { 
@@ -25,7 +24,7 @@ import {
 import { toast } from "sonner";
 
 import { LoanApplication, CashFlowAnalysis } from "@/types";
-import { getMockLoanApplications, generateMockCashFlowAnalysis } from "@/services/mockDataService";
+import { getApplicationsForAgentType, generateMockCashFlowAnalysis } from "@/services/mockDataService";
 
 const CashFlowAnalysisAgent = () => {
   const [searchParams] = useSearchParams();
@@ -37,33 +36,27 @@ const CashFlowAnalysisAgent = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("12");
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Load application data if ID provided in URL
   useEffect(() => {
     if (applicationId) {
-      // Get applications for cash flow analysis specifically to ensure proper data
       const applications = getApplicationsForAgentType("cash-flow-analysis");
       const app = applications.find(a => a.id === applicationId) || applications[0];
       
       if (app) {
         console.log("Found application for cash flow analysis:", app.id);
         setApplication(app);
-        // Start analysis immediately when application is found
         runCashFlowAnalysis(app);
       } else {
         toast.error(`Application ${applicationId} not found - using a sample application instead`);
-        // If specific application not found, use first available one
         if (applications.length > 0) {
           setApplication(applications[0]);
           runCashFlowAnalysis(applications[0]);
         }
       }
     } else {
-      // If no ID provided, load a random application
       const applications = getApplicationsForAgentType("cash-flow-analysis");
       if (applications.length > 0) {
         const randomApp = applications[Math.floor(Math.random() * applications.length)];
         setApplication(randomApp);
-        // Don't auto-run analysis if no specific app was requested
       }
     }
   }, [applicationId]);
@@ -72,7 +65,6 @@ const CashFlowAnalysisAgent = () => {
     setIsAnalyzing(true);
     setAnalysisProgress(0);
     
-    // Simulate analysis progress
     const interval = setInterval(() => {
       setAnalysisProgress(prev => {
         const newProgress = prev + Math.random() * 15;
@@ -80,7 +72,6 @@ const CashFlowAnalysisAgent = () => {
           clearInterval(interval);
           setIsAnalyzing(false);
           
-          // Generate the analysis results
           const analysis = generateMockCashFlowAnalysis(app);
           setCashFlowAnalysis(analysis);
           
@@ -298,7 +289,7 @@ const CashFlowAnalysisAgent = () => {
                         <img src="/lovable-uploads/b33a1622-519b-4d29-bcb5-c1f47afab476.png" class="logo" alt="Logo">
                         <button onclick="window.print()" class="print-button no-print">
                           <svg class="print-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2 2v4h10z"></path>
                           </svg>
                           Print Report
                         </button>
@@ -602,7 +593,6 @@ const CashFlowAnalysisAgent = () => {
     return <Badge variant="destructive">Weak Cash Flow</Badge>;
   };
 
-  // If no application is provided, show a placeholder
   if (!application) {
     return (
       <MainLayout>
@@ -651,7 +641,6 @@ const CashFlowAnalysisAgent = () => {
           </div>
         </div>
 
-        {/* Application Info Card */}
         <Card>
           <CardHeader className="pb-3">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -724,7 +713,6 @@ const CashFlowAnalysisAgent = () => {
 
         {cashFlowAnalysis && (
           <>
-            {/* Key Metrics */}
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardHeader className="py-2">
@@ -801,7 +789,6 @@ const CashFlowAnalysisAgent = () => {
               </Card>
             </div>
 
-            {/* Main Content */}
             <Card>
               <CardHeader>
                 <CardTitle>Cash Flow Analysis</CardTitle>
@@ -914,7 +901,6 @@ const CashFlowAnalysisAgent = () => {
                         <CardDescription>Detailed breakdown of historical cash flow components</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        {/* Historical content here */}
                         <div className="border border-dashed rounded-md h-[400px] flex items-center justify-center">
                           [Historical Data Analysis Charts]
                         </div>
@@ -929,7 +915,6 @@ const CashFlowAnalysisAgent = () => {
                         <CardDescription>{selectedPeriod}-month forecast with stress testing scenarios</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                        {/* Projections content here */}
                         <div className="border border-dashed rounded-md h-[400px] flex items-center justify-center">
                           [Cash Flow Projections Charts]
                         </div>
