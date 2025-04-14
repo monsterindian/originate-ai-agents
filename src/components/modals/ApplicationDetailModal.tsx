@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -655,9 +656,6 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                         No notes have been added yet.
                       </div>
                     )}
-                    
-                    <div className="mt-4">
-                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -773,4 +771,108 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                               }
                             </div>
                             <div className="text-xs text-muted-foreground flex items-center mt-1">
-                              <span className="inline-block w-2 h-2 rounded-full
+                              <span className="inline-block w-2 h-2 rounded-full mr-1.5 bg-purple-500" />
+                              <span>Underwriting AI Agent</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {application.dateDecided && (
+                        <div className="flex">
+                          <div className="flex flex-col items-center mr-4">
+                            <div className={`h-2.5 w-2.5 rounded-full ${
+                              application.status === "approved" || application.status === "conditionally_approved" 
+                                ? "bg-green-500" 
+                                : application.status === "rejected" 
+                                ? "bg-red-500" 
+                                : "bg-amber-500"
+                            }`}></div>
+                            <div className="h-full w-px bg-gray-200 my-1"></div>
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-start justify-between">
+                              <p className="text-sm font-medium">Decision Made</p>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(application.dateDecided)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {application.status === "approved" 
+                                ? "Application was approved."
+                                : application.status === "conditionally_approved"
+                                ? "Application was conditionally approved pending additional requirements."
+                                : application.status === "rejected"
+                                ? "Application was declined."
+                                : "Application decision was deferred pending additional information."}
+                            </p>
+                            <div className="text-sm text-muted-foreground">
+                              <span className="font-medium">Action Performed:</span> Final evaluation of all underwriting criteria and compliance requirements. Decision model applied with weighted risk factors and policy guidelines. {
+                                application.status === "approved" 
+                                  ? "Approval recommendations generated with suggested terms and conditions."
+                                  : application.status === "conditionally_approved"
+                                  ? "Conditional approval parameters defined with specific requirements to be met before funding."
+                                  : application.status === "rejected"
+                                  ? "Decline rationale documented with regulatory compliance verification."
+                                  : "Deferral conditions specified with timeline for reconsideration."
+                              }
+                            </div>
+                            {(application.status === "approved" || application.status === "conditionally_approved") && (
+                              <div className="text-sm text-muted-foreground mt-1">
+                                <span className="font-medium">Terms Generated:</span> Interest rate of {application.interestRate}% with {application.term} month term. {
+                                  application.status === "conditionally_approved" && "Conditional requirements include additional collateral documentation and verification of stated income."
+                                }
+                              </div>
+                            )}
+                            <div className="text-xs text-muted-foreground flex items-center mt-1">
+                              <span className={`inline-block w-2 h-2 rounded-full mr-1.5 ${
+                                application.status === "approved" || application.status === "conditionally_approved" 
+                                  ? "bg-green-500" 
+                                  : application.status === "rejected" 
+                                  ? "bg-red-500" 
+                                  : "bg-amber-500"
+                              }`} />
+                              <span>Decision AI Agent</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {application.status === "funded" && (
+                        <div className="flex">
+                          <div className="flex flex-col items-center mr-4">
+                            <div className="h-2.5 w-2.5 rounded-full bg-green-500"></div>
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex items-start justify-between">
+                              <p className="text-sm font-medium">Loan Funded</p>
+                              <span className="text-xs text-muted-foreground">
+                                {formatDate(application.dateFunded)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              Loan disbursement completed for {formatCurrency(application.amount)}.
+                            </p>
+                            <div className="text-sm text-muted-foreground">
+                              <span className="font-medium">Action Performed:</span> Final documentation verification, funding authorization, and disbursement processing. Payment schedule generated and account setup completed.
+                            </div>
+                            <div className="text-xs text-muted-foreground flex items-center mt-1">
+                              <span className="inline-block w-2 h-2 rounded-full mr-1.5 bg-green-500" />
+                              <span>Funding AI Agent</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default ApplicationDetailModal;
