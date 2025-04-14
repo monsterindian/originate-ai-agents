@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import {
@@ -51,37 +52,71 @@ import { formatCurrency } from "@/services/mockDataService";
 // Mock data for funding sources
 const mockFundingSources: FundingSource[] = [
   {
-    id: "FS-BANK001",
-    name: "First National Bank",
+    id: "FS-RABO001",
+    name: "Rabobank",
     type: "bank",
-    description: "Traditional bank offering competitive rates for prime borrowers across multiple asset classes.",
-    minAmount: 50000,
-    maxAmount: 5000000,
+    description: "Dutch multinational banking and financial services company known for its focus on agriculture and food sectors, offering competitive rates for various loan types.",
+    minAmount: 25000,
+    maxAmount: 10000000,
     interestRateRange: {
-      min: 4.25,
-      max: 7.5
+      min: 3.75,
+      max: 6.5
+    },
+    eligibilityCriteria: {
+      minCreditScore: 700,
+      maxLTV: 75,
+      preferredAssetClasses: ["residential_mortgage", "commercial_real_estate", "sme_loan", "equipment_finance"],
+      maxDTI: 40,
+    },
+    processingTime: {
+      min: 4,
+      max: 12
+    },
+    availableFunds: 50000000,
+    allocatedFunds: 18000000,
+    status: "active",
+    riskTolerance: "moderate",
+    specialPrograms: ["Sustainable business loans", "Agricultural financing", "Tech startup funding"],
+    contactInfo: {
+      name: "Joost van der Meer",
+      email: "j.vandermeer@rabobank.example.com",
+      phone: "(+31) 30-123-4567"
+    },
+    dateAdded: "2023-02-10",
+    lastUpdated: "2025-03-12"
+  },
+  {
+    id: "FS-ABN002",
+    name: "ABN AMRO Bank",
+    type: "bank",
+    description: "Major Dutch bank offering a wide range of financial products and services with competitive rates for both personal and business loans.",
+    minAmount: 10000,
+    maxAmount: 8000000,
+    interestRateRange: {
+      min: 3.95,
+      max: 7.0
     },
     eligibilityCriteria: {
       minCreditScore: 680,
       maxLTV: 80,
-      preferredAssetClasses: ["residential_mortgage", "commercial_real_estate", "auto_loan"],
-      maxDTI: 43,
+      preferredAssetClasses: ["residential_mortgage", "commercial_real_estate", "personal_loan", "auto_loan"],
+      maxDTI: 42,
     },
     processingTime: {
-      min: 5,
-      max: 15
+      min: 3,
+      max: 10
     },
-    availableFunds: 25000000,
-    allocatedFunds: 12500000,
+    availableFunds: 35000000,
+    allocatedFunds: 15500000,
     status: "active",
     riskTolerance: "conservative",
-    specialPrograms: ["First-time homebuyer", "Small business startup"],
+    specialPrograms: ["First-time homebuyer assistance", "Green energy financing"],
     contactInfo: {
-      name: "Sarah Johnson",
-      email: "sjohnson@firstnational.example.com",
-      phone: "(555) 123-4567"
+      name: "Sophia de Vries",
+      email: "s.devries@abnamro.example.com",
+      phone: "(+31) 20-987-6543"
     },
-    dateAdded: "2023-01-15",
+    dateAdded: "2023-03-05",
     lastUpdated: "2025-02-28"
   },
   {
@@ -439,25 +474,25 @@ const getMockFundingRecommendations = (): FundingRecommendation[] => {
   return [
     {
       applicationId: "APP-123456",
-      fundingSourceId: "FS-BANK001",
-      matchScore: 92,
+      fundingSourceId: "FS-RABO001",
+      matchScore: 95,
       reasons: [
-        "Credit score (720) meets bank's minimum requirement (680)",
-        "Loan amount ($350,000) falls within bank's range ($50,000 - $5,000,000)",
-        "LTV ratio (82.4%) is slightly above preferred maximum (80%)",
-        "Residential mortgage is a preferred asset class for this funding source",
-        "Low risk profile matches bank's conservative risk tolerance"
+        "Credit score (720) exceeds Rabobank's minimum requirement (700)",
+        "Loan amount ($350,000) falls well within bank's range ($25,000 - $10,000,000)",
+        "LTV ratio (82.4%) is slightly higher than preferred (75%) but acceptable",
+        "Residential mortgage is a preferred asset class for Rabobank",
+        "Low risk profile matches the bank's moderate risk tolerance"
       ],
       alternatives: [
         {
-          fundingSourceId: "FS-GOV004",
-          matchScore: 88,
-          reasons: ["Higher LTV allowed", "Lower credit score requirements"]
+          fundingSourceId: "FS-ABN002",
+          matchScore: 92,
+          reasons: ["Slightly lower interest rates", "Higher LTV allowance (80%)"]
         },
         {
-          fundingSourceId: "FS-CU003",
+          fundingSourceId: "FS-GOV004",
           matchScore: 85,
-          reasons: ["Higher interest rates", "Faster processing time"]
+          reasons: ["Higher LTV allowed", "First-time homebuyer programs"]
         }
       ],
       dateGenerated: "2024-03-16",
@@ -465,25 +500,25 @@ const getMockFundingRecommendations = (): FundingRecommendation[] => {
     },
     {
       applicationId: "APP-234567",
-      fundingSourceId: "FS-PE002",
-      matchScore: 90,
+      fundingSourceId: "FS-ABN002",
+      matchScore: 94,
       reasons: [
-        "Business loan type (SME) matches PE firm's preferred asset classes",
-        "Loan amount ($750,000) falls within firm's range ($500,000 - $20,000,000)",
-        "Business meets minimum operating history requirement (5 years)",
-        "Medium risk profile aligns with firm's aggressive risk tolerance",
-        "Business expansion purpose matches firm's growth accelerator program"
+        "SME loan type matches ABN AMRO's preferred asset classes",
+        "Loan amount ($750,000) falls within bank's range ($10,000 - $8,000,000)",
+        "Business has 5 years operating history, exceeding minimum requirements",
+        "Credit score (680) meets minimum threshold exactly",
+        "Business purpose aligns with bank's tech sector focus"
       ],
       alternatives: [
         {
-          fundingSourceId: "FS-INT007",
-          matchScore: 82,
-          reasons: ["Lower interest rates", "Faster processing"]
+          fundingSourceId: "FS-RABO001",
+          matchScore: 90,
+          reasons: ["Tech startup program", "Higher maximum loan amounts"]
         },
         {
-          fundingSourceId: "FS-P2P006",
-          matchScore: 70,
-          reasons: ["Lower minimum amount", "More flexible terms"]
+          fundingSourceId: "FS-PE002",
+          matchScore: 88,
+          reasons: ["More flexible terms", "Higher risk tolerance"]
         }
       ],
       dateGenerated: "2024-03-06",
@@ -491,25 +526,25 @@ const getMockFundingRecommendations = (): FundingRecommendation[] => {
     },
     {
       applicationId: "APP-345678",
-      fundingSourceId: "FS-PE002",
-      matchScore: 95,
+      fundingSourceId: "FS-RABO001",
+      matchScore: 97,
       reasons: [
-        "Commercial real estate asset class is preferred by this funding source",
-        "Loan amount ($1,250,000) falls within firm's range ($500,000 - $20,000,000)",
-        "Excellent credit profile and low risk rating",
-        "LTV ratio (78.1%) is below the maximum threshold (85%)",
-        "Investment purpose aligns with firm's portfolio strategy"
+        "Commercial real estate asset class is a preferred sector for Rabobank",
+        "Loan amount ($1,250,000) falls within bank's range ($25,000 - $10,000,000)",
+        "Excellent credit profile (790) far exceeds minimum requirement (700)",
+        "LTV ratio (78.1%) is close to bank's preferred maximum (75%)",
+        "Investment purpose aligns with bank's commercial property financing strategy"
       ],
       alternatives: [
         {
-          fundingSourceId: "FS-BANK001",
-          matchScore: 87,
-          reasons: ["Lower interest rates", "More conservative approach"]
+          fundingSourceId: "FS-ABN002",
+          matchScore: 90,
+          reasons: ["Faster processing times", "Slightly higher LTV allowance"]
         },
         {
-          fundingSourceId: "FS-INT007",
-          matchScore: 80,
-          reasons: ["Faster processing", "Internal strategic priority"]
+          fundingSourceId: "FS-PE002",
+          matchScore: 85,
+          reasons: ["Higher risk tolerance", "Specialized in commercial real estate"]
         }
       ],
       dateGenerated: "2024-03-21",
