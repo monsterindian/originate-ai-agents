@@ -22,14 +22,6 @@ import { LoanApplication } from "@/types";
 import AgentStatusIndicator from "@/components/agents/AgentStatusIndicator";
 import OpenAIStatusIndicator from "@/components/agents/OpenAIStatusIndicator";
 
-// Type for the fraud risk detail
-type FraudRiskDetail = {
-  identityVerificationScore: number;
-  suspiciousActivity: boolean;
-  documentVerification: 'Verified' | 'Pending' | 'Failed';
-  riskFactors: string[];
-};
-
 const FraudRiskAgent = () => {
   const [applications, setApplications] = useState<LoanApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,7 +84,7 @@ const FraudRiskAgent = () => {
             const updatedApplications = applications.map(app => {
               if (app.id === application.id) {
                 const newRisk = Math.random() < 0.7 ? "Low" : Math.random() < 0.5 ? "Medium" : "High";
-                return { ...app, risk: newRisk };
+                return { ...app, risk: newRisk as "Low" | "Medium" | "High" };
               }
               return app;
             });
@@ -141,19 +133,12 @@ const FraudRiskAgent = () => {
     }
   };
 
-  // Mock function to get fraud risk details
-  const getFraudRiskDetails = (application: LoanApplication): FraudRiskDetail => {
-    // Check if we already have fraud risk indicators added from the mock service
-    if (application.fraudRiskIndicators) {
-      return application.fraudRiskIndicators as FraudRiskDetail;
-    }
-    
-    // Otherwise generate mock data
+  const getFraudRiskDetails = (application: LoanApplication) => {
     return {
-      identityVerificationScore: Math.floor(Math.random() * 100),
-      suspiciousActivity: Math.random() > 0.7,
-      documentVerification: Math.random() > 0.7 ? 'Verified' : Math.random() > 0.5 ? 'Pending' : 'Failed',
-      riskFactors: Array.from({ length: Math.floor(Math.random() * 4) }, () => 
+      identityVerificationScore: application.fraudRiskScore || Math.floor(Math.random() * 100),
+      suspiciousActivity: application.suspiciousActivity || Math.random() > 0.7,
+      documentVerification: application.documentVerification || (Math.random() > 0.7 ? 'Verified' : Math.random() > 0.5 ? 'Pending' : 'Failed'),
+      riskFactors: application.riskFactors || Array.from({ length: Math.floor(Math.random() * 4) }, () => 
         ['Multiple applications', 'Address mismatch', 'Credit bureau alerts', 'Unusual transaction pattern', 'Device risk'][Math.floor(Math.random() * 5)]
       )
     };
@@ -366,7 +351,6 @@ const FraudRiskAgent = () => {
         </div>
       </div>
 
-      {/* Application Scan Dialog */}
       <Dialog open={isScanning || showDetailsDialog} onOpenChange={(open) => {
         if (!isScanning) setShowDetailsDialog(open);
       }}>
@@ -405,7 +389,6 @@ const FraudRiskAgent = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Fraud Risk Summary */}
                     <div>
                       <h3 className="text-lg font-semibold mb-3">Risk Assessment Summary</h3>
                       <div className={`p-4 rounded-md ${
@@ -445,7 +428,6 @@ const FraudRiskAgent = () => {
                       </div>
                     </div>
 
-                    {/* Identity Verification */}
                     <div>
                       <h3 className="text-lg font-semibold mb-3">Identity Verification</h3>
                       <Table>
@@ -489,7 +471,6 @@ const FraudRiskAgent = () => {
                       </Table>
                     </div>
 
-                    {/* Risk Factors */}
                     <div>
                       <h3 className="text-lg font-semibold mb-3">Risk Factors</h3>
                       {getFraudRiskDetails(selectedApplication).riskFactors.length > 0 ? (
@@ -506,7 +487,6 @@ const FraudRiskAgent = () => {
                       )}
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex justify-end gap-3 pt-4">
                       <Button 
                         variant="outline" 
