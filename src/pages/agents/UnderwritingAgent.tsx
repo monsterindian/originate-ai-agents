@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,13 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Search, CheckCircle, AlertCircle, Clock, Loader2, BarChart3, ArrowRight, Eye, FileText, Download, Ban, BarChart4, UserCheck } from "lucide-react";
+import { Search, CheckCircle, AlertCircle, Clock, Loader2, BarChart3, ArrowRight, Eye, FileText, Download, Ban, BarChart4, UserCheck, Receipt } from "lucide-react";
 import OpenAIStatusIndicator from "@/components/agents/OpenAIStatusIndicator";
 import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-// Mock data for underwriting with enhanced risk data
 const mockUnderwritingTasks = [
   {
     id: "APP-3845",
@@ -132,7 +130,6 @@ const UnderwritingAgent = () => {
   const [analysisProgress, setAnalysisProgress] = useState(0);
   const navigate = useNavigate();
 
-  // Simulate AI risk analysis
   useEffect(() => {
     if (analyzingTask) {
       const interval = setInterval(() => {
@@ -165,11 +162,11 @@ const UnderwritingAgent = () => {
     navigate(`/agents/decision?applicationId=${appId}`);
   };
 
-  const handleViewReport = (appId: string) => {
+  const generateCreditMemo = (appId: string) => {
     const app = mockUnderwritingTasks.find(app => app.id === appId);
     if (!app) return;
     
-    toast.info(`Generating risk assessment report for ${appId}`);
+    toast.info(`Generating credit memo for ${appId}`);
     
     setTimeout(() => {
       const win = window.open("", "_blank");
@@ -177,135 +174,360 @@ const UnderwritingAgent = () => {
         win.document.write(`
           <html>
             <head>
-              <title>Risk Assessment Report - ${appId}</title>
+              <title>Credit Memo - ${appId}</title>
               <style>
-                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-                .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-                .logo { max-width: 200px; }
-                h1, h2 { color: #333; }
-                h3 { color: #555; }
-                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-                th { background-color: #f2f2f2; }
-                .section { margin-bottom: 30px; }
-                .risk-high { color: #e11d48; font-weight: 600; }
-                .risk-medium { color: #f59e0b; font-weight: 600; }
-                .risk-low { color: #10b981; font-weight: 600; }
-                .metric { color: #2563eb; font-weight: 600; }
-                .strength { color: #16a34a; font-weight: 600; }
-                .progress-container { width: 100%; height: 20px; background-color: #f0f0f0; border-radius: 10px; margin: 10px 0; }
-                .progress-bar { height: 100%; border-radius: 10px; }
-                .progress-low { background-color: #10b981; }
-                .progress-medium { background-color: #f59e0b; }
-                .progress-high { background-color: #e11d48; }
+                @media print {
+                  .no-print {
+                    display: none;
+                  }
+                  body {
+                    padding: 20px;
+                  }
+                }
+                body { 
+                  font-family: Arial, sans-serif; 
+                  margin: 0; 
+                  padding: 20px; 
+                  color: #1A1F2C;
+                }
+                .header { 
+                  display: flex; 
+                  justify-content: space-between; 
+                  align-items: center; 
+                  margin-bottom: 30px; 
+                  padding-bottom: 10px;
+                  border-bottom: 2px solid #9b87f5;
+                }
+                .logo { 
+                  max-width: 200px; 
+                }
+                .print-button {
+                  background-color: #9b87f5;
+                  color: white;
+                  border: none;
+                  padding: 10px 20px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  font-weight: bold;
+                }
+                .print-icon {
+                  width: 16px;
+                  height: 16px;
+                }
+                h1, h2 { 
+                  color: #7E69AB; 
+                }
+                h1 {
+                  font-size: 26px;
+                  margin: 0;
+                }
+                h2 {
+                  border-bottom: 1px solid #D6BCFA;
+                  padding-bottom: 5px;
+                  margin-top: 30px;
+                  font-size: 18px;
+                }
+                .memo-id {
+                  color: #8E9196;
+                  font-size: 14px;
+                }
+                table { 
+                  width: 100%; 
+                  border-collapse: collapse; 
+                  margin: 20px 0; 
+                }
+                th, td { 
+                  padding: 10px; 
+                  text-align: left; 
+                  border-bottom: 1px solid #ddd; 
+                }
+                th { 
+                  background-color: #f2f2f2; 
+                  color: #6E59A5;
+                  font-weight: 600;
+                }
+                .section { 
+                  margin-bottom: 30px; 
+                }
+                .badge {
+                  display: inline-block;
+                  padding: 3px 10px;
+                  border-radius: 12px;
+                  font-size: 12px;
+                  font-weight: 500;
+                }
+                .badge-outline {
+                  background-color: transparent;
+                  border: 1px solid #9b87f5;
+                  color: #6E59A5;
+                }
+                .badge-success {
+                  background-color: #10b981;
+                  color: white;
+                }
+                .badge-warning {
+                  background-color: #f59e0b;
+                  color: white;
+                }
+                .badge-danger {
+                  background-color: #e11d48;
+                  color: white;
+                }
+                .flex-between {
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  margin-bottom: 10px;
+                }
+                .text-primary {
+                  color: #7E69AB;
+                }
+                .text-muted {
+                  color: #8E9196;
+                  font-size: 14px;
+                }
+                .text-bold {
+                  font-weight: 600;
+                }
+                .approval-section {
+                  margin-top: 50px;
+                  page-break-inside: avoid;
+                }
+                .signature-line {
+                  border-top: 1px solid #1A1F2C;
+                  margin-top: 60px;
+                  width: 200px;
+                  display: inline-block;
+                }
+                .metrics-grid {
+                  display: grid;
+                  grid-template-columns: repeat(2, 1fr);
+                  gap: 15px;
+                  margin: 20px 0;
+                }
+                .metric-card {
+                  border: 1px solid #D6BCFA;
+                  border-radius: 8px;
+                  padding: 15px;
+                }
+                .metric-value {
+                  font-size: 24px;
+                  font-weight: bold;
+                  color: #1A1F2C;
+                  margin: 5px 0;
+                }
+                @media print {
+                  .page-break {
+                    page-break-before: always;
+                  }
+                }
               </style>
             </head>
             <body>
               <div class="header">
                 <div>
-                  <h1>Risk Assessment Report</h1>
-                  <p>Application ID: ${appId}</p>
-                  <p>Date: ${new Date().toLocaleDateString()}</p>
+                  <h1>Credit Memorandum</h1>
+                  <p class="memo-id">Memo ID: CM-${appId}-${Math.floor(Math.random() * 1000)}</p>
+                  <p class="memo-id">Date: ${new Date().toLocaleDateString()}</p>
                 </div>
                 <img src="/lovable-uploads/c358cff4-5e06-49e8-af0b-d9e4c7099001.png" class="logo" alt="GaIGentic Logo">
+                <button onclick="window.print()" class="print-button no-print">
+                  <svg class="print-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                  </svg>
+                  Print Credit Memo
+                </button>
               </div>
-              
+
               <div class="section">
-                <h2>Application Summary</h2>
+                <h2>Executive Summary</h2>
+                <p>
+                  This credit memorandum provides a comprehensive analysis and recommendation for the ${app.amount} 
+                  ${app.purpose} loan request from ${app.borrower}. The application was submitted on 
+                  ${app.dateSubmitted} and is currently in ${app.status} stage.
+                </p>
+                <p>
+                  Based on our thorough analysis of the borrower's creditworthiness, financial history, and the 
+                  collateral provided, this loan is <span class="text-bold text-primary">${app.riskAssessment.level === 'Low' ? 'recommended for approval' : app.riskAssessment.level === 'Medium' ? 'recommended for approval with conditions' : 'recommended for additional review'}</span>.
+                </p>
+              </div>
+
+              <div class="section">
+                <h2>Loan Request Details</h2>
                 <table>
                   <tr>
-                    <th>Borrower</th>
-                    <td>${app.borrower}</td>
-                    <th>Loan Amount</th>
-                    <td>${app.amount}</td>
+                    <th>Application ID</th>
+                    <td>${app.id}</td>
+                    <th>Status</th>
+                    <td>
+                      <span class="badge badge-outline">
+                        ${app.status}
+                      </span>
+                    </td>
                   </tr>
                   <tr>
-                    <th>Purpose</th>
-                    <td>${app.purpose}</td>
+                    <th>Requested Amount</th>
+                    <td>${app.amount}</td>
                     <th>Asset Class</th>
                     <td>${app.assetClass}</td>
                   </tr>
                   <tr>
                     <th>Date Submitted</th>
                     <td>${app.dateSubmitted}</td>
+                    <th>Purpose</th>
+                    <td>${app.purpose}</td>
+                  </tr>
+                  <tr>
                     <th>Collateral Value</th>
                     <td>${app.collateralValue}</td>
+                    <th>Loan-to-Value</th>
+                    <td>${app.ltvRatio}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <div class="section">
+                <h2>Borrower Information</h2>
+                <table>
+                  <tr>
+                    <th>Borrower</th>
+                    <td colspan="3">${app.borrower}</td>
                   </tr>
                   <tr>
                     <th>Credit Score</th>
                     <td>${app.creditScore}</td>
-                    <th>Loan-to-Value</th>
-                    <td><span class="metric">Loan-to-Value:</span> ${app.ltvRatio}</td>
+                    <th>Debt-to-Income</th>
+                    <td>${app.dti}</td>
                   </tr>
                   <tr>
-                    <th>Debt-to-Income</th>
-                    <td><span class="metric">Debt-to-Income:</span> ${app.dti}</td>
-                    <th>Completion Status</th>
-                    <td>${app.completeness}%</td>
+                    <th>Industry</th>
+                    <td>${app.assetClass}</td>
+                    <th>Priority Rating</th>
+                    <td>
+                      <span class="badge badge-${app.priority === 'High' ? 'danger' : app.priority === 'Medium' ? 'warning' : 'outline'}">
+                        ${app.priority}
+                      </span>
+                    </td>
                   </tr>
                 </table>
               </div>
-              
+
+              <div class="metrics-grid">
+                ${Object.entries(app.riskAssessment.ratios).slice(0, 4).map(([key, value]) => `
+                  <div class="metric-card">
+                    <div class="text-muted">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</div>
+                    <div class="metric-value">${value}</div>
+                  </div>
+                `).join('')}
+              </div>
+
               <div class="section">
-                <h2>Risk Assessment Overview</h2>
-                <h3>Risk Level: <span class="risk-${app.riskAssessment.level.toLowerCase()}">${app.riskAssessment.level} Risk</span></h3>
-                
-                <p>Risk Score: ${app.riskAssessment.score}/100</p>
-                <div class="progress-container">
-                  <div class="progress-bar progress-${app.riskAssessment.level.toLowerCase()}" style="width: ${app.riskAssessment.score}%;"></div>
+                <h2>Financial Analysis</h2>
+                <p>
+                  The borrower has demonstrated ${app.riskAssessment.level === 'Low' ? 'strong' : app.riskAssessment.level === 'Medium' ? 'adequate' : 'concerning'} 
+                  financial performance with the following key metrics:
+                </p>
+                <ul>
+                  ${Object.entries(app.riskAssessment.ratios).map(([key, value]) => `
+                    <li><strong>${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</strong> ${value}</li>
+                  `).join('')}
+                </ul>
+              </div>
+
+              <div class="section">
+                <h2>Risk Assessment</h2>
+                <div class="flex-between">
+                  <h3>Risk Level: 
+                    <span class="badge badge-${app.riskAssessment.level === 'Low' ? 'success' : app.riskAssessment.level === 'Medium' ? 'warning' : 'danger'}">
+                      ${app.riskAssessment.level}
+                    </span>
+                  </h3>
+                  <h3>Risk Score: ${app.riskAssessment.score}/100</h3>
                 </div>
                 
-                <h3>Key Risk Factors</h3>
+                <h3>Risk Factors</h3>
                 <ul>
-                  ${app.riskAssessment.factors.map(factor => {
-                    let className = '';
-                    if (factor.toLowerCase().includes('debt') || factor.toLowerCase().includes('ratio') || factor.toLowerCase().includes('utilization')) {
-                      className = 'metric';
-                    } else if (factor.toLowerCase().includes('strong') || factor.toLowerCase().includes('sufficient') || factor.toLowerCase().includes('high-demand')) {
-                      className = 'risk-low';
-                    } else if (factor.toLowerCase().includes('moderate') || factor.toLowerCase().includes('cyclical') || factor.toLowerCase().includes('longer')) {
-                      className = 'risk-medium';
-                    } else if (factor.toLowerCase().includes('downturn') || factor.toLowerCase().includes('seasonal') || factor.toLowerCase().includes('volatile')) {
-                      className = 'risk-high';
-                    }
-                    return `<li><span class="${className}">${factor}</span></li>`;
-                  }).join('')}
+                  ${app.riskAssessment.factors.map(factor => `<li>${factor}</li>`).join('')}
                 </ul>
                 
                 <h3>Key Strengths</h3>
                 <ul>
-                  ${app.riskAssessment.strengths.map(strength => 
-                    `<li><span class="strength">${strength}</span></li>`
-                  ).join('')}
+                  ${app.riskAssessment.strengths.map(strength => `<li>${strength}</li>`).join('')}
                 </ul>
               </div>
-              
+
+              <div class="page-break"></div>
+
               <div class="section">
-                <h2>Financial Ratios & Metrics</h2>
-                <table>
-                  ${Object.entries(app.riskAssessment.ratios).map(([key, value]) => `
+                <h2>Funding Recommendation</h2>
+                <p>
+                  Based on our comprehensive analysis, this loan application is 
+                  ${app.riskAssessment.level === 'Low' 
+                    ? '<span class="text-bold text-primary">recommended for approval</span> through Rabo Bank with standard terms.'
+                    : app.riskAssessment.level === 'Medium' 
+                    ? '<span class="text-bold text-primary">recommended for approval with conditions</span> through ABN AMRO Bank.'
+                    : '<span class="text-bold">recommended for additional review</span> before funding consideration.'
+                  }
+                </p>
+
+                <div style="margin-top: 20px;">
+                  <h3>Recommended Terms</h3>
+                  <table>
                     <tr>
-                      <th>${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</th>
-                      <td><span class="metric">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</span> ${value}</td>
+                      <th>Amount</th>
+                      <td>${app.amount}</td>
+                      <th>Funding Source</th>
+                      <td>${app.riskAssessment.level === 'Low' ? 'Rabo Bank' : 'ABN AMRO Bank'}</td>
                     </tr>
-                  `).join('')}
-                </table>
+                    <tr>
+                      <th>Interest Rate</th>
+                      <td>${app.riskAssessment.level === 'Low' ? '5.75%' : app.riskAssessment.level === 'Medium' ? '6.25%' : '7.0%'}</td>
+                      <th>Term</th>
+                      <td>60 months</td>
+                    </tr>
+                    <tr>
+                      <th>Conditions</th>
+                      <td colspan="3">
+                        ${app.riskAssessment.level === 'Low' 
+                          ? 'Standard documentation and verification requirements.'
+                          : app.riskAssessment.level === 'Medium'
+                          ? 'Additional reserves of 10% of loan value and quarterly financial reporting required.'
+                          : 'Substantial additional collateral required, personal guarantees, and monthly financial reporting.'
+                        }
+                      </td>
+                    </tr>
+                  </table>
+                </div>
               </div>
-              
-              <div class="section">
-                <h2>Recommendation</h2>
-                <p>${app.riskAssessment.level === 'Low' ? 
-                  'Based on the comprehensive risk analysis, this application presents a <span class="risk-low">low risk profile</span> and is recommended for approval with standard terms.' :
-                  app.riskAssessment.level === 'Medium' ? 
-                  'Based on the comprehensive risk analysis, this application presents a <span class="risk-medium">moderate risk profile</span>. Recommend approval with additional monitoring or modified terms to mitigate identified risk factors.' :
-                  'Based on the comprehensive risk analysis, this application presents a <span class="risk-high">high risk profile</span>. Recommend additional collateral requirements or guarantees before proceeding, or denial if risks cannot be adequately mitigated.'
-                }</p>
+
+              <div class="approval-section">
+                <h2>Approval</h2>
+                <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                  <div>
+                    <p class="signature-line"></p>
+                    <div>Underwriter Signature</div>
+                    <div class="text-muted">Date: _______________</div>
+                  </div>
+                  <div>
+                    <p class="signature-line"></p>
+                    <div>Credit Officer Signature</div>
+                    <div class="text-muted">Date: _______________</div>
+                  </div>
+                  <div>
+                    <p class="signature-line"></p>
+                    <div>Approval Committee Chair</div>
+                    <div class="text-muted">Date: _______________</div>
+                  </div>
+                </div>
               </div>
               
               <div style="margin-top: 50px;">
-                <p><strong>Prepared by:</strong> GaIGentic Underwriting AI Agent</p>
-                <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-                <p><small>This report was automatically generated based on AI analysis. Human review recommended before final decision.</small></p>
+                <p class="text-muted">Credit Memo ID: CM-${appId}-${Math.floor(Math.random() * 1000)}</p>
+                <p class="text-muted">Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                <p class="text-muted">This document is confidential and intended for internal use only.</p>
               </div>
             </body>
           </html>
@@ -313,6 +535,15 @@ const UnderwritingAgent = () => {
         win.document.close();
       }
     }, 1000);
+  };
+
+  const handleViewBorrower = (borrower: string) => {
+    const borrowerId = "B-" + borrower.split(" ")[0].toUpperCase();
+    navigate(`/borrowers?id=${borrowerId}`);
+  };
+
+  const handleDownloadReport = (appId: string) => {
+    toast.success(`Downloading credit memo for ${appId}`);
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -325,16 +556,6 @@ const UnderwritingAgent = () => {
     if (risk === "High") return <Badge variant="destructive">High Risk</Badge>;
     if (risk === "Medium") return <Badge variant="warning">Medium Risk</Badge>;
     return <Badge variant="success">Low Risk</Badge>;
-  };
-  
-  const handleDownloadReport = (appId: string) => {
-    toast.success(`Downloading risk report for ${appId}`);
-  };
-
-  const handleViewBorrower = (borrower: string) => {
-    // Convert borrower name to a simulated ID for navigation
-    const borrowerId = "B-" + borrower.split(" ")[0].toUpperCase();
-    navigate(`/borrowers?id=${borrowerId}`);
   };
 
   return (
@@ -471,7 +692,15 @@ const UnderwritingAgent = () => {
                             <div className="text-xs">LTV: <span className="font-medium">{task.ltvRatio}</span></div>
                           </div>
                         </TableCell>
-                        <TableCell>{getRiskBadge(task.riskAssessment.level)}</TableCell>
+                        <TableCell>
+                          {task.riskAssessment.level === "Low" ? (
+                            <Badge variant="success">Low Risk</Badge>
+                          ) : task.riskAssessment.level === "Medium" ? (
+                            <Badge variant="warning">Medium Risk</Badge>
+                          ) : (
+                            <Badge variant="destructive">High Risk</Badge>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Button variant="ghost" size="icon" onClick={() => handleViewApplication(task)} title="View Application">
@@ -485,6 +714,14 @@ const UnderwritingAgent = () => {
                               title="Run Risk Analysis"
                             >
                               <BarChart3 className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => generateCreditMemo(task.id)}
+                              title="Generate Credit Memo"
+                            >
+                              <Receipt className="h-4 w-4" />
                             </Button>
                             <Button 
                               variant="ghost" 
@@ -578,7 +815,13 @@ const UnderwritingAgent = () => {
                         <TableCell>{task.collateralValue}</TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-1">
-                            {getRiskBadge(task.riskAssessment.level)}
+                            {task.riskAssessment.level === "Low" ? (
+                              <Badge variant="success">Low Risk</Badge>
+                            ) : task.riskAssessment.level === "Medium" ? (
+                              <Badge variant="warning">Medium Risk</Badge>
+                            ) : (
+                              <Badge variant="destructive">High Risk</Badge>
+                            )}
                             <div className="flex items-center gap-1 mt-1">
                               <Progress 
                                 value={task.riskAssessment.score} 
@@ -597,11 +840,11 @@ const UnderwritingAgent = () => {
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              onClick={() => handleViewReport(task.id)}
+                              onClick={() => generateCreditMemo(task.id)}
                               className="h-8 px-2 text-xs"
                             >
-                              <FileText className="h-3.5 w-3.5 mr-1" />
-                              View
+                              <Receipt className="h-3.5 w-3.5 mr-1" />
+                              Credit Memo
                             </Button>
                             <Button 
                               size="sm" 

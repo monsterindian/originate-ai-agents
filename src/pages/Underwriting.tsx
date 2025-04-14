@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { 
   Search, Filter, Download, AlertCircle, CheckCircle2, Clock, ArrowUpDown, 
-  FileText, UserCheck, Building, BarChart4, PiggyBank, ShieldCheck
+  FileText, UserCheck, Building, BarChart4, PiggyBank, ShieldCheck, Receipt
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -189,14 +189,14 @@ const Underwriting = () => {
     navigate(`/borrowers?id=${borrowerId}`);
   };
   
-  const handleGenerateReport = (appId: string) => {
-    toast.success(`Generating underwriting report for ${appId}`);
+  const handleGenerateCreditMemo = (appId: string) => {
+    toast.success(`Generating credit memo for ${appId}`);
     
     setTimeout(() => {
       toast(
         <div className="space-y-2">
-          <p className="font-semibold">Underwriting Report Ready</p>
-          <p>Report for {appId} has been generated</p>
+          <p className="font-semibold">Credit Memo Ready</p>
+          <p>Credit memo for {appId} has been generated</p>
           <div className="flex gap-2 mt-2">
             <Button size="sm" onClick={() => {
               const win = window.open("", "_blank");
@@ -204,102 +204,372 @@ const Underwriting = () => {
                 win.document.write(`
                   <html>
                     <head>
-                      <title>Underwriting Report - ${appId}</title>
+                      <title>Credit Memo - ${appId}</title>
                       <style>
-                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-                        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-                        .logo { max-width: 200px; }
-                        h1 { color: #333; }
-                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-                        th { background-color: #f2f2f2; }
+                        @media print {
+                          .no-print {
+                            display: none;
+                          }
+                          body {
+                            padding: 20px;
+                          }
+                        }
+                        body { 
+                          font-family: Arial, sans-serif; 
+                          margin: 0; 
+                          padding: 20px; 
+                          color: #1A1F2C;
+                        }
+                        .header { 
+                          display: flex; 
+                          justify-content: space-between; 
+                          align-items: center; 
+                          margin-bottom: 30px; 
+                          padding-bottom: 10px;
+                          border-bottom: 2px solid #9b87f5;
+                        }
+                        .logo { 
+                          max-width: 200px; 
+                        }
+                        .print-button {
+                          background-color: #9b87f5;
+                          color: white;
+                          border: none;
+                          padding: 10px 20px;
+                          border-radius: 4px;
+                          cursor: pointer;
+                          display: flex;
+                          align-items: center;
+                          gap: 6px;
+                          font-weight: bold;
+                        }
+                        .print-icon {
+                          width: 16px;
+                          height: 16px;
+                        }
+                        h1, h2 { 
+                          color: #7E69AB; 
+                        }
+                        h1 {
+                          font-size: 26px;
+                          margin: 0;
+                        }
+                        h2 {
+                          border-bottom: 1px solid #D6BCFA;
+                          padding-bottom: 5px;
+                          margin-top: 30px;
+                          font-size: 18px;
+                        }
+                        .memo-id {
+                          color: #8E9196;
+                          font-size: 14px;
+                        }
+                        table { 
+                          width: 100%; 
+                          border-collapse: collapse; 
+                          margin: 20px 0; 
+                        }
+                        th, td { 
+                          padding: 10px; 
+                          text-align: left; 
+                          border-bottom: 1px solid #ddd; 
+                        }
+                        th { 
+                          background-color: #f2f2f2; 
+                          color: #6E59A5;
+                          font-weight: 600;
+                        }
+                        .section { 
+                          margin-bottom: 30px; 
+                        }
+                        .badge {
+                          display: inline-block;
+                          padding: 3px 10px;
+                          border-radius: 12px;
+                          font-size: 12px;
+                          font-weight: 500;
+                        }
+                        .badge-outline {
+                          background-color: transparent;
+                          border: 1px solid #9b87f5;
+                          color: #6E59A5;
+                        }
+                        .badge-success {
+                          background-color: #10b981;
+                          color: white;
+                        }
+                        .badge-warning {
+                          background-color: #f59e0b;
+                          color: white;
+                        }
+                        .badge-danger {
+                          background-color: #e11d48;
+                          color: white;
+                        }
+                        .text-primary {
+                          color: #7E69AB;
+                        }
+                        .text-muted {
+                          color: #8E9196;
+                          font-size: 14px;
+                        }
+                        .text-bold {
+                          font-weight: 600;
+                        }
+                        .approval-section {
+                          margin-top: 50px;
+                          page-break-inside: avoid;
+                        }
+                        .signature-line {
+                          border-top: 1px solid #1A1F2C;
+                          margin-top: 60px;
+                          width: 200px;
+                          display: inline-block;
+                        }
+                        .metrics-grid {
+                          display: grid;
+                          grid-template-columns: repeat(2, 1fr);
+                          gap: 15px;
+                          margin: 20px 0;
+                        }
+                        .metric-card {
+                          border: 1px solid #D6BCFA;
+                          border-radius: 8px;
+                          padding: 15px;
+                        }
+                        .metric-value {
+                          font-size: 24px;
+                          font-weight: bold;
+                          color: #1A1F2C;
+                          margin: 5px 0;
+                        }
                         .risk-high { color: #e11d48; font-weight: 600; }
                         .risk-medium { color: #f59e0b; font-weight: 600; }
                         .risk-low { color: #10b981; font-weight: 600; }
                         .metric { color: #2563eb; font-weight: 600; }
+                        @media print {
+                          .page-break {
+                            page-break-before: always;
+                          }
+                        }
                       </style>
                     </head>
                     <body>
                       <div class="header">
                         <div>
-                          <h1>Underwriting Report</h1>
-                          <p>Application ID: ${appId}</p>
-                          <p>Date: ${new Date().toLocaleDateString()}</p>
+                          <h1>Credit Memorandum</h1>
+                          <p class="memo-id">Memo ID: CM-${appId}-${Math.floor(Math.random() * 1000)}</p>
+                          <p class="memo-id">Date: ${new Date().toLocaleDateString()}</p>
                         </div>
-                        <img src="/lovable-uploads/b33a1622-519b-4d29-bcb5-c1f47afab476.png" class="logo" alt="gaigentic Logo">
+                        <img src="/lovable-uploads/b33a1622-519b-4d29-bcb5-c1f47afab476.png" class="logo" alt="Logo">
+                        <button onclick="window.print()" class="print-button no-print">
+                          <svg class="print-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                          </svg>
+                          Print Credit Memo
+                        </button>
                       </div>
                       
-                      <h2>Application Details</h2>
-                      <table>
-                        <tr>
-                          <th>Borrower</th>
-                          <td>${mockApplications.find(a => a.id === appId)?.borrower || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                          <th>Amount</th>
-                          <td>${mockApplications.find(a => a.id === appId)?.amount || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                          <th>Type</th>
-                          <td>${mockApplications.find(a => a.id === appId)?.type || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                          <th>Date Submitted</th>
-                          <td>${mockApplications.find(a => a.id === appId)?.date || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                          <th>Status</th>
-                          <td>${mockApplications.find(a => a.id === appId)?.status || 'N/A'}</td>
-                        </tr>
-                      </table>
+                      <div class="section">
+                        <h2>Executive Summary</h2>
+                        <p>
+                          This credit memorandum provides a comprehensive analysis and recommendation for the ${mockApplications.find(a => a.id === appId)?.amount || 'N/A'} 
+                          ${mockApplications.find(a => a.id === appId)?.type || 'N/A'} loan request from ${mockApplications.find(a => a.id === appId)?.borrower || 'N/A'}. 
+                          The application was submitted on ${mockApplications.find(a => a.id === appId)?.date || 'N/A'}.
+                        </p>
+                        <p>
+                          Based on our thorough analysis of the borrower's creditworthiness, financial history, and the 
+                          collateral provided, this loan is <span class="text-bold text-primary">
+                          ${mockApplications.find(a => a.id === appId)?.risk.level === 'Low' ? 'recommended for approval' : 
+                            mockApplications.find(a => a.id === appId)?.risk.level === 'Medium' ? 'recommended for approval with conditions' : 
+                            'recommended for additional review'}
+                          </span>.
+                        </p>
+                      </div>
                       
-                      <h2>Risk Assessment</h2>
-                      <table>
-                        <tr>
-                          <th>Risk Level</th>
-                          <td class="risk-${mockApplications.find(a => a.id === appId)?.risk.level.toLowerCase() || 'medium'}">${mockApplications.find(a => a.id === appId)?.risk.level || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                          <th>Risk Score</th>
-                          <td>${mockApplications.find(a => a.id === appId)?.risk.score || 'N/A'}/100</td>
-                        </tr>
-                        <tr>
-                          <th>Debt-to-Income Ratio</th>
-                          <td><span class="metric">Debt-to-Income Ratio:</span> ${mockApplications.find(a => a.id === appId)?.risk.debtToIncome || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                          <th>Loan-to-Value Ratio</th>
-                          <td><span class="metric">Loan-to-Value Ratio:</span> ${mockApplications.find(a => a.id === appId)?.risk.loanToValue || 'N/A'}</td>
-                        </tr>
-                        <tr>
-                          <th>Credit Utilization</th>
-                          <td><span class="metric">Credit Utilization:</span> ${mockApplications.find(a => a.id === appId)?.risk.creditUtilization || 'N/A'}</td>
-                        </tr>
-                      </table>
+                      <div class="section">
+                        <h2>Application Details</h2>
+                        <table>
+                          <tr>
+                            <th>Application ID</th>
+                            <td>${appId}</td>
+                            <th>Status</th>
+                            <td>
+                              <span class="badge badge-${mockApplications.find(a => a.id === appId)?.status === 'Complete' ? 'success' : 'outline'}">
+                                ${mockApplications.find(a => a.id === appId)?.status || 'N/A'}
+                              </span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th>Borrower</th>
+                            <td>${mockApplications.find(a => a.id === appId)?.borrower || 'N/A'}</td>
+                            <th>Amount</th>
+                            <td>${mockApplications.find(a => a.id === appId)?.amount || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <th>Loan Type</th>
+                            <td>${mockApplications.find(a => a.id === appId)?.type || 'N/A'}</td>
+                            <th>Date Submitted</th>
+                            <td>${mockApplications.find(a => a.id === appId)?.date || 'N/A'}</td>
+                          </tr>
+                          <tr>
+                            <th>Progress</th>
+                            <td>${mockApplications.find(a => a.id === appId)?.progress || 'N/A'}%</td>
+                            <th>Notes</th>
+                            <td>${mockApplications.find(a => a.id === appId)?.notes || 'No notes available'}</td>
+                          </tr>
+                        </table>
+                      </div>
                       
-                      <h2>Risk Factors</h2>
-                      <ul>
-                        ${mockApplications.find(a => a.id === appId)?.risk.factors.map(factor => {
-                          let className = '';
-                          if (factor.toLowerCase().includes('debt') || factor.toLowerCase().includes('ratio') || factor.toLowerCase().includes('utilization')) {
-                            className = 'metric';
-                          } else if (factor.toLowerCase().includes('strong') || factor.toLowerCase().includes('excellent') || factor.toLowerCase().includes('low')) {
-                            className = 'risk-low';
-                          } else if (factor.toLowerCase().includes('below') || factor.toLowerCase().includes('limited')) {
-                            className = 'risk-medium';
-                          } else if (factor.toLowerCase().includes('high') || factor.toLowerCase().includes('concern') || factor.toLowerCase().includes('volatile')) {
-                            className = 'risk-high';
+                      <div class="section">
+                        <h2>Risk Assessment</h2>
+                        <div class="metrics-grid">
+                          <div class="metric-card">
+                            <div class="text-muted">Risk Level</div>
+                            <div class="metric-value risk-${mockApplications.find(a => a.id === appId)?.risk.level.toLowerCase() || 'medium'}">
+                              ${mockApplications.find(a => a.id === appId)?.risk.level || 'N/A'}
+                            </div>
+                          </div>
+                          <div class="metric-card">
+                            <div class="text-muted">Risk Score</div>
+                            <div class="metric-value">${mockApplications.find(a => a.id === appId)?.risk.score || 'N/A'}/100</div>
+                          </div>
+                          <div class="metric-card">
+                            <div class="text-muted">Debt-to-Income Ratio</div>
+                            <div class="metric-value metric">${mockApplications.find(a => a.id === appId)?.risk.debtToIncome || 'N/A'}</div>
+                          </div>
+                          <div class="metric-card">
+                            <div class="text-muted">Loan-to-Value Ratio</div>
+                            <div class="metric-value metric">${mockApplications.find(a => a.id === appId)?.risk.loanToValue || 'N/A'}</div>
+                          </div>
+                        </div>
+                        
+                        <h3>Risk Factors</h3>
+                        <ul>
+                          ${mockApplications.find(a => a.id === appId)?.risk.factors.map(factor => {
+                            let className = '';
+                            if (factor.toLowerCase().includes('debt') || factor.toLowerCase().includes('ratio') || factor.toLowerCase().includes('utilization')) {
+                              className = 'metric';
+                            } else if (factor.toLowerCase().includes('strong') || factor.toLowerCase().includes('excellent') || factor.toLowerCase().includes('low')) {
+                              className = 'risk-low';
+                            } else if (factor.toLowerCase().includes('below') || factor.toLowerCase().includes('limited')) {
+                              className = 'risk-medium';
+                            } else if (factor.toLowerCase().includes('high') || factor.toLowerCase().includes('concern') || factor.toLowerCase().includes('volatile')) {
+                              className = 'risk-high';
+                            }
+                            return `<li><span class="${className}">${factor}</span></li>`;
+                          }).join('') || '<li>No risk factors identified</li>'}
+                        </ul>
+                      </div>
+
+                      <div class="page-break"></div>
+
+                      <div class="section">
+                        <h2>Financial Analysis</h2>
+                        <p>
+                          The borrower has demonstrated ${mockApplications.find(a => a.id === appId)?.risk.level === 'Low' ? 'strong' : 
+                            mockApplications.find(a => a.id === appId)?.risk.level === 'Medium' ? 'adequate' : 'concerning'} 
+                          financial performance with the following key metrics:
+                        </p>
+                        <table>
+                          <tr>
+                            <th>Debt-to-Income Ratio</th>
+                            <td>
+                              <span class="metric">${mockApplications.find(a => a.id === appId)?.risk.debtToIncome || 'N/A'}</span>
+                              (${parseInt(mockApplications.find(a => a.id === appId)?.risk.debtToIncome || '0') <= 36 ? 
+                                'Excellent' : parseInt(mockApplications.find(a => a.id === appId)?.risk.debtToIncome || '0') <= 43 ? 
+                                'Acceptable' : 'Concerning'})
+                            </td>
+                          </tr>
+                          <tr>
+                            <th>Loan-to-Value Ratio</th>
+                            <td>
+                              <span class="metric">${mockApplications.find(a => a.id === appId)?.risk.loanToValue || 'N/A'}</span>
+                              (${parseInt(mockApplications.find(a => a.id === appId)?.risk.loanToValue || '0') <= 70 ? 
+                                'Excellent' : parseInt(mockApplications.find(a => a.id === appId)?.risk.loanToValue || '0') <= 80 ? 
+                                'Acceptable' : 'Concerning'})
+                            </td>
+                          </tr>
+                          <tr>
+                            <th>Credit Utilization</th>
+                            <td>
+                              <span class="metric">${mockApplications.find(a => a.id === appId)?.risk.creditUtilization || 'N/A'}</span>
+                              (${parseInt(mockApplications.find(a => a.id === appId)?.risk.creditUtilization || '0') <= 30 ? 
+                                'Excellent' : parseInt(mockApplications.find(a => a.id === appId)?.risk.creditUtilization || '0') <= 50 ? 
+                                'Good' : 'High'})
+                            </td>
+                          </tr>
+                        </table>
+                      </div>
+                      
+                      <div class="section">
+                        <h2>Funding Recommendation</h2>
+                        <p>
+                          Based on our comprehensive analysis, this loan application is 
+                          ${mockApplications.find(a => a.id === appId)?.risk.level === 'Low' 
+                            ? '<span class="text-bold text-primary">recommended for approval</span> through Rabo Bank with standard terms.'
+                            : mockApplications.find(a => a.id === appId)?.risk.level === 'Medium' 
+                            ? '<span class="text-bold text-primary">recommended for approval with conditions</span> through ABN AMRO Bank.'
+                            : '<span class="text-bold">recommended for additional review</span> before funding consideration.'
                           }
-                          return `<li><span class="${className}">${factor}</span></li>`;
-                        }).join('') || '<li>No risk factors identified</li>'}
-                      </ul>
-                      
-                      <h2>Notes</h2>
-                      <p>${mockApplications.find(a => a.id === appId)?.notes || 'No notes available'}</p>
+                        </p>
+
+                        <div style="margin-top: 20px;">
+                          <h3>Recommended Terms</h3>
+                          <table>
+                            <tr>
+                              <th>Amount</th>
+                              <td>${mockApplications.find(a => a.id === appId)?.amount || 'N/A'}</td>
+                              <th>Funding Source</th>
+                              <td>${mockApplications.find(a => a.id === appId)?.risk.level === 'Low' ? 'Rabo Bank' : 'ABN AMRO Bank'}</td>
+                            </tr>
+                            <tr>
+                              <th>Interest Rate</th>
+                              <td>${mockApplications.find(a => a.id === appId)?.risk.level === 'Low' ? '5.75%' : 
+                                mockApplications.find(a => a.id === appId)?.risk.level === 'Medium' ? '6.25%' : '7.0%'}</td>
+                              <th>Term</th>
+                              <td>60 months</td>
+                            </tr>
+                            <tr>
+                              <th>Conditions</th>
+                              <td colspan="3">
+                                ${mockApplications.find(a => a.id === appId)?.risk.level === 'Low' 
+                                  ? 'Standard documentation and verification requirements.'
+                                  : mockApplications.find(a => a.id === appId)?.risk.level === 'Medium'
+                                  ? 'Additional reserves of 10% of loan value and quarterly financial reporting required.'
+                                  : 'Substantial additional collateral required, personal guarantees, and monthly financial reporting.'
+                                }
+                              </td>
+                            </tr>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div class="approval-section">
+                        <h2>Approval</h2>
+                        <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+                          <div>
+                            <p class="signature-line"></p>
+                            <div>Underwriter Signature</div>
+                            <div class="text-muted">Date: _______________</div>
+                          </div>
+                          <div>
+                            <p class="signature-line"></p>
+                            <div>Credit Officer Signature</div>
+                            <div class="text-muted">Date: _______________</div>
+                          </div>
+                          <div>
+                            <p class="signature-line"></p>
+                            <div>Approval Committee Chair</div>
+                            <div class="text-muted">Date: _______________</div>
+                          </div>
+                        </div>
+                      </div>
                       
                       <div style="margin-top: 50px;">
-                        <p><strong>Prepared by:</strong> gaigentic Underwriting Team</p>
-                        <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                        <p class="text-muted">Credit Memo ID: CM-${appId}-${Math.floor(Math.random() * 1000)}</p>
+                        <p class="text-muted">Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+                        <p class="text-muted">This document is confidential and intended for internal use only.</p>
                       </div>
                     </body>
                   </html>
@@ -307,7 +577,7 @@ const Underwriting = () => {
                 win.document.close();
               }
             }}>
-              View Report
+              View Memo
             </Button>
             <Button size="sm" variant="outline">
               Download PDF
@@ -503,8 +773,8 @@ const Underwriting = () => {
                             <Button variant="ghost" size="icon" title="View Borrower" onClick={() => handleViewBorrower(app.borrower)}>
                               <UserCheck className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" title="Generate Financial Report" onClick={() => handleGenerateReport(app.id)}>
-                              <BarChart4 className="h-4 w-4" />
+                            <Button variant="ghost" size="icon" title="Generate Credit Memo" onClick={() => handleGenerateCreditMemo(app.id)}>
+                              <Receipt className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
