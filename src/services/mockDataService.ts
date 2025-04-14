@@ -129,11 +129,12 @@ export const getMockLoanApplicationById = (id: string): LoanApplication | undefi
   return applications.find(app => app.id === id) || applications[0]; // Fallback to the first app if not found
 };
 
-// Function to get applications for a specific agent type
+// Function to get applications for a specific agent type - MODIFIED to ensure at least 100 applications
 export const getApplicationsForAgentType = (agentType: string, count: number = 150): LoanApplication[] => {
-  const applications = getMockLoanApplications(count);
+  // Get a larger pool of applications to filter from
+  const applications = getMockLoanApplications(250);
   
-  // Filter applications based on agent type to return relevant applications
+  // Initial filtered applications based on agent type
   let filteredApps: LoanApplication[];
   
   switch (agentType) {
@@ -160,8 +161,23 @@ export const getApplicationsForAgentType = (agentType: string, count: number = 1
     case "fraud-risk":
       filteredApps = applications.map(app => ({
         ...app,
-        risk: faker.helpers.arrayElement(['Low', 'Medium', 'High']),
-      })).slice(0, count);
+        risk: faker.helpers.arrayElement(['Low', 'Medium', 'High']) as "Low" | "Medium" | "High",
+        fraudRiskScore: faker.number.int({ min: 20, max: 100 }),
+        suspiciousActivity: faker.datatype.boolean(0.3),
+        documentVerification: faker.helpers.arrayElement(['Verified', 'Pending', 'Failed']),
+        riskFactors: Array.from({ length: faker.number.int({ min: 1, max: 5 }) }, () => 
+          faker.helpers.arrayElement([
+            'Multiple applications',
+            'Address mismatch',
+            'Credit bureau alerts',
+            'Unusual transaction pattern',
+            'Device risk',
+            'Geolocation inconsistency',
+            'Document manipulation detected',
+            'Velocity checks failed'
+          ])
+        )
+      }));
       break;
     case "cash-flow-analysis":
       filteredApps = applications.filter(app => 
@@ -179,69 +195,99 @@ export const getApplicationsForAgentType = (agentType: string, count: number = 1
   
   // Ensure we have at least 100 applications for any agent type
   if (filteredApps.length < 100) {
-    // Add more applications until we reach at least 100
+    console.log(`Not enough applications for ${agentType}, adding more.`);
+    
+    // Create additional applications specific to this agent type
     const additionalNeeded = 100 - filteredApps.length;
-    const additionalApps = applications
-      .filter(app => !filteredApps.some(filteredApp => filteredApp.id === app.id))
-      .slice(0, additionalNeeded)
-      .map(app => {
-        // Adjust the status to match the agent type
-        let newStatus: LoanStatus;
-        switch (agentType) {
-          case "intake":
-            newStatus = "draft";
-            break;
-          case "processing":
-            newStatus = "reviewing";
-            break;
-          case "underwriting":
-            newStatus = "underwriting";
-            break;
-          case "decision":
-            newStatus = "underwriting";
-            break;
-          case "cash-flow-analysis":
-            newStatus = "reviewing";
-            break;
-          case "funding":
-            newStatus = "approved";
-            break;
-          default:
-            newStatus = "reviewing";
-        }
-        
-        return {
-          ...app,
-          status: newStatus
-        };
-      });
+    const additionalApps: LoanApplication[] = [];
+    
+    for (let i = 0; i < additionalNeeded; i++) {
+      // Create a base application
+      const appDTO = createRandomLoanApplication();
+      const borrower = createRandomBorrower();
       
-    filteredApps = [...filteredApps, ...additionalApps];
-  }
-
-  // Add fraud risk indicators for fraud-risk agent
-  if (agentType === "fraud-risk") {
-    return filteredApps.map(app => {
-      const fraudData = {
-        ...app,
-        fraudRiskScore: faker.number.int({ min: 20, max: 100 }),
-        suspiciousActivity: faker.datatype.boolean(0.3),
-        documentVerification: faker.helpers.arrayElement(['Verified', 'Pending', 'Failed']),
-        riskFactors: Array.from({ length: faker.number.int({ min: 0, max: 5 }) }, () => 
-          faker.helpers.arrayElement([
-            'Multiple applications',
-            'Address mismatch',
-            'Credit bureau alerts',
-            'Unusual transaction pattern',
-            'Device risk',
-            'Geolocation inconsistency',
-            'Document manipulation detected',
-            'Velocity checks failed'
-          ])
-        )
+      // Adjust the status to match the agent type
+      let newStatus: LoanStatus;
+      switch (agentType) {
+        case "intake":
+          newStatus = faker.helpers.arrayElement(["draft", "submitted", "reviewing"]);
+          break;
+        case "processing":
+          newStatus = faker.helpers.arrayElement(["reviewing", "information_needed"]);
+          break;
+        case "underwriting":
+          newStatus = "underwriting";
+          break;
+        case "decision":
+          newStatus = faker.helpers.arrayElement(["underwriting", "approved", "conditionally_approved", "rejected"]);
+          break;
+        case "cash-flow-analysis":
+          newStatus = faker.helpers.arrayElement(["reviewing", "underwriting"]);
+          break;
+        case "funding":
+          newStatus = faker.helpers.arrayElement(["approved", "funding"]);
+          break;
+        default:
+          newStatus = "reviewing";
+      }
+      
+      // Create application with adjusted status
+      const newApp: LoanApplication = {
+        ...appDTO,
+        borrower: borrower,
+        status: newStatus,
       };
-      return fraudData;
-    });
+      
+      // Add special fields for fraud-risk agent
+      if (agentType === "fraud-risk") {
+        Object.assign(newApp, {
+          risk: faker.helpers.arrayElement(['Low', 'Medium', 'High']) as "Low" | "Medium" | "High",
+          fraudRiskScore: faker.number.int({ min: 20, max: 100 }),
+          suspiciousActivity: faker.datatype.boolean(0.3),
+          documentVerification: faker.helpers.arrayElement(['Verified', 'Pending', 'Failed']),
+          riskFactors: Array.from({ length: faker.number.int({ min: 1, max: 5 }) }, () => 
+            faker.helpers.arrayElement([
+              'Multiple applications',
+              'Address mismatch',
+              'Credit bureau alerts',
+              'Unusual transaction pattern',
+              'Device risk',
+              'Geolocation inconsistency',
+              'Document manipulation detected',
+              'Velocity checks failed'
+            ])
+          )
+        });
+      }
+      
+      additionalApps.push(newApp);
+    }
+    
+    filteredApps = [...filteredApps, ...additionalApps];
+    console.log(`Added ${additionalApps.length} applications for ${agentType}, total: ${filteredApps.length}`);
+  }
+  
+  // Make sure all fraud-risk applications have the required fields
+  if (agentType === "fraud-risk") {
+    filteredApps = filteredApps.map(app => ({
+      ...app,
+      risk: app.risk || faker.helpers.arrayElement(['Low', 'Medium', 'High']) as "Low" | "Medium" | "High",
+      fraudRiskScore: app.fraudRiskScore || faker.number.int({ min: 20, max: 100 }),
+      suspiciousActivity: app.suspiciousActivity !== undefined ? app.suspiciousActivity : faker.datatype.boolean(0.3),
+      documentVerification: app.documentVerification || faker.helpers.arrayElement(['Verified', 'Pending', 'Failed']),
+      riskFactors: app.riskFactors || Array.from({ length: faker.number.int({ min: 1, max: 5 }) }, () => 
+        faker.helpers.arrayElement([
+          'Multiple applications',
+          'Address mismatch',
+          'Credit bureau alerts',
+          'Unusual transaction pattern',
+          'Device risk',
+          'Geolocation inconsistency',
+          'Document manipulation detected',
+          'Velocity checks failed'
+        ])
+      )
+    }));
   }
   
   return filteredApps.slice(0, count);
