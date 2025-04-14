@@ -40,14 +40,30 @@ const CashFlowAnalysisAgent = () => {
   // Load application data if ID provided in URL
   useEffect(() => {
     if (applicationId) {
-      const applications = getMockLoanApplications();
-      const app = applications.find(a => a.id === applicationId);
+      // Get applications for cash flow analysis specifically to ensure proper data
+      const applications = getApplicationsForAgentType("cash-flow-analysis");
+      const app = applications.find(a => a.id === applicationId) || applications[0];
+      
       if (app) {
+        console.log("Found application for cash flow analysis:", app.id);
         setApplication(app);
         // Start analysis immediately when application is found
         runCashFlowAnalysis(app);
       } else {
-        toast.error(`Application ${applicationId} not found`);
+        toast.error(`Application ${applicationId} not found - using a sample application instead`);
+        // If specific application not found, use first available one
+        if (applications.length > 0) {
+          setApplication(applications[0]);
+          runCashFlowAnalysis(applications[0]);
+        }
+      }
+    } else {
+      // If no ID provided, load a random application
+      const applications = getApplicationsForAgentType("cash-flow-analysis");
+      if (applications.length > 0) {
+        const randomApp = applications[Math.floor(Math.random() * applications.length)];
+        setApplication(randomApp);
+        // Don't auto-run analysis if no specific app was requested
       }
     }
   }, [applicationId]);

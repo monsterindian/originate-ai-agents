@@ -37,7 +37,7 @@ export const createRandomLoanApplication = (): LoanApplicationDTO => {
     purpose: faker.lorem.sentence(),
     completeness: faker.number.int({ min: 20, max: 100 }),
     displayStatus: faker.helpers.arrayElement(['Draft', 'Submitted', 'In Review', 'Information Needed', 'In Underwriting', 'Approved', 'Conditionally Approved', 'Rejected', 'Funding In Progress', 'Funded', 'Closed']),
-    risk: getRandomElement(RISK_LEVELS),
+    risk: getRandomElement([...RISK_LEVELS]),
     collateral: {
       type: faker.lorem.word(),
       value: faker.number.int({ min: 5000, max: 500000 }),
@@ -66,14 +66,14 @@ export const createRandomLoanApplication = (): LoanApplicationDTO => {
   };
 };
 
-// Function to create a fraud risk application
-export const createFraudRiskApplication = (baseApp: LoanApplicationDTO): LoanApplicationDTO => {
+// Generate a complete loan application with fraud risk data
+export const createFraudRiskApplication = (baseApp: LoanApplication): LoanApplication => {
   return {
     ...baseApp,
-    risk: getRandomElement(RISK_LEVELS),
+    risk: getRandomElement([...RISK_LEVELS]),
     fraudRiskScore: faker.number.int({ min: 20, max: 100 }),
     suspiciousActivity: faker.datatype.boolean(0.3),
-    documentVerification: getRandomElement(DOCUMENT_VERIFICATION_STATUSES),
+    documentVerification: getRandomElement([...DOCUMENT_VERIFICATION_STATUSES]) as "Verified" | "Pending" | "Failed",
     riskFactors: Array.from(
       { length: faker.number.int({ min: 1, max: 5 }) }, 
       () => getRandomElement(FRAUD_RISK_FACTORS)
@@ -175,17 +175,7 @@ export const getApplicationsForAgentType = (agentType: string, count: number = 1
     case "fraud-risk":
       // Create fraud risk applications with specific properties
       filteredApps = applications.slice(0, minAppCount).map(app => {
-        return {
-          ...app,
-          risk: getRandomElement(RISK_LEVELS),
-          fraudRiskScore: faker.number.int({ min: 20, max: 100 }),
-          suspiciousActivity: faker.datatype.boolean(0.3),
-          documentVerification: getRandomElement(DOCUMENT_VERIFICATION_STATUSES),
-          riskFactors: Array.from(
-            { length: faker.number.int({ min: 1, max: 5 }) }, 
-            () => getRandomElement(FRAUD_RISK_FACTORS)
-          )
-        };
+        return createFraudRiskApplication(app);
       });
       break;
     case "cash-flow-analysis":
