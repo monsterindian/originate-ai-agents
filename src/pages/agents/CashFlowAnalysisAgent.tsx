@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { 
@@ -796,4 +797,181 @@ const CashFlowAnalysisAgent = () => {
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="mb-4">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
-                    <TabsTrigger value
+                    <TabsTrigger value="historical">Historical</TabsTrigger>
+                    <TabsTrigger value="projections">Projections</TabsTrigger>
+                    <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="overview" className="space-y-4">
+                    <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Executive Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-sm">
+                          <p className="mb-4">
+                            The cash flow analysis for {application.borrower.companyName || `${application.borrower.firstName} ${application.borrower.lastName}`}'s
+                            ${application.amount.toLocaleString()} {application.purpose} loan application reveals a 
+                            <span className={
+                              cashFlowAnalysis.cashFlowHealth === 'Strong' ? ' text-green-600 font-medium' :
+                              cashFlowAnalysis.cashFlowHealth === 'Moderate' ? ' text-amber-600 font-medium' : ' text-red-600 font-medium'
+                            }>
+                              {' ' + cashFlowAnalysis.cashFlowHealth.toLowerCase() + ' '}
+                            </span>
+                            cash flow position with
+                            <span className={
+                              cashFlowAnalysis.repaymentCapacity === 'Strong' ? ' text-green-600 font-medium' :
+                              cashFlowAnalysis.repaymentCapacity === 'Moderate' ? ' text-amber-600 font-medium' : ' text-red-600 font-medium'
+                            }>
+                              {' ' + cashFlowAnalysis.repaymentCapacity.toLowerCase() + ' '}
+                            </span>
+                            loan repayment capacity.
+                          </p>
+                          
+                          <h4 className="font-semibold mb-2">Key Findings:</h4>
+                          <ul className="list-disc pl-5 space-y-1">
+                            <li>Operating Cash Flow: ${cashFlowAnalysis.historicalData.operatingCashFlow.toLocaleString()} annually</li>
+                            <li>Current Debt Service Coverage Ratio: {cashFlowAnalysis.historicalData.debtServiceCoverageRatio.toFixed(2)}x</li>
+                            <li>Cash Buffer: {cashFlowAnalysis.volatilityMetrics.cashBufferMonths.toFixed(1)} months of expenses</li>
+                            <li>
+                              Projected Annual Revenue: ${cashFlowAnalysis.projections.annualRevenue.toLocaleString()} 
+                              ({cashFlowAnalysis.projections.annualGrowthRate > 0 ? '+' : ''}{cashFlowAnalysis.projections.annualGrowthRate}%)
+                            </li>
+                          </ul>
+                        </CardContent>
+                        <CardFooter className="pt-0 text-sm">
+                          <div className="py-2 px-3 bg-muted rounded-md w-full">
+                            <span className="font-semibold">Recommendation:</span> {cashFlowAnalysis.recommendation}
+                          </div>
+                        </CardFooter>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base">Strengths & Concerns</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-sm">
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-semibold mb-2 text-green-600">Strengths:</h4>
+                              <ul className="list-disc pl-5 space-y-1">
+                                {cashFlowAnalysis.strengths.map((strength, idx) => (
+                                  <li key={idx}>{strength}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            
+                            <div>
+                              <h4 className="font-semibold mb-2 text-red-600">Concerns:</h4>
+                              <ul className="list-disc pl-5 space-y-1">
+                                {cashFlowAnalysis.concerns.map((concern, idx) => (
+                                  <li key={idx}>{concern}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-base">Monthly Cash Flow Trend</CardTitle>
+                        <CardDescription>Last 12 months</CardDescription>
+                      </CardHeader>
+                      <CardContent className="h-[300px] flex items-center justify-center border border-dashed rounded-md mt-2">
+                        [Cash Flow Chart Placeholder]
+                      </CardContent>
+                      <CardFooter className="text-xs text-muted-foreground">
+                        <div className="flex items-center">
+                          <Clock className="mr-1 h-3 w-3" />
+                          Data extracted from 12 months of bank statements and financial records.
+                        </div>
+                      </CardFooter>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="historical" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Historical Cash Flow Analysis</CardTitle>
+                        <CardDescription>Detailed breakdown of historical cash flow components</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Historical content here */}
+                        <div className="border border-dashed rounded-md h-[400px] flex items-center justify-center">
+                          [Historical Data Analysis Charts]
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="projections" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Future Cash Flow Projections</CardTitle>
+                        <CardDescription>{selectedPeriod}-month forecast with stress testing scenarios</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Projections content here */}
+                        <div className="border border-dashed rounded-md h-[400px] flex items-center justify-center">
+                          [Cash Flow Projections Charts]
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="recommendations" className="space-y-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Cash Flow Improvement Recommendations</CardTitle>
+                        <CardDescription>Actionable strategies to strengthen financial position</CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                          {cashFlowAnalysis.improvementRecommendations.map((rec, idx) => (
+                            <Card key={idx}>
+                              <CardHeader className="py-3">
+                                <CardTitle className="text-base">{rec.title}</CardTitle>
+                              </CardHeader>
+                              <CardContent className="py-2 text-sm">
+                                {rec.description}
+                              </CardContent>
+                              <CardFooter className="py-2">
+                                <div className="flex flex-wrap gap-2">
+                                  {rec.tags.map((tag, tagIdx) => (
+                                    <Badge key={tagIdx} variant="secondary">{tag}</Badge>
+                                  ))}
+                                </div>
+                              </CardFooter>
+                            </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" size="sm" onClick={() => window.location.href = "/applications"}>
+                  Back to Applications
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  disabled={isAnalyzing}
+                  onClick={handleDownloadSummary}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Full Report
+                </Button>
+              </CardFooter>
+            </Card>
+          </>
+        )}
+      </div>
+    </MainLayout>
+  );
+};
+
+export default CashFlowAnalysisAgent;
