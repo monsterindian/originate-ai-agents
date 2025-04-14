@@ -121,7 +121,6 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
     // In a real app, this would open the email client or phone dialer
   };
   
-  // Helper to safely render address
   const renderAddress = () => {
     if (!application.borrower.address) {
       return "No address on file";
@@ -136,12 +135,10 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
     );
   };
   
-  // Check if we have a status icon for this status
   const statusIcon = application.displayStatus && statusIcons[application.displayStatus] 
     ? statusIcons[application.displayStatus] 
     : <Clock className="h-4 w-4 text-slate-500" />;
   
-  // Check if we have a status variant for this status
   const statusVariant = application.displayStatus && statusVariants[application.displayStatus]
     ? statusVariants[application.displayStatus] as any
     : "default";
@@ -159,14 +156,12 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
   
     const borrowerName = borrower.companyName || `${borrower.firstName} ${borrower.lastName}`;
   
-    // Default values
     let riskLevel = 'Medium';
     let riskScore = 50;
     let riskFactors: string[] = [];
     let riskStrengths: string[] = [];
     let riskRatios: Record<string, string> = {};
   
-    // Enhanced Risk Assessment Logic
     if (risk === "Low") {
       riskLevel = 'Low';
       riskScore = 85;
@@ -213,7 +208,6 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
       };
     }
   
-    // After the existing code in the renderRiskAssessment function, update the risk assessment section to be more comprehensive
     return `
       <div class="section">
         <h1>Risk Assessment Report</h1>
@@ -813,3 +807,179 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                 )}
                 
                 <div className="mt-4">
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="timeline" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Application Timeline</CardTitle>
+                <CardDescription>Chronological history of this application</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {application.dateSubmitted && (
+                    <div className="flex">
+                      <div className="flex flex-col items-center mr-4">
+                        <div className="h-2.5 w-2.5 rounded-full bg-blue-500"></div>
+                        <div className="h-full w-px bg-gray-200 my-1"></div>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm font-medium">Application Submitted</p>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(application.dateSubmitted)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {getBorrowerName()} submitted loan application for {formatCurrency(application.amount)}.
+                        </p>
+                        <div className="text-xs text-muted-foreground flex items-center mt-1">
+                          <span className="inline-block w-2 h-2 rounded-full mr-1.5 bg-blue-500" />
+                          <span>Intake AI Agent</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {application.dateReviewed && (
+                    <div className="flex">
+                      <div className="flex flex-col items-center mr-4">
+                        <div className="h-2.5 w-2.5 rounded-full bg-indigo-500"></div>
+                        <div className="h-full w-px bg-gray-200 my-1"></div>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm font-medium">Application Reviewed</p>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(application.dateReviewed)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Initial review completed. Documents processed and verified.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Action: Document verification and initial risk assessment completed.
+                        </p>
+                        <div className="text-xs text-muted-foreground flex items-center mt-1">
+                          <span className="inline-block w-2 h-2 rounded-full mr-1.5 bg-indigo-500" />
+                          <span>Processing AI Agent</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {application.dateUnderwritten && (
+                    <div className="flex">
+                      <div className="flex flex-col items-center mr-4">
+                        <div className="h-2.5 w-2.5 rounded-full bg-purple-500"></div>
+                        <div className="h-full w-px bg-gray-200 my-1"></div>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm font-medium">Underwriting Completed</p>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(application.dateUnderwritten)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Full underwriting analysis completed with {application.risk} risk assessment.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Action: Comprehensive risk assessment performed, financial analysis completed, and underwriting recommendation provided.
+                        </p>
+                        <div className="text-xs text-muted-foreground flex items-center mt-1">
+                          <span className="inline-block w-2 h-2 rounded-full mr-1.5 bg-purple-500" />
+                          <span>Underwriting AI Agent</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {application.dateApproved && (
+                    <div className="flex">
+                      <div className="flex flex-col items-center mr-4">
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500"></div>
+                        <div className="h-full w-px bg-gray-200 my-1"></div>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm font-medium">Decision Made</p>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(application.dateApproved)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Application {application.status === "approved" ? "approved" : application.status === "conditionally_approved" ? "conditionally approved" : "rejected"}.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Action: Final loan decision determined based on comprehensive analysis of all application data, risk assessment, and policy guidelines.
+                        </p>
+                        <div className="text-xs text-muted-foreground flex items-center mt-1">
+                          <span className="inline-block w-2 h-2 rounded-full mr-1.5 bg-emerald-500" />
+                          <span>Decision AI Agent</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {application.dateFunded && (
+                    <div className="flex">
+                      <div className="flex flex-col items-center mr-4">
+                        <div className="h-2.5 w-2.5 rounded-full bg-green-500"></div>
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-start justify-between">
+                          <p className="text-sm font-medium">Loan Funded</p>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(application.dateFunded)}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Loan disbursed: {formatCurrency(application.amount)}.
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Action: Funds transfer initiated and confirmation sent to borrower.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {application.notes && application.notes.length > 0 && application.notes.map((note, index) => (
+                    note.isAgentNote && (
+                      <div key={note.id} className="flex">
+                        <div className="flex flex-col items-center mr-4">
+                          <div className="h-2.5 w-2.5 rounded-full bg-primary"></div>
+                          {index < application.notes.length - 1 && (
+                            <div className="h-full w-px bg-gray-200 my-1"></div>
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm font-medium">AI Agent Action</p>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDate(note.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{note.content}</p>
+                          <div className="text-xs text-muted-foreground flex items-center mt-1">
+                            <span className="inline-block w-2 h-2 rounded-full mr-1.5 bg-primary" />
+                            <span>AI Agent</span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default ApplicationDetailModal;
