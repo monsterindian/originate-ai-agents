@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,10 +13,9 @@ import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
 import DocumentGenerator from "@/components/DocumentGenerator";
 import { toast } from "sonner";
 import { getMockLoanApplications, getMockLoanApplicationById } from "@/services/mockDataService";
-import { LoanApplication } from "@/types";
+import { Document, LoanApplication, LoanStatus } from "@/types";
 import { useNavigate } from "react-router-dom";
 
-// Mock data specific to the processing agent
 const mockProcessingTasks = [
   {
     id: "APP-3846",
@@ -136,7 +134,6 @@ const ProcessingAgent = () => {
   const [showDocumentGenerator, setShowDocumentGenerator] = useState<{show: boolean, appId: string} | null>(null);
   const navigate = useNavigate();
 
-  // Simulate AI document processing
   useEffect(() => {
     if (processingTask) {
       const interval = setInterval(() => {
@@ -155,15 +152,12 @@ const ProcessingAgent = () => {
     }
   }, [processingTask]);
 
-  // Fetch real application data when viewing an application
   const handleViewApplication = (task: any) => {
-    // Attempt to fetch a real application from mock data
     const realApp = getMockLoanApplicationById(task.id);
     
     if (realApp) {
       setSelectedApplication(realApp);
     } else {
-      // Create a proper LoanApplication object from the mock task
       const mockApplication: LoanApplication = {
         id: task.id,
         borrowerId: `B-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
@@ -195,14 +189,9 @@ const ProcessingAgent = () => {
         interestRate: 5.25,
         purpose: task.purpose || "Business Expansion",
         completeness: task.completeness || 50,
-        risk: {
-          level: task.priority === "High" ? "High" : task.priority === "Medium" ? "Medium" : "Low",
-          score: task.priority === "High" ? 35 : task.priority === "Medium" ? 60 : 80,
-          factors: ["Credit history considerations", "Business sector volatility"],
-          strengths: ["Experienced management team", "Strong market position"]
-        },
         displayStatus: task.status || "In Review",
-        status: "reviewing",
+        risk: task.priority === "High" ? "High" : task.priority === "Medium" ? "Medium" : "Low",
+        status: "reviewing" as LoanStatus,
         documents: documentStatuses
           .filter(doc => doc.appId === task.id)
           .map(doc => ({
@@ -213,12 +202,12 @@ const ProcessingAgent = () => {
                  doc.name.includes("Financial") ? "Financial" : 
                  doc.name.includes("Tax") ? "Tax" : "Other",
             url: "http://example.com/doc1",
-            uploadedBy: doc.status === "verified" ? "borrower" : "pending",
+            uploadedBy: "borrower",
             uploadedAt: doc.uploadDate !== "-" ? doc.uploadDate : new Date().toISOString().split('T')[0],
-            status: doc.status,
+            status: doc.status === "verified" ? "verified" : doc.status === "rejected" ? "rejected" : "pending",
             aiAnalysisComplete: doc.aiVerified,
             aiAnalysisSummary: doc.aiVerified ? "Document appears to be authentic." : undefined
-          })),
+          })) as Document[],
         notes: [
           {
             id: "NOTE-1",
@@ -271,7 +260,6 @@ const ProcessingAgent = () => {
   };
   
   const handleGenerateDocumentSummary = (appId: string) => {
-    // Find the application
     const app = mockProcessingTasks.find(task => task.id === appId);
     if (!app) return;
     
@@ -282,7 +270,6 @@ const ProcessingAgent = () => {
   };
   
   const handleViewBorrower = (borrower: string) => {
-    // Convert borrower name to a simulated ID for navigation
     const borrowerId = "B-" + borrower.split(" ")[0].toUpperCase();
     navigate(`/borrowers?id=${borrowerId}`);
   };
