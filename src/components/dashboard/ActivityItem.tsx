@@ -10,6 +10,8 @@ type Activity = {
   agentType?: string;
   actionResult?: string;
   applicationId?: string;
+  documentGenerated?: string;
+  riskAssessment?: string;
 };
 
 type ActivityItemProps = {
@@ -87,6 +89,16 @@ const ActivityItem = ({ activity, index, isLast }: ActivityItemProps) => {
         {activity.actionResult && (
           <p className="text-xs text-muted-foreground italic">
             Result: {activity.actionResult}
+          </p>
+        )}
+        {activity.documentGenerated && (
+          <p className="text-xs text-muted-foreground">
+            Document Generated: {activity.documentGenerated}
+          </p>
+        )}
+        {activity.riskAssessment && (
+          <p className="text-xs text-muted-foreground">
+            Risk Assessment: {activity.riskAssessment}
           </p>
         )}
         {activity.applicationId && (

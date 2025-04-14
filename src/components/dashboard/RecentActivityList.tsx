@@ -10,6 +10,8 @@ export type Activity = {
   agentType?: string;
   actionResult?: string;
   applicationId?: string;
+  documentGenerated?: string;
+  riskAssessment?: string;
 };
 
 type RecentActivityListProps = {
