@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -149,6 +148,15 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
   const statusVariant = application.displayStatus && statusVariants[application.displayStatus]
     ? statusVariants[application.displayStatus] as any
     : "default";
+
+  const getDecisionDate = () => {
+    if (application.status === "approved" || application.status === "conditionally_approved") {
+      return application.dateApproved;
+    } else if (application.status === "rejected") {
+      return application.dateReviewed; // Using dateReviewed as fallback for rejection
+    }
+    return undefined;
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
@@ -778,7 +786,7 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                         </div>
                       )}
                       
-                      {application.dateDecided && (
+                      {getDecisionDate() && (
                         <div className="flex">
                           <div className="flex flex-col items-center mr-4">
                             <div className={`h-2.5 w-2.5 rounded-full ${
@@ -794,7 +802,7 @@ const ApplicationDetailModal = ({ isOpen, onClose, application }: ApplicationDet
                             <div className="flex items-start justify-between">
                               <p className="text-sm font-medium">Decision Made</p>
                               <span className="text-xs text-muted-foreground">
-                                {formatDate(application.dateDecided)}
+                                {formatDate(getDecisionDate())}
                               </span>
                             </div>
                             <p className="text-sm text-muted-foreground">
