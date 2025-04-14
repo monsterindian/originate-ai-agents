@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -64,7 +63,6 @@ const Applications = () => {
   const location = useLocation();
   
   useEffect(() => {
-    // Check for query parameters
     const params = new URLSearchParams(location.search);
     const action = params.get('action');
     const borrowerId = params.get('borrowerId');
@@ -72,23 +70,18 @@ const Applications = () => {
     
     if (action === 'new') {
       if (borrowerId) {
-        // Simulate starting a new application for specific borrower
         toast.success(`Starting new application for borrower ID: ${borrowerId}`);
-        // In a real app, you would navigate to a form or modal for creating a new application
       } else {
         toast.info("Starting new application");
-        // In a real app, you would navigate to a form or modal for creating a new application
       }
     }
     
-    // Load applications with a small delay to simulate API call
     setLoading(true);
     const timer = setTimeout(() => {
       const apps = getMockLoanApplications();
       setApplications(apps);
       setFilteredApplications(apps);
       
-      // If an application ID was provided, open that application
       if (applicationId) {
         const app = apps.find(app => app.id === applicationId);
         if (app) {
@@ -104,7 +97,6 @@ const Applications = () => {
     return () => clearTimeout(timer);
   }, [location.search]);
   
-  // Filter applications when search term or status filter changes
   useEffect(() => {
     const filteredBySearch = applications.filter(app => {
       const borrowerName = app.borrower.companyName || `${app.borrower.firstName} ${app.borrower.lastName}`;
@@ -128,29 +120,23 @@ const Applications = () => {
   const handleViewBorrower = (application: LoanApplication) => {
     const borrowerName = application.borrower.companyName || `${application.borrower.firstName} ${application.borrower.lastName}`;
     toast.info(`Viewing borrower details for ${borrowerName}`);
-    // Navigate to the borrower page with the corresponding ID
     navigate(`/borrowers?id=${application.borrowerId}`);
   };
 
   const handleSendToAgent = (application: LoanApplication) => {
-    // Update to include the new Cash Flow Analysis Agent option
     const agentTypes = [
       { type: "intake", name: "Intake Agent", conditions: ["draft", "submitted"] },
       { type: "processing", name: "Processing Agent", conditions: ["reviewing", "information_needed"] },
       { type: "underwriting", name: "Underwriting Agent", conditions: ["underwriting"] },
       { type: "cash-flow-analysis", name: "Cash Flow Analysis Agent", conditions: ["draft", "submitted", "reviewing", "information_needed", "underwriting", "approved", "conditionally_approved"] },
-      { type: "decision", name: "Decision Agent", conditions: [] } // Default
+      { type: "decision", name: "Decision Agent", conditions: [] }
     ];
     
-    // Find the appropriate agent type based on application status
     let selectedAgent = agentTypes.find(agent => 
       agent.conditions.includes(application.status)
-    ) || agentTypes[agentTypes.length - 1]; // Default to Decision Agent
+    ) || agentTypes[agentTypes.length - 1];
     
-    // Override for Cash Flow Analysis
-    // Show agent selection menu if more than one agent is applicable
     if (application.status === "underwriting" || application.status === "reviewing" || application.status === "information_needed") {
-      // Create a popup to select which agent to send to
       toast(
         <div className="space-y-2">
           <p className="font-semibold">Select Agent for Application {application.id}</p>
@@ -206,7 +192,6 @@ const Applications = () => {
       return;
     }
     
-    // For other statuses or direct selection
     toast(
       <div className="space-y-2">
         <p className="font-semibold">Sending Application to {selectedAgent.name}</p>
@@ -241,7 +226,6 @@ const Applications = () => {
   const handleDownloadApplication = (application: LoanApplication) => {
     toast.success(`Generating PDF for application ${application.id}`);
     
-    // Show a more detailed toast after a brief delay
     setTimeout(() => {
       toast(
         <div className="space-y-2">
@@ -264,7 +248,6 @@ const Applications = () => {
     setLoading(true);
     toast.info("Refreshing application data...");
     
-    // Simulate API refresh
     setTimeout(() => {
       const apps = getMockLoanApplications();
       setApplications(apps);

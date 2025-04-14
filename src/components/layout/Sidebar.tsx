@@ -12,7 +12,8 @@ import {
   Bot,
   Database,
   ShieldAlert,
-  PiggyBank
+  PiggyBank,
+  BarChart4
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -92,6 +93,13 @@ const Sidebar = () => {
             to="/agents/fraud-risk" 
             icon={<ShieldAlert size={20} />} 
             label="Fraud Risk Agent" 
+            collapsed={collapsed}
+            extra={<AgentStatusIndicator active />}
+          />
+          <NavItem 
+            to="/agents/cash-flow-analysis" 
+            icon={<BarChart4 size={20} />} 
+            label="Cash Flow Analysis" 
             collapsed={collapsed}
             extra={<AgentStatusIndicator active />}
           />

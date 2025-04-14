@@ -14,10 +14,18 @@ const AgentStatusIndicator = ({ active = false, status, type }: AgentStatusIndic
   return (
     <span 
       className={cn(
-        "agent-indicator",
-        isActive ? "agent-indicator-active" : "agent-indicator-inactive"
+        "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+        isActive 
+          ? "bg-emerald-100 text-emerald-800" 
+          : "bg-gray-100 text-gray-800"
       )}
     >
+      <span 
+        className={cn(
+          "w-2 h-2 mr-1 rounded-full",
+          isActive ? "bg-emerald-500" : "bg-gray-500"
+        )}
+      />
       {isActive ? "Active" : "Inactive"}
       {type && ` (${type})`}
     </span>
