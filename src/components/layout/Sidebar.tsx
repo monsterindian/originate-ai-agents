@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   Bot,
   Database,
-  ShieldAlert
+  ShieldAlert,
+  PiggyBank
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -98,6 +99,13 @@ const Sidebar = () => {
             to="/agents/decision" 
             icon={<Bot size={20} />} 
             label="Decision Agent" 
+            collapsed={collapsed}
+            extra={<AgentStatusIndicator active />}
+          />
+          <NavItem 
+            to="/agents/funding" 
+            icon={<PiggyBank size={20} />} 
+            label="Funding Agent" 
             collapsed={collapsed}
             extra={<AgentStatusIndicator active />}
           />

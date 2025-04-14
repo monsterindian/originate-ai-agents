@@ -1,4 +1,3 @@
-
 export type LoanStatus = 
   | "draft" 
   | "submitted" 
@@ -89,7 +88,9 @@ export type LoanApplicationDTO = {
     processingAgentId?: string;
     underwritingAgentId?: string;
     decisionAgentId?: string;
+    fundingAgentId?: string;
   };
+  recommendedFundingSourceId?: string;
 };
 
 export type LoanApplication = LoanApplicationDTO & {
@@ -120,7 +121,8 @@ export type AgentType =
   | "intake" 
   | "processing" 
   | "underwriting" 
-  | "decision";
+  | "decision"
+  | "funding";
 
 export type Agent = {
   id: string;
@@ -181,4 +183,66 @@ export type Loan = {
     amount: number;
     status: "on_time" | "late" | "missed";
   }[];
+  fundingSourceId?: string;
+};
+
+export type FundingSourceType = 
+  | "institutional_investor" 
+  | "bank" 
+  | "credit_union" 
+  | "private_equity" 
+  | "government_program"
+  | "securitization_pool" 
+  | "internal_funds"
+  | "peer_to_peer";
+
+export type FundingSource = {
+  id: string;
+  name: string;
+  type: FundingSourceType;
+  description: string;
+  minAmount: number;
+  maxAmount: number;
+  interestRateRange: {
+    min: number;
+    max: number;
+  };
+  eligibilityCriteria: {
+    minCreditScore?: number;
+    maxLTV?: number; // Loan-to-Value ratio
+    preferredAssetClasses?: AssetClass[];
+    maxDTI?: number; // Debt-to-Income ratio
+    businessRequirements?: string;
+    locationRestrictions?: string[];
+  };
+  processingTime: {
+    min: number; // in days
+    max: number; // in days
+  };
+  availableFunds: number;
+  allocatedFunds: number;
+  status: "active" | "inactive" | "limited";
+  riskTolerance: "conservative" | "moderate" | "aggressive";
+  specialPrograms?: string[];
+  contactInfo?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  dateAdded: string;
+  lastUpdated: string;
+};
+
+export type FundingRecommendation = {
+  applicationId: string;
+  fundingSourceId: string;
+  matchScore: number; // 0-100
+  reasons: string[];
+  alternatives: {
+    fundingSourceId: string;
+    matchScore: number;
+    reasons: string[];
+  }[];
+  dateGenerated: string;
+  generatedBy: string;
 };
