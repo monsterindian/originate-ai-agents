@@ -137,10 +137,10 @@ const ensureMinimumApplicationsForStatus = (
 };
 
 // Function to get applications for a specific agent type
-export const getApplicationsForAgentType = (agentType: string, count: number = 150): LoanApplication[] => {
+export const getApplicationsForAgentType = (agentType: string, count: number = 50): LoanApplication[] => {
   // Get a larger pool of applications to filter from
   const applications = getMockLoanApplications(300);
-  const minAppCount = 100; // Ensure at least 100 applications for each agent
+  const minAppCount = 50; // Ensure at least 50 applications for each agent
   
   // Initial filtered applications based on agent type
   let filteredApps: LoanApplication[];
