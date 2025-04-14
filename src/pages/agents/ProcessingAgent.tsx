@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Check, Clock, Info, X, ListFilter, CheckCircle, AlertCircle, FileText } from "lucide-react";
-import { getMockLoanApplications } from "@/services/mockDataService";
+import { getApplicationsForAgentType } from "@/services/mock/loanApplicationService";
 import { LoanApplication } from "@/types";
 
 const ProcessingAgent = () => {
   const [searchParams] = useSearchParams();
   const applicationId = searchParams.get("applicationId");
   const [application, setApplication] = useState<LoanApplication | null>(null);
+  const [applications, setApplications] = useState<LoanApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
@@ -23,13 +24,13 @@ const ProcessingAgent = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Get applications for processing agent
+        const apps = getApplicationsForAgentType('processing', 50);
+        setApplications(apps);
         
         // If applicationId is provided, fetch that specific application
         if (applicationId) {
-          const allApplications = getMockLoanApplications(50);
-          const app = allApplications.find(a => a.id === applicationId);
+          const app = apps.find(a => a.id === applicationId);
           if (app) {
             setApplication(app);
           } else {
@@ -46,6 +47,10 @@ const ProcessingAgent = () => {
 
     fetchData();
   }, [applicationId]);
+
+  const handleSelectApplication = (app: LoanApplication) => {
+    setApplication(app);
+  };
 
   const startProcessing = () => {
     setIsProcessing(true);
@@ -111,7 +116,7 @@ const ProcessingAgent = () => {
     );
   }
 
-  // If no application is provided, show a placeholder
+  // If no application is selected, show the application list
   if (!application) {
     return (
       <MainLayout>
@@ -123,27 +128,85 @@ const ProcessingAgent = () => {
                 Process and verify application documents
               </p>
             </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm">
+                <ListFilter className="w-4 h-4 mr-2" /> Filter
+              </Button>
+            </div>
           </div>
           
-          <Card className="border-dashed border-muted">
-            <CardContent className="py-12 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <FileText className="h-8 w-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">No Application Selected</h3>
-              <p className="text-muted-foreground max-w-md mb-4">
-                Please select an application from the Applications dashboard to process its documents.
-              </p>
-              <Button onClick={() => window.location.href = "/applications"}>
-                Browse Applications
-              </Button>
-            </CardContent>
-          </Card>
+          {applications.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {applications.map((app) => (
+                <Card key={app.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleSelectApplication(app)}>
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-base font-medium">
+                        {app.borrower.companyName || `${app.borrower.firstName} ${app.borrower.lastName}`}
+                      </CardTitle>
+                      <Badge variant="outline">
+                        {app.displayStatus || app.status}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2 text-sm mb-3">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Application ID:</span>
+                        <span className="font-medium">{app.id}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Loan Amount:</span>
+                        <span className="font-medium">${app.amount.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Status:</span>
+                        <span className="font-medium">{app.displayStatus || app.status}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Documents:</span>
+                        <span className="font-medium">{app.documents.length} to review</span>
+                      </div>
+                    </div>
+                    <Separator className="my-3" />
+                    <div className="flex justify-end mt-2">
+                      <Button
+                        size="sm"
+                        className="h-8"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSelectApplication(app);
+                        }}
+                      >
+                        <FileText className="w-4 h-4 mr-2" /> Process Documents
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="border-dashed border-muted">
+              <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <FileText className="h-8 w-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No Applications Available</h3>
+                <p className="text-muted-foreground max-w-md mb-4">
+                  There are currently no applications in the processing queue.
+                </p>
+                <Button onClick={() => window.location.href = "/applications"}>
+                  Browse Applications
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </MainLayout>
     );
   }
 
+  // Show selected application details
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -156,6 +219,13 @@ const ProcessingAgent = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setApplication(null)}
+              size="sm"
+            >
+              Back to List
+            </Button>
             <Badge variant="outline">
               {application.displayStatus || application.status}
             </Badge>
