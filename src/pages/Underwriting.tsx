@@ -215,9 +215,10 @@ const Underwriting = () => {
                         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
                         th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
                         th { background-color: #f2f2f2; }
-                        .risk-high { color: #e11d48; }
-                        .risk-medium { color: #f59e0b; }
-                        .risk-low { color: #10b981; }
+                        .risk-high { color: #e11d48; font-weight: 600; }
+                        .risk-medium { color: #f59e0b; font-weight: 600; }
+                        .risk-low { color: #10b981; font-weight: 600; }
+                        .metric { color: #2563eb; font-weight: 600; }
                       </style>
                     </head>
                     <body>
@@ -227,7 +228,7 @@ const Underwriting = () => {
                           <p>Application ID: ${appId}</p>
                           <p>Date: ${new Date().toLocaleDateString()}</p>
                         </div>
-                        <img src="/lovable-uploads/c358cff4-5e06-49e8-af0b-d9e4c7099001.png" class="logo" alt="GaIgentic Logo">
+                        <img src="/lovable-uploads/c358cff4-5e06-49e8-af0b-d9e4c7099001.png" class="logo" alt="GaIGentic Logo">
                       </div>
                       
                       <h2>Application Details</h2>
@@ -266,28 +267,40 @@ const Underwriting = () => {
                         </tr>
                         <tr>
                           <th>Debt-to-Income Ratio</th>
-                          <td>${mockApplications.find(a => a.id === appId)?.risk.debtToIncome || 'N/A'}</td>
+                          <td><span class="metric">Debt-to-Income Ratio:</span> ${mockApplications.find(a => a.id === appId)?.risk.debtToIncome || 'N/A'}</td>
                         </tr>
                         <tr>
                           <th>Loan-to-Value Ratio</th>
-                          <td>${mockApplications.find(a => a.id === appId)?.risk.loanToValue || 'N/A'}</td>
+                          <td><span class="metric">Loan-to-Value Ratio:</span> ${mockApplications.find(a => a.id === appId)?.risk.loanToValue || 'N/A'}</td>
                         </tr>
                         <tr>
                           <th>Credit Utilization</th>
-                          <td>${mockApplications.find(a => a.id === appId)?.risk.creditUtilization || 'N/A'}</td>
+                          <td><span class="metric">Credit Utilization:</span> ${mockApplications.find(a => a.id === appId)?.risk.creditUtilization || 'N/A'}</td>
                         </tr>
                       </table>
                       
                       <h2>Risk Factors</h2>
                       <ul>
-                        ${mockApplications.find(a => a.id === appId)?.risk.factors.map(factor => `<li>${factor}</li>`).join('') || '<li>No risk factors identified</li>'}
+                        ${mockApplications.find(a => a.id === appId)?.risk.factors.map(factor => {
+                          let className = '';
+                          if (factor.toLowerCase().includes('debt') || factor.toLowerCase().includes('ratio') || factor.toLowerCase().includes('utilization')) {
+                            className = 'metric';
+                          } else if (factor.toLowerCase().includes('strong') || factor.toLowerCase().includes('excellent') || factor.toLowerCase().includes('low')) {
+                            className = 'risk-low';
+                          } else if (factor.toLowerCase().includes('below') || factor.toLowerCase().includes('limited')) {
+                            className = 'risk-medium';
+                          } else if (factor.toLowerCase().includes('high') || factor.toLowerCase().includes('concern') || factor.toLowerCase().includes('volatile')) {
+                            className = 'risk-high';
+                          }
+                          return `<li><span class="${className}">${factor}</span></li>`;
+                        }).join('') || '<li>No risk factors identified</li>'}
                       </ul>
                       
                       <h2>Notes</h2>
                       <p>${mockApplications.find(a => a.id === appId)?.notes || 'No notes available'}</p>
                       
                       <div style="margin-top: 50px;">
-                        <p><strong>Prepared by:</strong> GaIgentic Underwriting Team</p>
+                        <p><strong>Prepared by:</strong> GaIGentic Underwriting Team</p>
                         <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
                       </div>
                     </body>

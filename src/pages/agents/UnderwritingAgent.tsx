@@ -188,9 +188,11 @@ const UnderwritingAgent = () => {
                 th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
                 th { background-color: #f2f2f2; }
                 .section { margin-bottom: 30px; }
-                .risk-high { color: #e11d48; }
-                .risk-medium { color: #f59e0b; }
-                .risk-low { color: #10b981; }
+                .risk-high { color: #e11d48; font-weight: 600; }
+                .risk-medium { color: #f59e0b; font-weight: 600; }
+                .risk-low { color: #10b981; font-weight: 600; }
+                .metric { color: #2563eb; font-weight: 600; }
+                .strength { color: #16a34a; font-weight: 600; }
                 .progress-container { width: 100%; height: 20px; background-color: #f0f0f0; border-radius: 10px; margin: 10px 0; }
                 .progress-bar { height: 100%; border-radius: 10px; }
                 .progress-low { background-color: #10b981; }
@@ -205,7 +207,7 @@ const UnderwritingAgent = () => {
                   <p>Application ID: ${appId}</p>
                   <p>Date: ${new Date().toLocaleDateString()}</p>
                 </div>
-                <img src="/lovable-uploads/c358cff4-5e06-49e8-af0b-d9e4c7099001.png" class="logo" alt="GaIgentic Logo">
+                <img src="/lovable-uploads/c358cff4-5e06-49e8-af0b-d9e4c7099001.png" class="logo" alt="GaIGentic Logo">
               </div>
               
               <div class="section">
@@ -233,11 +235,11 @@ const UnderwritingAgent = () => {
                     <th>Credit Score</th>
                     <td>${app.creditScore}</td>
                     <th>Loan-to-Value</th>
-                    <td>${app.ltvRatio}</td>
+                    <td><span class="metric">Loan-to-Value:</span> ${app.ltvRatio}</td>
                   </tr>
                   <tr>
                     <th>Debt-to-Income</th>
-                    <td>${app.dti}</td>
+                    <td><span class="metric">Debt-to-Income:</span> ${app.dti}</td>
                     <th>Completion Status</th>
                     <td>${app.completeness}%</td>
                   </tr>
@@ -246,7 +248,7 @@ const UnderwritingAgent = () => {
               
               <div class="section">
                 <h2>Risk Assessment Overview</h2>
-                <h3>Risk Level: <span class="risk-${app.riskAssessment.level.toLowerCase()}">${app.riskAssessment.level}</span></h3>
+                <h3>Risk Level: <span class="risk-${app.riskAssessment.level.toLowerCase()}">${app.riskAssessment.level} Risk</span></h3>
                 
                 <p>Risk Score: ${app.riskAssessment.score}/100</p>
                 <div class="progress-container">
@@ -255,12 +257,26 @@ const UnderwritingAgent = () => {
                 
                 <h3>Key Risk Factors</h3>
                 <ul>
-                  ${app.riskAssessment.factors.map(factor => `<li>${factor}</li>`).join('')}
+                  ${app.riskAssessment.factors.map(factor => {
+                    let className = '';
+                    if (factor.toLowerCase().includes('debt') || factor.toLowerCase().includes('ratio') || factor.toLowerCase().includes('utilization')) {
+                      className = 'metric';
+                    } else if (factor.toLowerCase().includes('strong') || factor.toLowerCase().includes('sufficient') || factor.toLowerCase().includes('high-demand')) {
+                      className = 'risk-low';
+                    } else if (factor.toLowerCase().includes('moderate') || factor.toLowerCase().includes('cyclical') || factor.toLowerCase().includes('longer')) {
+                      className = 'risk-medium';
+                    } else if (factor.toLowerCase().includes('downturn') || factor.toLowerCase().includes('seasonal') || factor.toLowerCase().includes('volatile')) {
+                      className = 'risk-high';
+                    }
+                    return `<li><span class="${className}">${factor}</span></li>`;
+                  }).join('')}
                 </ul>
                 
                 <h3>Key Strengths</h3>
                 <ul>
-                  ${app.riskAssessment.strengths.map(strength => `<li>${strength}</li>`).join('')}
+                  ${app.riskAssessment.strengths.map(strength => 
+                    `<li><span class="strength">${strength}</span></li>`
+                  ).join('')}
                 </ul>
               </div>
               
@@ -270,7 +286,7 @@ const UnderwritingAgent = () => {
                   ${Object.entries(app.riskAssessment.ratios).map(([key, value]) => `
                     <tr>
                       <th>${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</th>
-                      <td>${value}</td>
+                      <td><span class="metric">${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:</span> ${value}</td>
                     </tr>
                   `).join('')}
                 </table>
@@ -279,15 +295,15 @@ const UnderwritingAgent = () => {
               <div class="section">
                 <h2>Recommendation</h2>
                 <p>${app.riskAssessment.level === 'Low' ? 
-                  'Based on the comprehensive risk analysis, this application presents a low risk profile and is recommended for approval with standard terms.' :
+                  'Based on the comprehensive risk analysis, this application presents a <span class="risk-low">low risk profile</span> and is recommended for approval with standard terms.' :
                   app.riskAssessment.level === 'Medium' ? 
-                  'Based on the comprehensive risk analysis, this application presents a moderate risk profile. Recommend approval with additional monitoring or modified terms to mitigate identified risk factors.' :
-                  'Based on the comprehensive risk analysis, this application presents a high risk profile. Recommend additional collateral requirements or guarantees before proceeding, or denial if risks cannot be adequately mitigated.'
+                  'Based on the comprehensive risk analysis, this application presents a <span class="risk-medium">moderate risk profile</span>. Recommend approval with additional monitoring or modified terms to mitigate identified risk factors.' :
+                  'Based on the comprehensive risk analysis, this application presents a <span class="risk-high">high risk profile</span>. Recommend additional collateral requirements or guarantees before proceeding, or denial if risks cannot be adequately mitigated.'
                 }</p>
               </div>
               
               <div style="margin-top: 50px;">
-                <p><strong>Prepared by:</strong> GaIgentic Underwriting AI Agent</p>
+                <p><strong>Prepared by:</strong> GaIGentic Underwriting AI Agent</p>
                 <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
                 <p><small>This report was automatically generated based on AI analysis. Human review recommended before final decision.</small></p>
               </div>

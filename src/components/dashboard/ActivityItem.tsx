@@ -70,6 +70,49 @@ const ActivityItem = ({ activity, index, isLast }: ActivityItemProps) => {
     }
   };
 
+  // Highlight key risk terms in appropriate colors
+  const highlightText = (text: string) => {
+    if (!text.toLowerCase().includes('risk')) return text;
+    
+    // Create a regex to find key risk terms
+    const riskRegex = /(high risk|medium risk|low risk|risk assessment|debt-to-income|loan-to-value|credit utilization|strong cash flow|insufficient|excellent|poor|concern|volatility|stable|uncertain|approval|rejection|ratio)/gi;
+    
+    // Split the text by the regex matches
+    const parts = text.split(riskRegex);
+    const matches = text.match(riskRegex) || [];
+    
+    // Combine parts and matches with appropriate styling
+    return parts.map((part, index) => {
+      // Return part as is
+      if (index === parts.length - 1) return part;
+      
+      // Get the corresponding match
+      const match = matches[index];
+      if (!match) return part;
+      
+      // Determine color based on match content
+      let color = "text-slate-600 font-medium";
+      const lowerMatch = match.toLowerCase();
+      
+      if (lowerMatch.includes("high risk") || lowerMatch.includes("poor") || lowerMatch.includes("insufficient") || lowerMatch.includes("rejection") || lowerMatch.includes("volatility") || lowerMatch.includes("uncertain") || lowerMatch.includes("concern")) {
+        color = "text-red-600 font-medium";
+      } else if (lowerMatch.includes("medium risk")) {
+        color = "text-amber-600 font-medium";
+      } else if (lowerMatch.includes("low risk") || lowerMatch.includes("excellent") || lowerMatch.includes("strong") || lowerMatch.includes("approval") || lowerMatch.includes("stable")) {
+        color = "text-green-600 font-medium";
+      } else if (lowerMatch.includes("debt-to-income") || lowerMatch.includes("loan-to-value") || lowerMatch.includes("credit utilization") || lowerMatch.includes("ratio")) {
+        color = "text-blue-600 font-medium";
+      }
+      
+      return (
+        <>
+          {part}
+          <span className={color}>{match}</span>
+        </>
+      );
+    });
+  };
+
   return (
     <div className="flex">
       <div className="flex flex-col items-center mr-4">
@@ -85,10 +128,10 @@ const ActivityItem = ({ activity, index, isLast }: ActivityItemProps) => {
             {formatTimestamp(activity.timestamp)}
           </span>
         </div>
-        <p className="text-sm text-muted-foreground">{activity.details}</p>
+        <p className="text-sm text-muted-foreground">{highlightText(activity.details)}</p>
         {activity.actionResult && (
           <p className="text-xs text-muted-foreground italic">
-            Result: {activity.actionResult}
+            Result: {highlightText(activity.actionResult)}
           </p>
         )}
         {activity.documentGenerated && (
@@ -98,7 +141,7 @@ const ActivityItem = ({ activity, index, isLast }: ActivityItemProps) => {
         )}
         {activity.riskAssessment && (
           <p className="text-xs text-muted-foreground">
-            Risk Assessment: {activity.riskAssessment}
+            Risk Assessment: {highlightText(activity.riskAssessment)}
           </p>
         )}
         {activity.applicationId && (
