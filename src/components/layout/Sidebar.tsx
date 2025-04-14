@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import AgentStatusIndicator from "../agents/AgentStatusIndicator";
+import Logo from "@/components/branding/Logo";
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -31,9 +32,8 @@ const Sidebar = () => {
     >
       <div className="flex items-center justify-between px-4 h-14">
         {!collapsed && (
-          <div className="font-bold text-xl flex items-center gap-2">
-            <span className="bg-sidebar-primary text-white rounded p-1">AI</span>
-            <span>LoanAgent</span>
+          <div className="flex items-center gap-2">
+            <Logo size="sm" />
           </div>
         )}
         <Button 
