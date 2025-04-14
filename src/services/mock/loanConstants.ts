@@ -29,5 +29,5 @@ export const FRAUD_RISK_FACTORS = [
 // Document verification statuses
 export const DOCUMENT_VERIFICATION_STATUSES = ['Verified', 'Pending', 'Failed'];
 
-// Risk levels
-export const RISK_LEVELS = ['Low', 'Medium', 'High'] as const;
+// Risk levels - change from const assertion to regular array type
+export const RISK_LEVELS: Array<"Low" | "Medium" | "High"> = ['Low', 'Medium', 'High'];
