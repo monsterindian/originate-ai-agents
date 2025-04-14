@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { 
   Search, CheckCircle, AlertCircle, Clock, Loader2, BarChart3, Eye, 
   FileText, ThumbsUp, ThumbsDown, CircleSlash, Check, Filter, RefreshCw,
-  Download, MessageSquare, Lightbulb, PieChart, UserCheck
+  Download, MessageSquare, Lightbulb, PieChart, UserCheck, Shield, LineChart
 } from "lucide-react";
 import OpenAIStatusIndicator from "@/components/agents/OpenAIStatusIndicator";
 import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
@@ -29,6 +29,11 @@ type DecisionTask = LoanApplication & {
   decisionReason?: string;
   dti?: string;
   ltvRatio?: string;
+  cashFlowCoverage?: string;
+  debtServiceRatio?: string;
+  liquidityRatio?: string;
+  riskFactors?: string[];
+  strengths?: string[];
 };
 
 const DecisionAgent = () => {
@@ -53,6 +58,27 @@ const DecisionAgent = () => {
         const tasks: DecisionTask[] = appsForDecision.map(app => {
           const dti = `${Math.floor(Math.random() * 20) + 25}%`; // Random DTI between 25% and 45%
           const ltvRatio = `${Math.floor(Math.random() * 30) + 60}%`; // Random LTV between 60% and 90%
+          const cashFlowCoverage = (Math.random() * 2 + 1).toFixed(2) + 'x'; // Random between 1.00x and 3.00x
+          const debtServiceRatio = (Math.random() * 0.6 + 0.4).toFixed(2); // Random between 0.40 and 1.00
+          const liquidityRatio = (Math.random() * 1.5 + 0.5).toFixed(2); // Random between 0.50 and 2.00
+          
+          // Define risk factors and strengths based on application details
+          const riskFactors = [];
+          const strengths = [];
+          
+          // Determine risk factors
+          if (parseInt(dti) > 40) riskFactors.push("High debt-to-income ratio");
+          if (parseInt(ltvRatio) > 80) riskFactors.push("High loan-to-value ratio");
+          if (parseFloat(cashFlowCoverage) < 1.5) riskFactors.push("Low cash flow coverage");
+          if (parseFloat(debtServiceRatio) > 0.8) riskFactors.push("High debt service ratio");
+          if (app.borrower.creditScore && app.borrower.creditScore < 650) riskFactors.push("Below-average credit score");
+          
+          // Determine strengths
+          if (parseInt(dti) < 35) strengths.push("Healthy debt-to-income ratio");
+          if (parseInt(ltvRatio) < 70) strengths.push("Strong collateral position");
+          if (parseFloat(cashFlowCoverage) > 2) strengths.push("Excellent cash flow coverage");
+          if (app.borrower.creditScore && app.borrower.creditScore > 750) strengths.push("Excellent credit history");
+          if (parseFloat(liquidityRatio) > 1.2) strengths.push("Strong liquidity position");
           
           // Determine AI recommendation based on risk and other factors
           let aiRecommendation: "Approve" | "Conditionally Approve" | "Reject" | "Review";
@@ -65,7 +91,8 @@ const DecisionAgent = () => {
               aiRecommendation = "Conditionally Approve";
               conditions = [
                 "Increase down payment to 25%",
-                "Provide additional collateral verification"
+                "Provide additional collateral verification",
+                "Obtain personal guarantee from primary owner"
               ];
             } else {
               aiRecommendation = "Review";
@@ -78,7 +105,8 @@ const DecisionAgent = () => {
               conditions = [
                 "Increase down payment to 35%",
                 "Require personal guarantee",
-                "Increase interest rate by 0.5%"
+                "Increase interest rate by 0.5%",
+                "Require monthly financial reporting"
               ];
             }
           }
@@ -88,7 +116,12 @@ const DecisionAgent = () => {
             aiRecommendation,
             conditions,
             dti,
-            ltvRatio
+            ltvRatio,
+            cashFlowCoverage,
+            debtServiceRatio,
+            liquidityRatio,
+            riskFactors,
+            strengths
           };
         });
         
@@ -101,33 +134,54 @@ const DecisionAgent = () => {
         const decisions: DecisionTask[] = decidedApps.map(app => {
           const dti = `${Math.floor(Math.random() * 20) + 25}%`;
           const ltvRatio = `${Math.floor(Math.random() * 30) + 60}%`;
+          const cashFlowCoverage = (Math.random() * 2 + 1).toFixed(2) + 'x';
+          const debtServiceRatio = (Math.random() * 0.6 + 0.4).toFixed(2);
+          const liquidityRatio = (Math.random() * 1.5 + 0.5).toFixed(2);
+          
+          // Define risk factors and strengths based on application details
+          const riskFactors = [];
+          const strengths = [];
+          
+          // Determine risk factors
+          if (parseInt(dti) > 40) riskFactors.push("High debt-to-income ratio");
+          if (parseInt(ltvRatio) > 80) riskFactors.push("High loan-to-value ratio");
+          if (parseFloat(cashFlowCoverage) < 1.5) riskFactors.push("Low cash flow coverage");
+          if (parseFloat(debtServiceRatio) > 0.8) riskFactors.push("High debt service ratio");
+          if (app.borrower.creditScore && app.borrower.creditScore < 650) riskFactors.push("Below-average credit score");
+          
+          // Determine strengths
+          if (parseInt(dti) < 35) strengths.push("Healthy debt-to-income ratio");
+          if (parseInt(ltvRatio) < 70) strengths.push("Strong collateral position");
+          if (parseFloat(cashFlowCoverage) > 2) strengths.push("Excellent cash flow coverage");
+          if (app.borrower.creditScore && app.borrower.creditScore > 750) strengths.push("Excellent credit history");
+          if (parseFloat(liquidityRatio) > 1.2) strengths.push("Strong liquidity position");
           
           // Determine AI recommendation that matches the actual decision
           let aiRecommendation: "Approve" | "Conditionally Approve" | "Reject" | "Review";
-          let humanDecision: "Approve" | "Conditionally Approve" | "Reject";
           let decisionReason: string;
           
           if (app.status === "approved") {
             aiRecommendation = "Approve";
-            humanDecision = "Approve";
-            decisionReason = "Strong financials, good credit history, adequate collateral";
+            decisionReason = "Strong financials, good credit history, and adequate collateral";
           } else if (app.status === "conditionally_approved") {
             aiRecommendation = "Conditionally Approve";
-            humanDecision = "Conditionally Approve";
-            decisionReason = "Approval with conditions: Additional equity injection required";
+            decisionReason = "Approval with conditions: Additional equity injection required and enhanced reporting";
           } else {
             aiRecommendation = "Reject";
-            humanDecision = "Reject";
-            decisionReason = "High debt-to-income ratio, insufficient cash flow projections";
+            decisionReason = "High debt-to-income ratio, insufficient cash flow projections, and elevated risk factors";
           }
           
           return {
             ...app,
             aiRecommendation,
             decisionReason,
-            humanDecision,
             dti,
-            ltvRatio
+            ltvRatio,
+            cashFlowCoverage,
+            debtServiceRatio,
+            liquidityRatio,
+            riskFactors,
+            strengths
           };
         });
         
@@ -181,7 +235,7 @@ const DecisionAgent = () => {
       ...app,
       status: "approved",
       displayStatus: "Approved",
-      decisionReason: "Strong financials, good credit history, adequate collateral",
+      decisionReason: "Strong financials, good credit history, and adequate collateral",
       dateApproved: new Date().toISOString().split('T')[0]
     };
     
@@ -215,7 +269,7 @@ const DecisionAgent = () => {
       ...app,
       status: "rejected",
       displayStatus: "Rejected",
-      decisionReason: "High debt-to-income ratio, insufficient documentation, risk factors",
+      decisionReason: "High debt-to-income ratio, insufficient documentation, and critical risk factors",
       dateApproved: new Date().toISOString().split('T')[0]
     };
     
@@ -224,7 +278,7 @@ const DecisionAgent = () => {
   };
 
   const handleViewReport = (appId: string) => {
-    toast.info(`Viewing decision report for ${appId}`);
+    toast.info(`Viewing detailed decision report for ${appId}`);
     // In a real app, this would open a detailed decision report
   };
 
@@ -390,7 +444,7 @@ const DecisionAgent = () => {
                           <TableHead>Loan Details</TableHead>
                           <TableHead>Risk Assessment</TableHead>
                           <TableHead>AI Recommendation</TableHead>
-                          <TableHead>Conditions</TableHead>
+                          <TableHead>Key Factors</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -424,22 +478,46 @@ const DecisionAgent = () => {
                                 <div className="text-xs mt-1">Credit: {task.borrower.creditScore || "N/A"}</div>
                                 <div className="text-xs">DTI: {task.dti}</div>
                                 <div className="text-xs">LTV: {task.ltvRatio}</div>
+                                <div className="text-xs">Cash Flow: {task.cashFlowCoverage}</div>
                               </div>
                             </TableCell>
                             <TableCell>{getRecommendationBadge(task.aiRecommendation)}</TableCell>
                             <TableCell>
-                              {task.conditions && task.conditions.length > 0 ? (
-                                <div className="max-w-[200px] text-xs">
-                                  {task.conditions.map((condition, idx) => (
-                                    <div key={idx} className="flex items-start gap-1 mb-1">
-                                      <div className="min-w-3">•</div>
-                                      <div>{condition}</div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="text-xs text-muted-foreground">No conditions</div>
-                              )}
+                              <div className="max-w-[200px] text-xs">
+                                {task.riskFactors && task.riskFactors.length > 0 && (
+                                  <div className="mb-2">
+                                    <div className="font-medium text-red-500 mb-1">Risk Factors:</div>
+                                    {task.riskFactors.map((factor, idx) => (
+                                      <div key={idx} className="flex items-start gap-1 mb-1">
+                                        <div className="min-w-3">•</div>
+                                        <div>{factor}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {task.strengths && task.strengths.length > 0 && (
+                                  <div>
+                                    <div className="font-medium text-green-500 mb-1">Strengths:</div>
+                                    {task.strengths.map((strength, idx) => (
+                                      <div key={idx} className="flex items-start gap-1 mb-1">
+                                        <div className="min-w-3">•</div>
+                                        <div>{strength}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {task.conditions && task.conditions.length > 0 && task.aiRecommendation === "Conditionally Approve" && (
+                                  <div className="mt-2">
+                                    <div className="font-medium text-amber-500 mb-1">Conditions:</div>
+                                    {task.conditions.map((condition, idx) => (
+                                      <div key={idx} className="flex items-start gap-1 mb-1">
+                                        <div className="min-w-3">•</div>
+                                        <div>{condition}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-col gap-2">
@@ -454,7 +532,7 @@ const DecisionAgent = () => {
                                     disabled={!!analyzingTask}
                                     title="Run Final Analysis"
                                   >
-                                    <BarChart3 className="h-4 w-4" />
+                                    <Shield className="h-4 w-4" />
                                   </Button>
                                   <Button 
                                     variant="ghost" 
