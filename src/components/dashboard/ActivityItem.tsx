@@ -72,10 +72,10 @@ const ActivityItem = ({ activity, index, isLast }: ActivityItemProps) => {
 
   // Highlight key risk terms in appropriate colors
   const highlightText = (text: string) => {
-    if (!text.toLowerCase().includes('risk')) return text;
+    if (!text) return "";
     
     // Create a regex to find key risk terms
-    const riskRegex = /(high risk|medium risk|low risk|risk assessment|debt-to-income|loan-to-value|credit utilization|strong cash flow|insufficient|excellent|poor|concern|volatility|stable|uncertain|approval|rejection|ratio)/gi;
+    const riskRegex = /(high risk|medium risk|low risk|risk assessment|debt-to-income|loan-to-value|credit utilization|strong cash flow|insufficient|excellent|poor|concern|volatility|stable|uncertain|approval|rejection|ratio|credit score|collateral value|cash reserves|payment history|delinquencies|default risk|debt service coverage|liquidity|profitability|net worth|capital|assets|liabilities)/gi;
     
     // Split the text by the regex matches
     const parts = text.split(riskRegex);
@@ -94,13 +94,20 @@ const ActivityItem = ({ activity, index, isLast }: ActivityItemProps) => {
       let color = "text-slate-600 font-medium";
       const lowerMatch = match.toLowerCase();
       
-      if (lowerMatch.includes("high risk") || lowerMatch.includes("poor") || lowerMatch.includes("insufficient") || lowerMatch.includes("rejection") || lowerMatch.includes("volatility") || lowerMatch.includes("uncertain") || lowerMatch.includes("concern")) {
+      if (lowerMatch.includes("high risk") || lowerMatch.includes("poor") || lowerMatch.includes("insufficient") || 
+          lowerMatch.includes("rejection") || lowerMatch.includes("volatility") || lowerMatch.includes("uncertain") || 
+          lowerMatch.includes("concern") || lowerMatch.includes("delinquencies") || lowerMatch.includes("default risk")) {
         color = "text-red-600 font-medium";
-      } else if (lowerMatch.includes("medium risk")) {
+      } else if (lowerMatch.includes("medium risk") || lowerMatch.includes("ratio") || lowerMatch.includes("credit score") || 
+                 lowerMatch.includes("capital") || lowerMatch.includes("liabilities")) {
         color = "text-amber-600 font-medium";
-      } else if (lowerMatch.includes("low risk") || lowerMatch.includes("excellent") || lowerMatch.includes("strong") || lowerMatch.includes("approval") || lowerMatch.includes("stable")) {
+      } else if (lowerMatch.includes("low risk") || lowerMatch.includes("excellent") || lowerMatch.includes("strong") || 
+                 lowerMatch.includes("approval") || lowerMatch.includes("stable") || lowerMatch.includes("assets") || 
+                 lowerMatch.includes("profitability") || lowerMatch.includes("net worth")) {
         color = "text-green-600 font-medium";
-      } else if (lowerMatch.includes("debt-to-income") || lowerMatch.includes("loan-to-value") || lowerMatch.includes("credit utilization") || lowerMatch.includes("ratio")) {
+      } else if (lowerMatch.includes("debt-to-income") || lowerMatch.includes("loan-to-value") || 
+                 lowerMatch.includes("credit utilization") || lowerMatch.includes("collateral value") || 
+                 lowerMatch.includes("debt service coverage") || lowerMatch.includes("liquidity")) {
         color = "text-blue-600 font-medium";
       }
       
