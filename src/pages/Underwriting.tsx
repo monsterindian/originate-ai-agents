@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -186,7 +185,6 @@ const Underwriting = () => {
   };
   
   const handleViewBorrower = (borrower: string) => {
-    // Convert borrower name to a simulated ID for navigation
     const borrowerId = "B-" + borrower.split(" ")[0].toUpperCase();
     navigate(`/borrowers?id=${borrowerId}`);
   };
@@ -228,7 +226,7 @@ const Underwriting = () => {
                           <p>Application ID: ${appId}</p>
                           <p>Date: ${new Date().toLocaleDateString()}</p>
                         </div>
-                        <img src="/lovable-uploads/c358cff4-5e06-49e8-af0b-d9e4c7099001.png" class="logo" alt="GaIGentic Logo">
+                        <img src="/lovable-uploads/b33a1622-519b-4d29-bcb5-c1f47afab476.png" class="logo" alt="gaigentic Logo">
                       </div>
                       
                       <h2>Application Details</h2>
@@ -300,7 +298,7 @@ const Underwriting = () => {
                       <p>${mockApplications.find(a => a.id === appId)?.notes || 'No notes available'}</p>
                       
                       <div style="margin-top: 50px;">
-                        <p><strong>Prepared by:</strong> GaIGentic Underwriting Team</p>
+                        <p><strong>Prepared by:</strong> gaigentic Underwriting Team</p>
                         <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
                       </div>
                     </body>
