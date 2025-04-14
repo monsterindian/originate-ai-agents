@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -285,7 +284,7 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
           </tr>
           <tr>
             <th>Asset Class</th>
-            <td>${assetClass.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
+            <td>${assetClass.replace(/_/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase())}</td>
           </tr>
         </table>
         
@@ -329,23 +328,19 @@ const DocumentGenerator: React.FC<DocumentGeneratorProps> = ({
         
         <h2>Assessment Conclusion</h2>
         <p>${
-          riskLevel.toLowerCase() === 'low' ? 
-          'Based on our comprehensive analysis, this application presents a low risk profile. The borrower demonstrates strong financial stability, appropriate credit history, and the loan purpose aligns well with our lending criteria.' :
-          
-          riskLevel.toLowerCase() === 'medium' ? 
-          'Based on our comprehensive analysis, this application presents a moderate risk profile. While there are some areas of concern, these are balanced by positive aspects of the borrower's profile and application. Additional monitoring or modifications to standard terms may be warranted.' :
-          
-          'Based on our comprehensive analysis, this application presents a high risk profile. Several significant risk factors have been identified that require careful consideration. Additional collateral, guarantees, or significant modifications to terms would be necessary to proceed with this application.'
+          riskLevel.toLowerCase() === 'low' 
+          ? 'Based on our comprehensive analysis, this application presents a low risk profile. The borrower demonstrates strong financial stability, appropriate credit history, and the loan purpose aligns well with our lending criteria.' 
+          : riskLevel.toLowerCase() === 'medium' 
+          ? 'Based on our comprehensive analysis, this application presents a moderate risk profile. While there are some areas of concern, these are balanced by positive aspects of the borrower profile and application. Additional monitoring or modifications to standard terms may be warranted.' 
+          : 'Based on our comprehensive analysis, this application presents a high risk profile. Several significant risk factors have been identified that require careful consideration. Additional collateral, guarantees, or significant modifications to terms would be necessary to proceed with this application.'
         }</p>
         
         <p>Recommendation: ${
-          riskLevel.toLowerCase() === 'low' ? 
-          'Approval with standard terms' :
-          
-          riskLevel.toLowerCase() === 'medium' ? 
-          'Conditional approval with enhanced monitoring' :
-          
-          'Application requires significant additional support or restructuring before approval'
+          riskLevel.toLowerCase() === 'low' 
+          ? 'Approval with standard terms' 
+          : riskLevel.toLowerCase() === 'medium' 
+          ? 'Conditional approval with enhanced monitoring' 
+          : 'Application requires significant additional support or restructuring before approval'
         }</p>
       </div>
       
