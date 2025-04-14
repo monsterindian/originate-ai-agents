@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const mockApplications = [
   {
@@ -23,7 +25,15 @@ const mockApplications = [
     status: "In Progress",
     progress: 65,
     date: "May 23, 2023",
-    notes: "Missing tax returns for 2021-2022"
+    notes: "Missing tax returns for 2021-2022",
+    risk: {
+      level: "Medium",
+      factors: ["Debt service coverage ratio below target", "Limited operating history"],
+      score: 68,
+      debtToIncome: "42%",
+      loanToValue: "75%",
+      creditUtilization: "62%"
+    }
   },
   {
     id: "APP-2023-0518",
@@ -33,7 +43,15 @@ const mockApplications = [
     status: "Complete",
     progress: 100,
     date: "May 18, 2023",
-    notes: "All documentation verified"
+    notes: "All documentation verified",
+    risk: {
+      level: "Low",
+      factors: ["Strong cash flow", "Excellent payment history", "Established business"],
+      score: 85,
+      debtToIncome: "34%",
+      loanToValue: "65%",
+      creditUtilization: "48%"
+    }
   },
   {
     id: "APP-2023-0511",
@@ -43,7 +61,15 @@ const mockApplications = [
     status: "In Progress",
     progress: 85,
     date: "May 11, 2023",
-    notes: "Pending environmental assessment"
+    notes: "Pending environmental assessment",
+    risk: {
+      level: "Medium",
+      factors: ["Property in flood zone", "Specialized collateral", "Regulatory compliance concerns"],
+      score: 62,
+      debtToIncome: "39%",
+      loanToValue: "78%",
+      creditUtilization: "55%"
+    }
   },
   {
     id: "APP-2023-0505",
@@ -53,7 +79,15 @@ const mockApplications = [
     status: "Pending Review",
     progress: 40,
     date: "May 5, 2023",
-    notes: "Waiting for property appraisal"
+    notes: "Waiting for property appraisal",
+    risk: {
+      level: "High",
+      factors: ["Seasonal revenue fluctuations", "Industry volatility post-pandemic", "High debt load"],
+      score: 45,
+      debtToIncome: "48%",
+      loanToValue: "82%",
+      creditUtilization: "75%"
+    }
   },
   {
     id: "APP-2023-0429",
@@ -63,7 +97,15 @@ const mockApplications = [
     status: "In Progress",
     progress: 75,
     date: "April 29, 2023",
-    notes: "Pending business plan review"
+    notes: "Pending business plan review",
+    risk: {
+      level: "Low",
+      factors: ["Strong collateral", "Consistent revenue growth", "Low existing debt"],
+      score: 78,
+      debtToIncome: "35%",
+      loanToValue: "60%",
+      creditUtilization: "42%"
+    }
   }
 ];
 
@@ -116,21 +158,162 @@ const mockTasks = [
 ];
 
 const getStatusColor = (status: string) => {
-  if (status === "Complete" || status === "Completed") return "default";
+  if (status === "Complete" || status === "Completed") return "success";
   if (status === "In Progress") return "secondary";
   if (status === "Pending" || status === "Pending Review") return "outline";
   return "destructive";
 };
 
 const getPriorityColor = (priority: string) => {
-  if (priority === "Low") return "default";
+  if (priority === "Low") return "success";
   if (priority === "Medium") return "secondary";
+  return "destructive";
+};
+
+const getRiskColor = (level: string) => {
+  if (level === "Low") return "success";
+  if (level === "Medium") return "warning";
   return "destructive";
 };
 
 const Underwriting = () => {
   const [tab, setTab] = useState("applications");
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+  
+  const handleViewApplication = (appId: string) => {
+    navigate(`/applications?id=${appId}`);
+  };
+  
+  const handleViewBorrower = (borrower: string) => {
+    // Convert borrower name to a simulated ID for navigation
+    const borrowerId = "B-" + borrower.split(" ")[0].toUpperCase();
+    navigate(`/borrowers?id=${borrowerId}`);
+  };
+  
+  const handleGenerateReport = (appId: string) => {
+    toast.success(`Generating underwriting report for ${appId}`);
+    
+    setTimeout(() => {
+      toast(
+        <div className="space-y-2">
+          <p className="font-semibold">Underwriting Report Ready</p>
+          <p>Report for {appId} has been generated</p>
+          <div className="flex gap-2 mt-2">
+            <Button size="sm" onClick={() => {
+              const win = window.open("", "_blank");
+              if (win) {
+                win.document.write(`
+                  <html>
+                    <head>
+                      <title>Underwriting Report - ${appId}</title>
+                      <style>
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                        .logo { max-width: 200px; }
+                        h1 { color: #333; }
+                        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+                        th { background-color: #f2f2f2; }
+                        .risk-high { color: #e11d48; }
+                        .risk-medium { color: #f59e0b; }
+                        .risk-low { color: #10b981; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="header">
+                        <div>
+                          <h1>Underwriting Report</h1>
+                          <p>Application ID: ${appId}</p>
+                          <p>Date: ${new Date().toLocaleDateString()}</p>
+                        </div>
+                        <img src="/lovable-uploads/c358cff4-5e06-49e8-af0b-d9e4c7099001.png" class="logo" alt="GaIgentic Logo">
+                      </div>
+                      
+                      <h2>Application Details</h2>
+                      <table>
+                        <tr>
+                          <th>Borrower</th>
+                          <td>${mockApplications.find(a => a.id === appId)?.borrower || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Amount</th>
+                          <td>${mockApplications.find(a => a.id === appId)?.amount || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Type</th>
+                          <td>${mockApplications.find(a => a.id === appId)?.type || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Date Submitted</th>
+                          <td>${mockApplications.find(a => a.id === appId)?.date || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Status</th>
+                          <td>${mockApplications.find(a => a.id === appId)?.status || 'N/A'}</td>
+                        </tr>
+                      </table>
+                      
+                      <h2>Risk Assessment</h2>
+                      <table>
+                        <tr>
+                          <th>Risk Level</th>
+                          <td class="risk-${mockApplications.find(a => a.id === appId)?.risk.level.toLowerCase() || 'medium'}">${mockApplications.find(a => a.id === appId)?.risk.level || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Risk Score</th>
+                          <td>${mockApplications.find(a => a.id === appId)?.risk.score || 'N/A'}/100</td>
+                        </tr>
+                        <tr>
+                          <th>Debt-to-Income Ratio</th>
+                          <td>${mockApplications.find(a => a.id === appId)?.risk.debtToIncome || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Loan-to-Value Ratio</th>
+                          <td>${mockApplications.find(a => a.id === appId)?.risk.loanToValue || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th>Credit Utilization</th>
+                          <td>${mockApplications.find(a => a.id === appId)?.risk.creditUtilization || 'N/A'}</td>
+                        </tr>
+                      </table>
+                      
+                      <h2>Risk Factors</h2>
+                      <ul>
+                        ${mockApplications.find(a => a.id === appId)?.risk.factors.map(factor => `<li>${factor}</li>`).join('') || '<li>No risk factors identified</li>'}
+                      </ul>
+                      
+                      <h2>Notes</h2>
+                      <p>${mockApplications.find(a => a.id === appId)?.notes || 'No notes available'}</p>
+                      
+                      <div style="margin-top: 50px;">
+                        <p><strong>Prepared by:</strong> GaIgentic Underwriting Team</p>
+                        <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                      </div>
+                    </body>
+                  </html>
+                `);
+                win.document.close();
+              }
+            }}>
+              View Report
+            </Button>
+            <Button size="sm" variant="outline">
+              Download PDF
+            </Button>
+          </div>
+        </div>,
+        { duration: 10000 }
+      );
+    }, 1500);
+  };
+  
+  const filteredApplications = mockApplications.filter(app => 
+    app.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    app.borrower.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    app.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    app.status.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   
   return (
     <MainLayout>
@@ -219,6 +402,7 @@ const Underwriting = () => {
                 <TabsList>
                   <TabsTrigger value="applications">Applications</TabsTrigger>
                   <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                  <TabsTrigger value="risk">Risk Analysis</TabsTrigger>
                 </TabsList>
                 
                 <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -265,7 +449,7 @@ const Underwriting = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockApplications.map((app) => (
+                    {filteredApplications.map((app) => (
                       <TableRow key={app.id}>
                         <TableCell className="font-medium">{app.id}</TableCell>
                         <TableCell>
@@ -290,7 +474,7 @@ const Underwriting = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={getStatusColor(app.status) as "default" | "secondary" | "outline" | "destructive"}>
+                          <Badge variant={getStatusColor(app.status) as "success" | "secondary" | "outline" | "destructive" | "warning"}>
                             {app.status}
                           </Badge>
                         </TableCell>
@@ -302,13 +486,13 @@ const Underwriting = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" title="View Application">
+                            <Button variant="ghost" size="icon" title="View Application" onClick={() => handleViewApplication(app.id)}>
                               <FileText className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" title="View Borrower">
+                            <Button variant="ghost" size="icon" title="View Borrower" onClick={() => handleViewBorrower(app.borrower)}>
                               <UserCheck className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" title="View Financial Analysis">
+                            <Button variant="ghost" size="icon" title="Generate Financial Report" onClick={() => handleGenerateReport(app.id)}>
                               <BarChart4 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -344,25 +528,94 @@ const Underwriting = () => {
                         <TableCell>{task.assignee}</TableCell>
                         <TableCell>{task.dueDate}</TableCell>
                         <TableCell>
-                          <Badge variant={getPriorityColor(task.priority) as "default" | "secondary" | "destructive"}>
+                          <Badge variant={getPriorityColor(task.priority) as "success" | "secondary" | "destructive"}>
                             {task.priority}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={getStatusColor(task.status) as "default" | "secondary" | "outline" | "destructive"}>
+                          <Badge variant={getStatusColor(task.status) as "success" | "secondary" | "outline" | "destructive" | "warning"}>
                             {task.status}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" title="View Task">
+                            <Button variant="ghost" size="icon" title="View Task"
+                              onClick={() => toast.info(`Viewing details for task ${task.id}`)}>
                               <FileText className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" title="View Application">
+                            <Button variant="ghost" size="icon" title="View Application" 
+                              onClick={() => handleViewApplication(task.application)}>
                               <PiggyBank className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" title="Assign Task">
+                            <Button variant="ghost" size="icon" title="Assign Task"
+                              onClick={() => toast.info(`Opening assignment dialog for task ${task.id}`)}>
                               <UserCheck className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+              
+              <TabsContent value="risk" className="w-full">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Application</TableHead>
+                      <TableHead>Borrower</TableHead>
+                      <TableHead>Risk Rating</TableHead>
+                      <TableHead>Risk Score</TableHead>
+                      <TableHead>Key Metrics</TableHead>
+                      <TableHead>Risk Factors</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredApplications.map((app) => (
+                      <TableRow key={app.id}>
+                        <TableCell className="font-medium">{app.id}</TableCell>
+                        <TableCell>{app.borrower}</TableCell>
+                        <TableCell>
+                          <Badge variant={getRiskColor(app.risk.level) as "success" | "warning" | "destructive"}>
+                            {app.risk.level} Risk
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Progress value={app.risk.score} className="h-2 w-16" />
+                            <span className="text-sm">{app.risk.score}/100</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm space-y-1">
+                            <div>DTI: {app.risk.debtToIncome}</div>
+                            <div>LTV: {app.risk.loanToValue}</div>
+                            <div>Credit Util: {app.risk.creditUtilization}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="max-w-[200px]">
+                            <ul className="text-xs list-disc pl-4">
+                              {app.risk.factors.slice(0, 2).map((factor, idx) => (
+                                <li key={idx}>{factor}</li>
+                              ))}
+                              {app.risk.factors.length > 2 && (
+                                <li className="text-muted-foreground">+{app.risk.factors.length - 2} more</li>
+                              )}
+                            </ul>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" title="View Full Risk Analysis" 
+                              onClick={() => handleGenerateReport(app.id)}>
+                              <FileText className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" title="View Application" 
+                              onClick={() => handleViewApplication(app.id)}>
+                              <PiggyBank className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>

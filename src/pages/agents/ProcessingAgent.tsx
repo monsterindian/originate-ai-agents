@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Search, CheckCircle, AlertCircle, Clock, FileText, Loader2, FileCheck, ArrowRight, Eye } from "lucide-react";
+import { Search, CheckCircle, AlertCircle, Clock, FileText, Loader2, FileCheck, ArrowRight, Eye, Download, UserCheck, MessagesSquare } from "lucide-react";
 import OpenAIStatusIndicator from "@/components/agents/OpenAIStatusIndicator";
 import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
+import DocumentGenerator from "@/components/DocumentGenerator";
 import { toast } from "sonner";
 import { getMockLoanApplications, getMockLoanApplicationById } from "@/services/mockDataService";
 import { LoanApplication } from "@/types";
+import { useNavigate } from "react-router-dom";
 
 // Mock data specific to the processing agent
 const mockProcessingTasks = [
@@ -26,7 +28,9 @@ const mockProcessingTasks = [
     priority: "High",
     missingDocuments: ["Financial Statements", "Business Plan"],
     estimatedCompletion: "2024-04-17",
-    assetClass: "Equipment"
+    assetClass: "Equipment",
+    amount: "$850,000",
+    purpose: "Equipment Purchase"
   },
   {
     id: "APP-3847",
@@ -37,7 +41,9 @@ const mockProcessingTasks = [
     priority: "Medium",
     missingDocuments: ["Tax Returns", "Proof of Collateral", "Business License"],
     estimatedCompletion: "2024-04-20",
-    assetClass: "Business"
+    assetClass: "Business",
+    amount: "$1,200,000",
+    purpose: "Business Expansion"
   },
   {
     id: "APP-3849",
@@ -48,7 +54,9 @@ const mockProcessingTasks = [
     priority: "Medium",
     missingDocuments: ["Property Appraisal"],
     estimatedCompletion: "2024-04-15",
-    assetClass: "Working Capital"
+    assetClass: "Working Capital",
+    amount: "$750,000",
+    purpose: "Working Capital"
   }
 ];
 
@@ -125,6 +133,8 @@ const ProcessingAgent = () => {
   const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
   const [processingTask, setProcessingTask] = useState<string | null>(null);
   const [processingProgress, setProcessingProgress] = useState(0);
+  const [showDocumentGenerator, setShowDocumentGenerator] = useState<{show: boolean, appId: string} | null>(null);
+  const navigate = useNavigate();
 
   // Simulate AI document processing
   useEffect(() => {
@@ -178,37 +188,37 @@ const ProcessingAgent = () => {
         },
         assetClass: task.assetClass?.toLowerCase().includes("equipment") ? "equipment_finance" : 
                   task.assetClass?.toLowerCase().includes("capital") ? "sme_loan" : "commercial_real_estate",
-        amount: Math.floor(Math.random() * 500000) + 50000,
+        amount: typeof task.amount === 'string' ? 
+                parseInt(task.amount.replace(/[$,]/g, '')) : 
+                Math.floor(Math.random() * 500000) + 50000,
         term: 36,
         interestRate: 5.25,
-        purpose: "Business Expansion",
+        purpose: task.purpose || "Business Expansion",
         completeness: task.completeness || 50,
-        risk: task.priority === "High" ? "High" : task.priority === "Medium" ? "Medium" : "Low",
+        risk: {
+          level: task.priority === "High" ? "High" : task.priority === "Medium" ? "Medium" : "Low",
+          score: task.priority === "High" ? 35 : task.priority === "Medium" ? 60 : 80,
+          factors: ["Credit history considerations", "Business sector volatility"],
+          strengths: ["Experienced management team", "Strong market position"]
+        },
         displayStatus: task.status || "In Review",
         status: "reviewing",
-        documents: [
-          {
-            id: "DOC-1",
-            name: "Business Registration",
-            type: "Registration",
+        documents: documentStatuses
+          .filter(doc => doc.appId === task.id)
+          .map(doc => ({
+            id: doc.id,
+            name: doc.name,
+            type: doc.name.includes("Registration") ? "Registration" : 
+                 doc.name.includes("Verification") ? "Identity" : 
+                 doc.name.includes("Financial") ? "Financial" : 
+                 doc.name.includes("Tax") ? "Tax" : "Other",
             url: "http://example.com/doc1",
-            uploadedBy: "system",
-            uploadedAt: new Date().toISOString().split('T')[0],
-            status: "verified",
-            aiAnalysisComplete: true,
-            aiAnalysisSummary: "Document appears to be authentic."
-          },
-          {
-            id: "DOC-2",
-            name: "Financial Statements",
-            type: "Financial",
-            url: "http://example.com/doc2",
-            uploadedBy: "user",
-            uploadedAt: new Date().toISOString().split('T')[0],
-            status: "pending",
-            aiAnalysisComplete: false
-          }
-        ],
+            uploadedBy: doc.status === "verified" ? "borrower" : "pending",
+            uploadedAt: doc.uploadDate !== "-" ? doc.uploadDate : new Date().toISOString().split('T')[0],
+            status: doc.status,
+            aiAnalysisComplete: doc.aiVerified,
+            aiAnalysisSummary: doc.aiVerified ? "Document appears to be authentic." : undefined
+          })),
         notes: [
           {
             id: "NOTE-1",
@@ -238,12 +248,43 @@ const ProcessingAgent = () => {
 
   const handleSendToUnderwriting = (appId: string) => {
     toast.success(`Application ${appId} sent to Underwriting Agent`);
-    // In a real app, this would update the application status and route it to underwriting
+    navigate(`/agents/underwriting?applicationId=${appId}`);
   };
 
   const handleRequestDocument = (appId: string, document: string) => {
     toast.info(`Document request sent for ${document} on application ${appId}`);
-    // In a real app, this would send a notification to the borrower
+    
+    setTimeout(() => {
+      toast(
+        <div className="space-y-2">
+          <p className="font-semibold">Document Request Sent</p>
+          <p>Request for {document} has been sent to the borrower</p>
+          <div className="flex gap-2 mt-2">
+            <Button size="sm" onClick={() => navigate(`/applications?id=${appId}`)}>
+              View Application
+            </Button>
+          </div>
+        </div>,
+        { duration: 5000 }
+      );
+    }, 1000);
+  };
+  
+  const handleGenerateDocumentSummary = (appId: string) => {
+    // Find the application
+    const app = mockProcessingTasks.find(task => task.id === appId);
+    if (!app) return;
+    
+    setShowDocumentGenerator({
+      show: true,
+      appId
+    });
+  };
+  
+  const handleViewBorrower = (borrower: string) => {
+    // Convert borrower name to a simulated ID for navigation
+    const borrowerId = "B-" + borrower.split(" ")[0].toUpperCase();
+    navigate(`/borrowers?id=${borrowerId}`);
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -358,22 +399,32 @@ const ProcessingAgent = () => {
                     <TableRow>
                       <TableHead>Application ID</TableHead>
                       <TableHead>Borrower</TableHead>
+                      <TableHead>Loan Details</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Progress</TableHead>
                       <TableHead>Priority</TableHead>
                       <TableHead>Missing Documents</TableHead>
-                      <TableHead>Est. Completion</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockProcessingTasks.map((task) => (
+                    {mockProcessingTasks.filter(task => 
+                      task.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      task.borrower.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      task.status.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map((task) => (
                       <TableRow key={task.id}>
                         <TableCell className="font-medium">{task.id}</TableCell>
                         <TableCell>
                           <div>
                             <div>{task.borrower}</div>
                             <div className="text-xs text-muted-foreground">{task.assetClass}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div>{task.amount}</div>
+                            <div className="text-xs text-muted-foreground">{task.purpose}</div>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -397,7 +448,6 @@ const ProcessingAgent = () => {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell>{task.estimatedCompletion}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Button variant="ghost" size="icon" onClick={() => handleViewApplication(task)} title="View Application">
@@ -411,6 +461,14 @@ const ProcessingAgent = () => {
                               title="Verify Documents"
                             >
                               <FileCheck className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleGenerateDocumentSummary(task.id)}
+                              title="Generate Document Summary"
+                            >
+                              <FileText className="h-4 w-4" />
                             </Button>
                             <Button 
                               variant="ghost" 
@@ -438,6 +496,35 @@ const ProcessingAgent = () => {
                     <div className="text-xs text-muted-foreground mt-1">AI document verification in progress...</div>
                   </div>
                 )}
+                
+                {showDocumentGenerator && (
+                  <div className="mt-4 p-4 border rounded-md">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-medium">Generate Document Summary for {showDocumentGenerator.appId}</h3>
+                      <Button variant="outline" size="sm" onClick={() => setShowDocumentGenerator(null)}>
+                        Close
+                      </Button>
+                    </div>
+                    
+                    <DocumentGenerator 
+                      documentType="application" 
+                      applicationData={{
+                        ...mockProcessingTasks.find(t => t.id === showDocumentGenerator.appId),
+                        borrower: {
+                          companyName: mockProcessingTasks.find(t => t.id === showDocumentGenerator.appId)?.borrower,
+                          address: {
+                            street: "123 Business Ave",
+                            city: "Commerce City",
+                            state: "CA",
+                            zipCode: "90001",
+                            country: "USA"
+                          }
+                        }
+                      }}
+                      onClose={() => setShowDocumentGenerator(null)}
+                    />
+                  </div>
+                )}
               </TabsContent>
               
               <TabsContent value="documents" className="w-full">
@@ -454,7 +541,11 @@ const ProcessingAgent = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {documentStatuses.map((doc) => (
+                    {documentStatuses.filter(doc => 
+                      doc.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      doc.appId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      doc.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map((doc) => (
                       <TableRow key={doc.id}>
                         <TableCell className="font-medium">{doc.id}</TableCell>
                         <TableCell>{doc.appId}</TableCell>
@@ -475,16 +566,25 @@ const ProcessingAgent = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          {doc.status === "pending" ? (
-                            <Button size="sm" variant="outline" onClick={() => handleRequestDocument(doc.appId, doc.name)}>
-                              Request Document
-                            </Button>
-                          ) : (
-                            <Button size="sm" variant="outline">
-                              <FileText className="h-4 w-4 mr-2" />
-                              View
-                            </Button>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {doc.status === "pending" ? (
+                              <Button size="sm" variant="outline" onClick={() => handleRequestDocument(doc.appId, doc.name)}>
+                                <MessagesSquare className="h-4 w-4 mr-2" />
+                                Request Document
+                              </Button>
+                            ) : (
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="outline">
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View
+                                </Button>
+                                <Button size="sm" variant="outline">
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Download
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
-import { Search, CheckCircle, AlertCircle, Clock, Loader2, BarChart3, ArrowRight, Eye, FileText } from "lucide-react";
+import { Search, CheckCircle, AlertCircle, Clock, Loader2, BarChart3, ArrowRight, Eye, FileText, Download, Ban, BarChart4, UserCheck } from "lucide-react";
 import OpenAIStatusIndicator from "@/components/agents/OpenAIStatusIndicator";
 import ApplicationDetailModal from "@/components/modals/ApplicationDetailModal";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
-// Mock data for underwriting
+// Mock data for underwriting with enhanced risk data
 const mockUnderwritingTasks = [
   {
     id: "APP-3845",
@@ -29,7 +30,25 @@ const mockUnderwritingTasks = [
     dti: "38%",
     ltvRatio: "75%",
     collateralValue: "$2,950,000",
-    riskAssessment: "Medium",
+    riskAssessment: {
+      level: "Medium",
+      score: 65,
+      factors: [
+        "Property in secondary market with moderate appreciation potential",
+        "Borrower has moderate leverage with existing properties",
+        "Historic cash flow covers debt service by 1.2x"
+      ],
+      strengths: [
+        "Experienced management team with 15+ years in real estate",
+        "Strong tenant mix with 5+ year leases" 
+      ],
+      ratios: {
+        debtServiceCoverage: "1.2x",
+        returnOnInvestment: "8.4%",
+        operatingExpenseRatio: "42%",
+        vacancyRate: "5%"
+      }
+    },
     estimatedCompletion: "2024-04-18"
   },
   {
@@ -46,7 +65,26 @@ const mockUnderwritingTasks = [
     dti: "35%",
     ltvRatio: "70%",
     collateralValue: "$6,500,000",
-    riskAssessment: "Low",
+    riskAssessment: {
+      level: "Low",
+      score: 82,
+      factors: [
+        "Pre-sales covering 65% of total project value",
+        "Borrower has sufficient liquidity for cost overruns",
+        "Project located in high-demand area"
+      ],
+      strengths: [
+        "Developer has completed 12 similar projects in the last decade",
+        "Construction timeline aligns with market conditions",
+        "All permits and approvals secured"
+      ],
+      ratios: {
+        debtServiceCoverage: "1.5x",
+        returnOnInvestment: "18.2%",
+        loanToValue: "70%",
+        preSalesPercentage: "65%"
+      }
+    },
     estimatedCompletion: "2024-04-15"
   },
   {
@@ -63,7 +101,25 @@ const mockUnderwritingTasks = [
     dti: "42%",
     ltvRatio: "N/A",
     collateralValue: "$1,200,000",
-    riskAssessment: "Medium",
+    riskAssessment: {
+      level: "Medium",
+      score: 58,
+      factors: [
+        "Industry experiencing cyclical downturn",
+        "Accounts receivable aging longer than industry average",
+        "Seasonal cash flow fluctuations"
+      ],
+      strengths: [
+        "Long-term contracts with major clients",
+        "Diversified customer base across industries"
+      ],
+      ratios: {
+        currentRatio: "1.3x",
+        quickRatio: "0.9x",
+        daysReceivablesOutstanding: "65 days",
+        inventoryTurnover: "6.2x annually"
+      }
+    },
     estimatedCompletion: "2024-04-20"
   }
 ];
@@ -74,6 +130,7 @@ const UnderwritingAgent = () => {
   const [selectedApplication, setSelectedApplication] = useState<any | null>(null);
   const [analyzingTask, setAnalyzingTask] = useState<string | null>(null);
   const [analysisProgress, setAnalysisProgress] = useState(0);
+  const navigate = useNavigate();
 
   // Simulate AI risk analysis
   useEffect(() => {
@@ -105,12 +162,141 @@ const UnderwritingAgent = () => {
 
   const handleSendToDecision = (appId: string) => {
     toast.success(`Application ${appId} sent to Decision Agent`);
-    // In a real app, this would update the application status and route it to decision
+    navigate(`/agents/decision?applicationId=${appId}`);
   };
 
   const handleViewReport = (appId: string) => {
-    toast.info(`Viewing risk assessment report for ${appId}`);
-    // In a real app, this would open a detailed risk report
+    const app = mockUnderwritingTasks.find(app => app.id === appId);
+    if (!app) return;
+    
+    toast.info(`Generating risk assessment report for ${appId}`);
+    
+    setTimeout(() => {
+      const win = window.open("", "_blank");
+      if (win) {
+        win.document.write(`
+          <html>
+            <head>
+              <title>Risk Assessment Report - ${appId}</title>
+              <style>
+                body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+                .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+                .logo { max-width: 200px; }
+                h1, h2 { color: #333; }
+                h3 { color: #555; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+                th { background-color: #f2f2f2; }
+                .section { margin-bottom: 30px; }
+                .risk-high { color: #e11d48; }
+                .risk-medium { color: #f59e0b; }
+                .risk-low { color: #10b981; }
+                .progress-container { width: 100%; height: 20px; background-color: #f0f0f0; border-radius: 10px; margin: 10px 0; }
+                .progress-bar { height: 100%; border-radius: 10px; }
+                .progress-low { background-color: #10b981; }
+                .progress-medium { background-color: #f59e0b; }
+                .progress-high { background-color: #e11d48; }
+              </style>
+            </head>
+            <body>
+              <div class="header">
+                <div>
+                  <h1>Risk Assessment Report</h1>
+                  <p>Application ID: ${appId}</p>
+                  <p>Date: ${new Date().toLocaleDateString()}</p>
+                </div>
+                <img src="/lovable-uploads/c358cff4-5e06-49e8-af0b-d9e4c7099001.png" class="logo" alt="GaIgentic Logo">
+              </div>
+              
+              <div class="section">
+                <h2>Application Summary</h2>
+                <table>
+                  <tr>
+                    <th>Borrower</th>
+                    <td>${app.borrower}</td>
+                    <th>Loan Amount</th>
+                    <td>${app.amount}</td>
+                  </tr>
+                  <tr>
+                    <th>Purpose</th>
+                    <td>${app.purpose}</td>
+                    <th>Asset Class</th>
+                    <td>${app.assetClass}</td>
+                  </tr>
+                  <tr>
+                    <th>Date Submitted</th>
+                    <td>${app.dateSubmitted}</td>
+                    <th>Collateral Value</th>
+                    <td>${app.collateralValue}</td>
+                  </tr>
+                  <tr>
+                    <th>Credit Score</th>
+                    <td>${app.creditScore}</td>
+                    <th>Loan-to-Value</th>
+                    <td>${app.ltvRatio}</td>
+                  </tr>
+                  <tr>
+                    <th>Debt-to-Income</th>
+                    <td>${app.dti}</td>
+                    <th>Completion Status</th>
+                    <td>${app.completeness}%</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <div class="section">
+                <h2>Risk Assessment Overview</h2>
+                <h3>Risk Level: <span class="risk-${app.riskAssessment.level.toLowerCase()}">${app.riskAssessment.level}</span></h3>
+                
+                <p>Risk Score: ${app.riskAssessment.score}/100</p>
+                <div class="progress-container">
+                  <div class="progress-bar progress-${app.riskAssessment.level.toLowerCase()}" style="width: ${app.riskAssessment.score}%;"></div>
+                </div>
+                
+                <h3>Key Risk Factors</h3>
+                <ul>
+                  ${app.riskAssessment.factors.map(factor => `<li>${factor}</li>`).join('')}
+                </ul>
+                
+                <h3>Key Strengths</h3>
+                <ul>
+                  ${app.riskAssessment.strengths.map(strength => `<li>${strength}</li>`).join('')}
+                </ul>
+              </div>
+              
+              <div class="section">
+                <h2>Financial Ratios & Metrics</h2>
+                <table>
+                  ${Object.entries(app.riskAssessment.ratios).map(([key, value]) => `
+                    <tr>
+                      <th>${key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</th>
+                      <td>${value}</td>
+                    </tr>
+                  `).join('')}
+                </table>
+              </div>
+              
+              <div class="section">
+                <h2>Recommendation</h2>
+                <p>${app.riskAssessment.level === 'Low' ? 
+                  'Based on the comprehensive risk analysis, this application presents a low risk profile and is recommended for approval with standard terms.' :
+                  app.riskAssessment.level === 'Medium' ? 
+                  'Based on the comprehensive risk analysis, this application presents a moderate risk profile. Recommend approval with additional monitoring or modified terms to mitigate identified risk factors.' :
+                  'Based on the comprehensive risk analysis, this application presents a high risk profile. Recommend additional collateral requirements or guarantees before proceeding, or denial if risks cannot be adequately mitigated.'
+                }</p>
+              </div>
+              
+              <div style="margin-top: 50px;">
+                <p><strong>Prepared by:</strong> GaIgentic Underwriting AI Agent</p>
+                <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                <p><small>This report was automatically generated based on AI analysis. Human review recommended before final decision.</small></p>
+              </div>
+            </body>
+          </html>
+        `);
+        win.document.close();
+      }
+    }, 1000);
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -123,6 +309,16 @@ const UnderwritingAgent = () => {
     if (risk === "High") return <Badge variant="destructive">High Risk</Badge>;
     if (risk === "Medium") return <Badge variant="warning">Medium Risk</Badge>;
     return <Badge variant="success">Low Risk</Badge>;
+  };
+  
+  const handleDownloadReport = (appId: string) => {
+    toast.success(`Downloading risk report for ${appId}`);
+  };
+
+  const handleViewBorrower = (borrower: string) => {
+    // Convert borrower name to a simulated ID for navigation
+    const borrowerId = "B-" + borrower.split(" ")[0].toUpperCase();
+    navigate(`/borrowers?id=${borrowerId}`);
   };
 
   return (
@@ -203,6 +399,7 @@ const UnderwritingAgent = () => {
                 <TabsList>
                   <TabsTrigger value="applications">Applications</TabsTrigger>
                   <TabsTrigger value="analysis">Risk Analysis</TabsTrigger>
+                  <TabsTrigger value="metrics">Financial Metrics</TabsTrigger>
                 </TabsList>
                 
                 <div className="relative w-full sm:w-60">
@@ -258,7 +455,7 @@ const UnderwritingAgent = () => {
                             <div className="text-xs">LTV: <span className="font-medium">{task.ltvRatio}</span></div>
                           </div>
                         </TableCell>
-                        <TableCell>{getRiskBadge(task.riskAssessment)}</TableCell>
+                        <TableCell>{getRiskBadge(task.riskAssessment.level)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
                             <Button variant="ghost" size="icon" onClick={() => handleViewApplication(task)} title="View Application">
@@ -363,12 +560,121 @@ const UnderwritingAgent = () => {
                           )}
                         </TableCell>
                         <TableCell>{task.collateralValue}</TableCell>
-                        <TableCell>{getRiskBadge(task.riskAssessment)}</TableCell>
                         <TableCell>
-                          <Button size="sm" variant="outline" onClick={() => handleViewReport(task.id)}>
-                            <FileText className="h-4 w-4 mr-2" />
-                            View Report
-                          </Button>
+                          <div className="flex flex-col gap-1">
+                            {getRiskBadge(task.riskAssessment.level)}
+                            <div className="flex items-center gap-1 mt-1">
+                              <Progress 
+                                value={task.riskAssessment.score} 
+                                className={`h-2 ${
+                                  task.riskAssessment.level === "Low" ? "bg-green-200" : 
+                                  task.riskAssessment.level === "Medium" ? "bg-amber-200" : 
+                                  "bg-red-200"
+                                }`} 
+                              />
+                              <span className="text-xs">{task.riskAssessment.score}</span>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => handleViewReport(task.id)}
+                              className="h-8 px-2 text-xs"
+                            >
+                              <FileText className="h-3.5 w-3.5 mr-1" />
+                              View
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleDownloadReport(task.id)}
+                              className="h-8 px-2 text-xs"
+                            >
+                              <Download className="h-3.5 w-3.5 mr-1" />
+                              Download
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+              
+              <TabsContent value="metrics" className="w-full">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Application</TableHead>
+                      <TableHead>Borrower</TableHead>
+                      <TableHead>Loan Type</TableHead>
+                      <TableHead>Key Financial Metrics</TableHead>
+                      <TableHead>Risk Factors</TableHead>
+                      <TableHead>Strengths</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {mockUnderwritingTasks.map((task) => (
+                      <TableRow key={task.id}>
+                        <TableCell className="font-medium">{task.id}</TableCell>
+                        <TableCell>{task.borrower}</TableCell>
+                        <TableCell>{task.assetClass}</TableCell>
+                        <TableCell>
+                          <div className="space-y-1 text-sm">
+                            {Object.entries(task.riskAssessment.ratios).slice(0, 3).map(([key, value]) => (
+                              <div key={key}>
+                                <span className="font-medium">
+                                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                                </span> {value}
+                              </div>
+                            ))}
+                            {Object.keys(task.riskAssessment.ratios).length > 3 && (
+                              <div className="text-xs text-muted-foreground">
+                                +{Object.keys(task.riskAssessment.ratios).length - 3} more metrics
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <ul className="list-disc pl-4 text-sm">
+                            {task.riskAssessment.factors.slice(0, 2).map((factor, idx) => (
+                              <li key={idx} className="text-sm">{factor}</li>
+                            ))}
+                            {task.riskAssessment.factors.length > 2 && (
+                              <li className="text-xs text-muted-foreground">
+                                +{task.riskAssessment.factors.length - 2} more factors
+                              </li>
+                            )}
+                          </ul>
+                        </TableCell>
+                        <TableCell>
+                          <ul className="list-disc pl-4 text-sm">
+                            {task.riskAssessment.strengths.slice(0, 2).map((strength, idx) => (
+                              <li key={idx} className="text-sm">{strength}</li>
+                            ))}
+                            {task.riskAssessment.strengths.length > 2 && (
+                              <li className="text-xs text-muted-foreground">
+                                +{task.riskAssessment.strengths.length - 2} more strengths
+                              </li>
+                            )}
+                          </ul>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Button size="icon" variant="ghost" onClick={() => handleViewApplication(task)} title="View Application">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => handleViewBorrower(task.borrower)} title="View Borrower">
+                              <UserCheck className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => handleRunRiskAnalysis(task.id)} title="Run Financial Analysis">
+                              <BarChart4 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

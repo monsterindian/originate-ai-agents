@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Bell, Search, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import OpenAIStatusIndicator from "../agents/OpenAIStatusIndicator";
+import Logo from "@/components/branding/Logo";
 
 const Topbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
