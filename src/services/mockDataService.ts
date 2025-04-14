@@ -109,7 +109,7 @@ const createRandomLoanApplication = (): LoanApplicationDTO => {
 };
 
 // Function to generate mock LoanApplications
-export const getMockLoanApplications = (count: number = 500): LoanApplication[] => {
+export const getMockLoanApplications = (count: number = 150): LoanApplication[] => {
   const applications: LoanApplication[] = [];
   for (let i = 0; i < count; i++) {
     const applicationDTO = createRandomLoanApplication();
@@ -125,14 +125,117 @@ export const getMockLoanApplications = (count: number = 500): LoanApplication[] 
 
 // Function to get a specific loan application by ID
 export const getMockLoanApplicationById = (id: string): LoanApplication | undefined => {
-  const applications = getMockLoanApplications(20);
+  const applications = getMockLoanApplications(150);
   return applications.find(app => app.id === id) || applications[0]; // Fallback to the first app if not found
 };
 
 // Function to get applications for a specific agent type
-export const getApplicationsForAgentType = (agentType: string, count: number = 10): LoanApplication[] => {
+export const getApplicationsForAgentType = (agentType: string, count: number = 150): LoanApplication[] => {
   const applications = getMockLoanApplications(count);
-  return applications;
+  
+  // Filter applications based on agent type to return relevant applications
+  let filteredApps: LoanApplication[];
+  
+  switch (agentType) {
+    case "intake":
+      filteredApps = applications.filter(app => 
+        ["draft", "submitted", "reviewing"].includes(app.status)
+      );
+      break;
+    case "processing":
+      filteredApps = applications.filter(app => 
+        ["reviewing", "information_needed"].includes(app.status)
+      );
+      break;
+    case "underwriting":
+      filteredApps = applications.filter(app => 
+        ["underwriting"].includes(app.status)
+      );
+      break;
+    case "decision":
+      filteredApps = applications.filter(app => 
+        ["underwriting", "approved", "conditionally_approved", "rejected"].includes(app.status)
+      );
+      break;
+    case "fraud-risk":
+      // Ensure we return at least 100 applications for fraud risk
+      filteredApps = applications.map(app => ({
+        ...app,
+        risk: faker.helpers.arrayElement(['Low', 'Medium', 'High']),
+        // Add additional fraud risk indicators
+        fraudRiskIndicators: {
+          identityVerificationScore: faker.number.int({ min: 20, max: 100 }),
+          suspiciousActivity: faker.datatype.boolean(0.3),
+          documentVerification: faker.helpers.arrayElement(['Verified', 'Pending', 'Failed']),
+          riskFactors: Array.from({ length: faker.number.int({ min: 0, max: 5 }) }, () => 
+            faker.helpers.arrayElement([
+              'Multiple applications',
+              'Address mismatch',
+              'Credit bureau alerts',
+              'Unusual transaction pattern',
+              'Device risk',
+              'Geolocation inconsistency',
+              'Document manipulation detected',
+              'Velocity checks failed'
+            ])
+          )
+        }
+      }));
+      break;
+    case "cash-flow-analysis":
+      filteredApps = applications.filter(app => 
+        ["reviewing", "underwriting"].includes(app.status)
+      );
+      break;
+    case "funding":
+      filteredApps = applications.filter(app => 
+        ["approved", "funding"].includes(app.status)
+      );
+      break;
+    default:
+      filteredApps = applications;
+  }
+  
+  // Ensure we have at least 100 applications for any agent type
+  if (filteredApps.length < 100) {
+    // Add more applications until we reach 100
+    const additionalNeeded = 100 - filteredApps.length;
+    const additionalApps = applications
+      .filter(app => !filteredApps.some(filteredApp => filteredApp.id === app.id))
+      .slice(0, additionalNeeded)
+      .map(app => {
+        // Adjust the status to match the agent type
+        let newStatus: LoanStatus;
+        switch (agentType) {
+          case "intake":
+            newStatus = "draft";
+            break;
+          case "processing":
+            newStatus = "reviewing";
+            break;
+          case "underwriting":
+            newStatus = "underwriting";
+            break;
+          case "decision":
+            newStatus = "underwriting";
+            break;
+          case "funding":
+            newStatus = "approved";
+            break;
+          default:
+            newStatus = "reviewing";
+        }
+        
+        return {
+          ...app,
+          status: newStatus
+        };
+      });
+      
+    filteredApps = [...filteredApps, ...additionalApps];
+  }
+  
+  return filteredApps.slice(0, count);
 };
 
 // Function to format currency
