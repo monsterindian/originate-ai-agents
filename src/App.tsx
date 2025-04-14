@@ -16,6 +16,7 @@ import UnderwritingAgent from "./pages/agents/UnderwritingAgent";
 import DecisionAgent from "./pages/agents/DecisionAgent";
 import FraudRiskAgent from "./pages/agents/FraudRiskAgent";
 import FundingAgent from "./pages/agents/FundingAgent";
+import CashFlowAnalysisAgent from "./pages/agents/CashFlowAnalysisAgent";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/agents/decision" element={<DecisionAgent />} />
           <Route path="/agents/fraud-risk" element={<FraudRiskAgent />} />
           <Route path="/agents/funding" element={<FundingAgent />} />
+          <Route path="/agents/cash-flow-analysis" element={<CashFlowAnalysisAgent />} />
           
           <Route path="/applications" element={<Applications />} />
           <Route path="/borrowers" element={<Borrowers />} />

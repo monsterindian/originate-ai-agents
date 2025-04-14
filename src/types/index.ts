@@ -1,3 +1,4 @@
+
 export type LoanStatus = 
   | "draft" 
   | "submitted" 
@@ -89,6 +90,7 @@ export type LoanApplicationDTO = {
     underwritingAgentId?: string;
     decisionAgentId?: string;
     fundingAgentId?: string;
+    cashFlowAnalysisAgentId?: string;
   };
   recommendedFundingSourceId?: string;
 };
@@ -122,7 +124,8 @@ export type AgentType =
   | "processing" 
   | "underwriting" 
   | "decision"
-  | "funding";
+  | "funding"
+  | "cashflow_analysis";
 
 export type Agent = {
   id: string;
@@ -245,4 +248,73 @@ export type FundingRecommendation = {
   }[];
   dateGenerated: string;
   generatedBy: string;
+};
+
+// Cash Flow Analysis Types
+export type CashFlowHealth = "Strong" | "Moderate" | "Weak";
+export type RepaymentCapacity = "Strong" | "Moderate" | "Limited";
+
+export type CashFlowHistoricalData = {
+  revenue: number;
+  revenueTrend: number;
+  cogs: number;
+  cogsTrend: number;
+  operatingExpenses: number;
+  operatingExpensesTrend: number;
+  operatingCashFlow: number;
+  operatingCashFlowTrend: number;
+  cashConversionCycle: number;
+  cashConversionCycleTrend: number;
+  capitalExpenditures: number;
+  capitalExpendituresTrend: number;
+  existingDebtService: number;
+  existingDebtServiceTrend: number;
+  debtServiceCoverageRatio: number;
+  debtServiceCoverageTrend: number;
+};
+
+export type CashFlowVolatilityMetrics = {
+  revenueStandardDeviation: number;
+  revenueVolatilityInterpretation: string;
+  cashBufferMonths: number;
+  cashBufferInterpretation: string;
+  peakToTroughRatio: number;
+  peakToTroughInterpretation: string;
+};
+
+export type CashFlowProjections = {
+  annualRevenue: number;
+  annualGrowthRate: number;
+  operatingCashFlow: number;
+  freeCashFlow: number;
+  debtServiceCoverageRatio: number;
+  loanPaymentCapacity: number;
+};
+
+export type CashFlowImprovementRecommendation = {
+  title: string;
+  description: string;
+  tags: string[];
+};
+
+export type CashFlowAnalysis = {
+  cashFlowHealth: CashFlowHealth;
+  repaymentCapacity: RepaymentCapacity;
+  recommendation: string;
+  historicalData: CashFlowHistoricalData;
+  volatilityMetrics: CashFlowVolatilityMetrics;
+  strengths: string[];
+  concerns: string[];
+  seasonalityInsights: string[];
+  projectionsWhenGenerated: CashFlowProjections;
+  projections: CashFlowProjections;
+  projectionPeriod: number;
+  stressTestingSummary: string;
+  recommendedFundingSource: string;
+  recommendedLoanStructure: string;
+  recommendedInterestRate: number;
+  fundingRationale: string;
+  riskFactors: string[];
+  mitigationStrategies: string[];
+  improvementRecommendations: CashFlowImprovementRecommendation[];
 };

@@ -1,1263 +1,549 @@
-import { 
-  Borrower, 
-  LoanApplication, 
-  LoanStatus, 
-  AssetClass, 
-  Agent, 
-  AgentType,
-  DashboardSummary,
-  Document,
-  Note,
-  FundingSource,
-  FundingSourceType,
-  FundingRecommendation
-} from "@/types";
+import { faker } from "@faker-js/faker";
+import { LoanApplication, LoanStatus, AssetClass, Borrower, LoanApplicationDTO, CashFlowAnalysis, CashFlowHealth, RepaymentCapacity, CashFlowHistoricalData, CashFlowVolatilityMetrics, CashFlowProjections, CashFlowImprovementRecommendation } from "@/types";
 
-// Helper to generate random date strings within a range
-const randomDate = (start: Date, end: Date): string => {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())).toISOString().split('T')[0];
-};
-
-// Helper to generate random IDs with prefixes
-const generateId = (prefix: string): string => {
-  return `${prefix}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-};
-
-// Generate random names
-const firstNames = [
-  "John", "Jane", "Michael", "Emily", "David", "Sarah", "Robert", "Lisa", "Thomas", "Jessica",
-  "William", "Jennifer", "James", "Elizabeth", "Christopher", "Ashley", "Daniel", "Samantha", 
-  "Matthew", "Amanda", "Andrew", "Stephanie", "Joseph", "Nicole", "Ryan", "Katherine", "Nicholas",
-  "Melissa", "Anthony", "Heather", "Kevin", "Christina", "Brian", "Rachel", "Steven", "Laura"
-];
-
-const lastNames = [
-  "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Rodriguez", "Wilson",
-  "Martinez", "Anderson", "Taylor", "Thomas", "Hernandez", "Moore", "Martin", "Jackson", "Thompson", "White",
-  "Lopez", "Lee", "Gonzalez", "Harris", "Clark", "Lewis", "Robinson", "Walker", "Perez", "Hall",
-  "Young", "Allen", "Sanchez", "Wright", "King", "Scott", "Green", "Baker", "Adams", "Nelson"
-];
-
-const companyNames = [
-  "Acme Industries", "Global Enterprises", "Summit Solutions", "Horizon Tech", "Elite Services",
-  "Pioneer Innovations", "Prestige Properties", "Frontier Systems", "Universal Logistics", "Pinnacle Group",
-  "Dynamic Solutions", "Advance Technologies", "Premier Services", "Heritage Construction", "Momentum Partners",
-  "Synergy Ventures", "Precision Engineering", "Cascade Development", "Apex Corporation", "Vantage Holdings",
-  "Allegiance Investments", "Strategic Ventures", "Evergreen Properties", "Clearwater Consulting", "Cornerstone Builders",
-  "Skyline Developers", "Integrity Financial", "Beacon Advisors", "Sunbelt Enterprises", "Victory Partners",
-  "Revolution Tech", "Spectrum Software", "Atlas Logistics", "Harbor Freight", "Liberty Capital",
-  "Maritime Shipping", "Blue Ridge Developments", "Eagle Construction", "Golden Gate Industries", "Silver Lining Tech"
-];
-
-const streetNames = [
-  "Main Street", "Oak Avenue", "Maple Drive", "Cedar Lane", "Pine Street", "Elm Road", "Washington Avenue",
-  "Park Boulevard", "Highland Drive", "Sunset Lane", "Riverside Drive", "Mountain View", "Lake Shore Drive",
-  "Meadow Lane", "Forest Avenue", "Valley Road", "Spring Street", "Willow Lane", "Ocean Drive", "Broadway"
-];
-
-const cities = [
-  "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego",
-  "Dallas", "San Jose", "Austin", "Jacksonville", "Fort Worth", "Columbus", "San Francisco", "Charlotte",
-  "Indianapolis", "Seattle", "Denver", "Washington", "Boston", "Nashville", "Baltimore", "Oklahoma City",
-  "Portland", "Las Vegas", "Milwaukee", "Albuquerque", "Tucson", "Fresno", "Sacramento", "Kansas City",
-  "Atlanta", "Miami", "Tampa", "Orlando", "Pittsburgh", "Cincinnati", "Minneapolis", "Cleveland"
-];
-
-const states = [
-  "NY", "CA", "IL", "TX", "AZ", "PA", "FL", "GA", "NC", "OH", "MI", "WA", "CO", "DC", "MA", "TN",
-  "MD", "OK", "OR", "NV", "WI", "NM", "AZ", "CA", "MO", "GA", "FL", "FL", "FL", "PA", "OH", "MN"
-];
-
-const industries = [
-  "Manufacturing", "Technology", "Healthcare", "Retail", "Finance", "Education", "Real Estate", 
-  "Construction", "Energy", "Transportation", "Hospitality", "Agriculture", "Media", "Telecommunications",
-  "Automotive", "Pharmaceuticals", "Insurance", "Legal Services", "Entertainment", "Food & Beverage"
-];
-
-const loanPurposes = [
-  "Property Acquisition", "Equipment Purchase", "Business Expansion", "Working Capital", "Debt Consolidation",
-  "Renovation", "Inventory", "Marketing", "Research & Development", "Staffing", "Software Implementation",
-  "Franchise Fee", "Startup Costs", "Refinancing", "Acquisition", "New Location", "Equipment Upgrades",
-  "Facility Improvement", "Technology Infrastructure", "Seasonal Cash Flow"
-];
-
-// Create mock borrowers
-export const generateMockBorrowers = (count: number): Borrower[] => {
-  return Array.from({ length: count }).map((_, index) => {
-    const id = generateId("B");
-    const isCompany = Math.random() > 0.4;
-    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-    const name = isCompany 
-      ? companyNames[Math.floor(Math.random() * companyNames.length)]
-      : `${firstName} ${lastName}`;
-    const email = isCompany
-      ? `info@${name.toLowerCase().replace(/[^\w]/g, '')}.com`
-      : `${firstName.toLowerCase()}.${lastName.toLowerCase()}${Math.floor(Math.random() * 100)}@example.com`;
-    const creditScore = Math.floor(Math.random() * 300) + 550;
-    
-    return {
-      id,
-      firstName: isCompany ? "" : firstName,
-      lastName: isCompany ? "" : lastName,
-      companyName: isCompany ? name : undefined,
-      email,
-      phone: `(${Math.floor(Math.random() * 900) + 100})-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-      dateOfBirth: isCompany ? undefined : randomDate(new Date(1960, 0, 1), new Date(2000, 0, 1)),
-      ssn: isCompany ? undefined : `${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 90) + 10}-${Math.floor(Math.random() * 9000) + 1000}`,
-      taxId: isCompany ? `${Math.floor(Math.random() * 90) + 10}-${Math.floor(Math.random() * 9000000) + 1000000}` : undefined,
-      address: {
-        street: `${Math.floor(Math.random() * 9000) + 1000} ${streetNames[Math.floor(Math.random() * streetNames.length)]}`,
-        city: cities[Math.floor(Math.random() * cities.length)],
-        state: states[Math.floor(Math.random() * states.length)],
-        zipCode: `${Math.floor(Math.random() * 90000) + 10000}`,
-        country: "USA"
-      },
-      creditScore,
-      creditRating: creditScore > 750 ? "Excellent" : creditScore > 700 ? "Good" : creditScore > 650 ? "Fair" : "Poor",
-      income: isCompany ? undefined : Math.floor(Math.random() * 100000) + 40000,
-      annualRevenue: isCompany ? Math.floor(Math.random() * 9000000) + 1000000 : undefined,
-      employmentStatus: isCompany ? undefined : ["Employed", "Self-Employed", "Unemployed", "Retired"][Math.floor(Math.random() * 3)],
-      industry: isCompany ? industries[Math.floor(Math.random() * industries.length)] : undefined,
-      yearsInBusiness: isCompany ? Math.floor(Math.random() * 20) + 1 : undefined,
-      employmentInfo: isCompany ? undefined : {
-        employer: ["ABC Corp", "XYZ Inc", "Tech Solutions", "Global Finance", "Retail Giant"][Math.floor(Math.random() * 5)],
-        position: ["Manager", "Analyst", "Director", "Associate", "Specialist"][Math.floor(Math.random() * 5)],
-        startDate: randomDate(new Date(2010, 0, 1), new Date(2020, 0, 1)),
-      },
-      relationshipManager: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
-      dateCreated: randomDate(new Date(2023, 0, 1), new Date()),
-      dateUpdated: randomDate(new Date(2023, 6, 1), new Date())
-    };
-  });
-};
-
-// Helper to generate documents for applications
-const generateDocuments = (applicationId: string, borrowerId: string, status: LoanStatus, dateCreated: string): Document[] => {
-  const documentTypes = [
-    "ID Verification", "Income Proof", "Bank Statement", 
-    "Credit Report", "Property Assessment", "Tax Return",
-    "Business Plan", "Financial Statements", "Collateral Documentation",
-    "Insurance Policy", "Articles of Incorporation", "Operating Agreement"
-  ];
-
-  // Determine how many documents should be generated based on application status
-  const progressMap: Record<LoanStatus, number> = {
-    "draft": 1,
-    "submitted": 2,
-    "reviewing": 3,
-    "information_needed": 3,
-    "underwriting": 4,
-    "approved": 5,
-    "conditionally_approved": 5,
-    "rejected": 5,
-    "funding": 6,
-    "funded": 6,
-    "closed": 6
-  };
-  
-  const targetDocCount = progressMap[status] || 3;
-  const documentCount = Math.min(Math.floor(Math.random() * 3) + targetDocCount, documentTypes.length);
-  
-  // Shuffle document types and pick a subset
-  const shuffledDocTypes = [...documentTypes].sort(() => 0.5 - Math.random()).slice(0, documentCount);
-  
-  return shuffledDocTypes.map(docType => {
-    // Document status should align with application status
-    let docStatus: "pending" | "verified" | "rejected";
-    if (["draft", "submitted", "information_needed"].includes(status)) {
-      docStatus = Math.random() > 0.7 ? "pending" : "verified";
-    } else if (status === "rejected") {
-      docStatus = Math.random() > 0.5 ? "rejected" : "verified";
-    } else {
-      docStatus = Math.random() > 0.2 ? "verified" : "pending";
-    }
-    
-    const uploadDate = randomDate(new Date(dateCreated), new Date());
-    
-    return {
-      id: generateId("DOC"),
-      name: `${docType.replace(/\s+/g, '_')}_${applicationId}.pdf`,
-      type: docType,
-      url: `https://example.com/documents/${generateId("")}`,
-      uploadedBy: Math.random() > 0.5 ? "system" : borrowerId,
-      uploadedAt: uploadDate,
-      status: docStatus,
-      aiAnalysisComplete: status !== "draft" && Math.random() > 0.3,
-      aiAnalysisSummary: status !== "draft" && Math.random() > 0.3 
-        ? `Document appears to be ${Math.random() > 0.8 ? "potentially problematic" : "authentic"} and ${Math.random() > 0.7 ? "matches" : "doesn't fully match"} the provided information.`
-        : undefined
-    };
-  });
-};
-
-// Helper to generate notes for applications
-const generateNotes = (applicationId: string, status: LoanStatus, dateCreated: string): Note[] => {
-  if (status === "draft") return [];
-  
-  const noteCount = Math.floor(Math.random() * 5) + (["reviewing", "underwriting", "approved", "conditionally_approved", "rejected", "funding", "funded", "closed"].includes(status) ? 3 : 1);
-  
-  const agentNotes = [
-    "Initial review complete. Application meets basic criteria for further processing.",
-    "Credit check reveals strong payment history with minor concerns in debt-to-income ratio.",
-    "Property valuation results indicate appropriate loan-to-value ratio for requested amount.",
-    "Borrower financial statements verified and show adequate cash flow for servicing the debt.",
-    "Documentation appears complete and accurate. No significant discrepancies found.",
-    "Risk assessment indicates moderate risk profile. Recommend additional collateral.",
-    "Analysis shows strong repayment capacity. Recommend approval at requested terms.",
-    "Income verification completed. Borrower meets minimum income requirements.",
-    "Potential compliance concerns identified. Recommend additional documentation.",
-    "Background check completed with no significant findings.",
-    "Financial analysis suggests debt-to-income ratio exceeds guidelines. Consider conditional approval.",
-    "Market analysis of proposed property/investment shows favorable conditions.",
-    "Borrower business plan demonstrates viability but projected revenues may be optimistic.",
-    "Suggests restructuring terms to better align with borrower's cash flow patterns.",
-    "Automation risk assessment completed with low-risk findings."
-  ];
-  
-  const userNotes = [
-    "Called borrower to request additional documentation regarding income verification.",
-    "Discussed payment terms and explained interest rate calculation to borrower.",
-    "Provided guidance on completing missing sections of the application.",
-    "Met with borrower to review property assessment and discuss valuation concerns.",
-    "Scheduled site visit for property inspection next week.",
-    "Reached out to co-signer to verify willingness to participate.",
-    "Consulted with underwriting team regarding exception request.",
-    "Reviewed application with senior management due to loan size.",
-    "Requested clarification on discrepancy in financial statements.",
-    "Conducted follow-up call to discuss conditional approval terms."
-  ];
-  
-  return Array.from({ length: noteCount }).map((_, index) => {
-    const isAgentNote = Math.random() > 0.4;
-    const noteDate = randomDate(new Date(dateCreated), new Date());
-    
-    return {
-      id: generateId("NOTE"),
-      content: isAgentNote 
-        ? agentNotes[Math.floor(Math.random() * agentNotes.length)]
-        : userNotes[Math.floor(Math.random() * userNotes.length)],
-      createdBy: isAgentNote ? `agent-${generateId("")}` : "user-admin",
-      createdAt: noteDate,
-      isAgentNote
-    };
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-};
-
-// Create mock loan applications
-export const generateMockLoanApplications = (count: number, borrowers: Borrower[]): LoanApplication[] => {
+// Function to generate a random LoanStatus
+const getRandomLoanStatus = (): LoanStatus => {
   const statuses: LoanStatus[] = [
-    "draft", "submitted", "reviewing", "information_needed", "underwriting", 
-    "approved", "conditionally_approved", "rejected", "funding", "funded", "closed"
+    "draft", "submitted", "reviewing", "information_needed",
+    "underwriting", "approved", "conditionally_approved", "rejected",
+    "funding", "funded", "closed"
   ];
-  
+  return faker.helpers.arrayElement(statuses);
+};
+
+// Function to generate a random AssetClass
+const getRandomAssetClass = (): AssetClass => {
   const assetClasses: AssetClass[] = [
-    "residential_mortgage", "commercial_real_estate", "auto_loan", 
+    "residential_mortgage", "commercial_real_estate", "auto_loan",
     "personal_loan", "sme_loan", "equipment_finance", "other"
   ];
-
-  // Create a distribution pattern for statuses to make the data more realistic
-  const statusDistribution: Record<LoanStatus, number> = {
-    "draft": 0.1,            // 10% of apps
-    "submitted": 0.1,         // 10% of apps
-    "reviewing": 0.15,        // 15% of apps
-    "information_needed": 0.1, // 10% of apps
-    "underwriting": 0.15,     // 15% of apps
-    "approved": 0.05,         // 5% of apps
-    "conditionally_approved": 0.1, // 10% of apps
-    "rejected": 0.05,         // 5% of apps
-    "funding": 0.05,          // 5% of apps
-    "funded": 0.1,            // 10% of apps
-    "closed": 0.05            // 5% of apps
-  };
-
-  return Array.from({ length: count }).map((_, index) => {
-    const id = generateId("APP");
-    const borrower = borrowers[Math.floor(Math.random() * borrowers.length)];
-    
-    // Determine status based on distribution
-    let statusRoll = Math.random();
-    let cumulativeProbability = 0;
-    let status: LoanStatus = "draft";
-    
-    for (const [stat, probability] of Object.entries(statusDistribution)) {
-      cumulativeProbability += probability;
-      if (statusRoll <= cumulativeProbability) {
-        status = stat as LoanStatus;
-        break;
-      }
-    }
-    
-    // Pick an asset class with some correlation to borrower type
-    let assetClass: AssetClass;
-    if (borrower.companyName) {
-      assetClass = ["commercial_real_estate", "equipment_finance", "sme_loan"][Math.floor(Math.random() * 3)] as AssetClass;
-    } else {
-      assetClass = ["residential_mortgage", "auto_loan", "personal_loan"][Math.floor(Math.random() * 3)] as AssetClass;
-    }
-    
-    const dateCreated = randomDate(new Date(2023, 0, 1), new Date());
-    const dateUpdated = randomDate(new Date(dateCreated), new Date());
-    const dateSubmitted = status !== "draft" ? randomDate(new Date(dateCreated), new Date(dateUpdated)) : undefined;
-    const dateReviewed = ["reviewing", "information_needed", "underwriting", "approved", "conditionally_approved", "rejected", "funding", "funded", "closed"].includes(status)
-      ? randomDate(new Date(dateSubmitted || dateCreated), new Date(dateUpdated))
-      : undefined;
-    const dateUnderwritten = ["underwriting", "approved", "conditionally_approved", "rejected", "funding", "funded", "closed"].includes(status)
-      ? randomDate(new Date(dateReviewed || dateCreated), new Date(dateUpdated))
-      : undefined;
-    const dateApproved = ["approved", "conditionally_approved", "funding", "funded", "closed"].includes(status) 
-      ? randomDate(new Date(dateUnderwritten || dateCreated), new Date(dateUpdated)) 
-      : undefined;
-    const dateFunded = ["funded", "closed"].includes(status)
-      ? randomDate(new Date(dateApproved || dateCreated), new Date(dateUpdated))
-      : undefined;
-    const dateClosed = status === "closed"
-      ? randomDate(new Date(dateFunded || dateCreated), new Date(dateUpdated))
-      : undefined;
-
-    // Generate documents based on application status
-    const documents = generateDocuments(id, borrower.id, status, dateCreated);
-    
-    // Generate notes based on application status
-    const notes = generateNotes(id, status, dateCreated);
-
-    // Generate loan amount based on asset class with some randomness
-    let amount = 0;
-    switch (assetClass) {
-      case "residential_mortgage":
-        amount = Math.floor(Math.random() * 800000) + 200000;
-        break;
-      case "commercial_real_estate":
-        amount = Math.floor(Math.random() * 5000000) + 1000000;
-        break;
-      case "auto_loan":
-        amount = Math.floor(Math.random() * 50000) + 10000;
-        break;
-      case "personal_loan":
-        amount = Math.floor(Math.random() * 30000) + 5000;
-        break;
-      case "sme_loan":
-        amount = Math.floor(Math.random() * 500000) + 50000;
-        break;
-      case "equipment_finance":
-        amount = Math.floor(Math.random() * 300000) + 20000;
-        break;
-      default:
-        amount = Math.floor(Math.random() * 100000) + 10000;
-    }
-
-    // Calculate interest rate based on borrower credit and market conditions
-    const baseRate = 5.0; // Base interest rate
-    const creditAdjustment = (borrower.creditScore ? (800 - borrower.creditScore) / 100 : 2); // Higher score = lower rate
-    const randomVariation = (Math.random() - 0.5) * 0.5; // Add slight randomness
-    const interestRate = baseRate + creditAdjustment + randomVariation;
-
-    // Determine completeness percentage based on status
-    const completenessMap: Record<LoanStatus, number> = {
-      "draft": Math.floor(Math.random() * 30) + 10,
-      "submitted": Math.floor(Math.random() * 20) + 40,
-      "reviewing": Math.floor(Math.random() * 15) + 60,
-      "information_needed": Math.floor(Math.random() * 10) + 50,
-      "underwriting": Math.floor(Math.random() * 15) + 75,
-      "approved": Math.floor(Math.random() * 5) + 95,
-      "conditionally_approved": Math.floor(Math.random() * 5) + 90,
-      "rejected": Math.floor(Math.random() * 20) + 70,
-      "funding": 100,
-      "funded": 100,
-      "closed": 100
-    };
-    
-    const completeness = completenessMap[status];
-
-    // Assign agents based on application status
-    const agentAssignments = {
-      intakeAgentId: ["submitted", "reviewing", "information_needed", "underwriting", "approved", "conditionally_approved", "rejected", "funding", "funded", "closed"].includes(status)
-        ? `intake-${generateId("")}` : undefined,
-      processingAgentId: ["reviewing", "information_needed", "underwriting", "approved", "conditionally_approved", "rejected", "funding", "funded", "closed"].includes(status)
-        ? `processing-${generateId("")}` : undefined,
-      underwritingAgentId: ["underwriting", "approved", "conditionally_approved", "rejected", "funding", "funded", "closed"].includes(status)
-        ? `underwriting-${generateId("")}` : undefined,
-      decisionAgentId: ["approved", "conditionally_approved", "rejected", "funding", "funded", "closed"].includes(status)
-        ? `decision-${generateId("")}` : undefined,
-      fundingAgentId: ["funding", "funded", "closed"].includes(status)
-        ? `funding-${generateId("")}` : undefined,
-    };
-
-    // Add funding source recommendation for some applications
-    const recommendedFundingSourceId = ["approved", "conditionally_approved", "funding", "funded", "closed"].includes(status) && Math.random() > 0.3
-      ? `FS-${generateId("")}` : undefined;
-
-    // Create a "display status" for UI presentation that's more user-friendly
-    const statusDisplayMap: Record<LoanStatus, string> = {
-      "draft": "Draft",
-      "submitted": "Submitted",
-      "reviewing": "In Review",
-      "information_needed": "Information Needed",
-      "underwriting": "In Underwriting",
-      "approved": "Approved",
-      "conditionally_approved": "Conditionally Approved",
-      "rejected": "Rejected",
-      "funding": "Funding In Progress",
-      "funded": "Funded",
-      "closed": "Closed"
-    };
-
-    const displayStatus = statusDisplayMap[status];
-
-    // Define purpose based on asset class
-    const purpose = loanPurposes[Math.floor(Math.random() * loanPurposes.length)];
-
-    return {
-      id,
-      borrowerId: borrower.id,
-      borrower,
-      assetClass,
-      amount,
-      term: [12, 24, 36, 60, 120, 180, 240, 360][Math.floor(Math.random() * 8)],
-      interestRate: parseFloat(interestRate.toFixed(2)),
-      purpose,
-      completeness,
-      displayStatus,
-      collateral: assetClass !== "personal_loan" ? {
-        type: assetClass === "auto_loan" ? "Vehicle" : assetClass === "residential_mortgage" ? "Property" : "Business Assets",
-        value: amount * (1 + Math.random() * 0.5),
-        description: `${assetClass === "auto_loan" ? "2023 Toyota Camry" : assetClass === "residential_mortgage" ? "3BR/2BA Single Family Home" : "Business Equipment and Inventory"}`
-      } : undefined,
-      status,
-      documents,
-      notes,
-      dateCreated,
-      dateUpdated,
-      dateSubmitted,
-      dateReviewed,
-      dateUnderwritten,
-      dateApproved,
-      dateFunded,
-      dateClosed,
-      agentAssignments,
-      recommendedFundingSourceId,
-      risk: borrower.creditScore 
-        ? (borrower.creditScore > 750 ? "Low" : borrower.creditScore > 680 ? "Medium" : "High")
-        : (Math.random() > 0.6 ? "Medium" : Math.random() > 0.5 ? "Low" : "High")
-    };
-  });
+  return faker.helpers.arrayElement(assetClasses);
 };
 
-// Create mock agents
-export const generateMockAgents = (): Agent[] => {
-  const agentTypes: AgentType[] = ["intake", "processing", "underwriting", "decision"];
-  
-  return agentTypes.map(type => {
-    const id = `${type}-${generateId("")}`;
-    
-    let name = "";
-    let description = "";
-    
-    switch (type) {
-      case "intake":
-        name = "Intake Assistant";
-        description = "Handles initial application review and document collection";
-        break;
-      case "processing":
-        name = "Loan Processor";
-        description = "Processes applications and verifies documentation";
-        break;
-      case "underwriting":
-        name = "Underwriting Analyst";
-        description = "Analyzes borrower creditworthiness and risk assessment";
-        break;
-      case "decision":
-        name = "Decision Engine";
-        description = "Makes final loan approval recommendations based on all data";
-        break;
-    }
-    
-    return {
-      id,
-      name,
-      type,
-      status: "active",
-      description,
-      lastActivity: randomDate(new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()),
-      performanceMetrics: {
-        tasksCompleted: Math.floor(Math.random() * 500) + 50,
-        averageCompletionTime: Math.floor(Math.random() * 60) + 10,
-        errorRate: Math.random() * 0.05
-      }
-    };
-  });
-};
-
-// Generate mock funding sources
-export const generateMockFundingSources = (): FundingSource[] => {
-  const fundingSourceTypes: FundingSourceType[] = [
-    "institutional_investor", "bank", "credit_union", "private_equity", 
-    "government_program", "securitization_pool", "internal_funds", "peer_to_peer"
-  ];
-  
-  const names = {
-    "bank": ["First National Bank", "Midwest Regional Bank", "Pacific Trust Bank", "Enterprise Banking Group", "Atlantic Financial"],
-    "credit_union": ["Community Credit Union", "Members First CU", "Federal Employees CU", "Teachers Credit Union", "Healthcare Workers CU"],
-    "private_equity": ["Horizon Capital", "Summit Partners", "Blackstone Funding", "Highland Investments", "Vanguard Equity"],
-    "institutional_investor": ["Global Investment Partners", "Prudential Asset Management", "Fidelity Investment Group", "State Retirement System", "University Endowment Fund"],
-    "government_program": ["Federal Housing Authority", "Small Business Administration", "Export-Import Bank", "Rural Development Program", "Urban Development Fund"],
-    "securitization_pool": ["Pacific Securitization Trust", "Residential Mortgage Securities", "Commercial Property Trust", "Auto Loan Backed Securities", "Structured Finance Trust"],
-    "internal_funds": ["Credion Internal Fund", "Strategic Finance Pool", "Retained Earnings Fund", "Special Projects Fund", "Innovation Capital Fund"],
-    "peer_to_peer": ["LendConnect Platform", "P2P Funding Marketplace", "Crowdsource Lending", "Retail Investor Network", "Direct Lending Exchange"]
-  };
-  
-  return fundingSourceTypes.flatMap(type => {
-    return Array.from({ length: Math.floor(Math.random() * 2) + 1 }).map((_, index) => {
-      const id = `FS-${type.substring(0, 3).toUpperCase()}${(index + 1).toString().padStart(3, '0')}`;
-      const nameList = names[type] || [`${type.replace(/_/g, ' ')} Fund ${index + 1}`];
-      const name = nameList[Math.min(index, nameList.length - 1)];
-      
-      // Generate min/max loan amounts based on funding source type
-      let minAmount = 10000;
-      let maxAmount = 500000;
-      switch (type) {
-        case "bank":
-          minAmount = 50000;
-          maxAmount = 5000000;
-          break;
-        case "credit_union":
-          minAmount = 5000;
-          maxAmount = 500000;
-          break;
-        case "private_equity":
-          minAmount = 500000;
-          maxAmount = 20000000;
-          break;
-        case "institutional_investor":
-          minAmount = 1000000;
-          maxAmount = 50000000;
-          break;
-        case "government_program":
-          minAmount = 10000;
-          maxAmount = 750000;
-          break;
-        case "securitization_pool":
-          minAmount = 100000;
-          maxAmount = 1000000;
-          break;
-        case "internal_funds":
-          minAmount = 10000;
-          maxAmount = 1000000;
-          break;
-        case "peer_to_peer":
-          minAmount = 1000;
-          maxAmount = 100000;
-          break;
-      }
-      
-      // Generate interest rate ranges based on funding source type
-      let minRate = 3.0;
-      let maxRate = 7.0;
-      switch (type) {
-        case "bank":
-          minRate = 4.25;
-          maxRate = 7.5;
-          break;
-        case "credit_union":
-          minRate = 3.75;
-          maxRate = 6.5;
-          break;
-        case "private_equity":
-          minRate = 6.75;
-          maxRate = 12.0;
-          break;
-        case "institutional_investor":
-          minRate = 5.0;
-          maxRate = 9.0;
-          break;
-        case "government_program":
-          minRate = 3.25;
-          maxRate = 5.5;
-          break;
-        case "securitization_pool":
-          minRate = 4.0;
-          maxRate = 6.0;
-          break;
-        case "internal_funds":
-          minRate = 3.5;
-          maxRate = 9.0;
-          break;
-        case "peer_to_peer":
-          minRate = 5.0;
-          maxRate = 15.0;
-          break;
-      }
-      
-      // Generate eligibility criteria based on funding source type
-      const eligibilityCriteria: any = {};
-      
-      // Add credit score requirement for some funding sources
-      if (["bank", "credit_union", "government_program", "securitization_pool", "peer_to_peer"].includes(type)) {
-        eligibilityCriteria.minCreditScore = type === "government_program" ? 580 : 
-                                          type === "peer_to_peer" ? 620 : 
-                                          type === "credit_union" ? 640 : 
-                                          type === "bank" ? 680 : 700;
-      }
-      
-      // Add loan-to-value ratio for secured loans
-      if (["bank", "credit_union", "private_equity", "government_program", "securitization_pool"].includes(type)) {
-        eligibilityCriteria.maxLTV = type === "government_program" ? 96.5 : 
-                                  type === "credit_union" ? 90 : 
-                                  type === "private_equity" ? 85 : 80;
-      }
-      
-      // Add debt-to-income ratio for consumer loans
-      if (["bank", "credit_union", "government_program", "peer_to_peer"].includes(type)) {
-        eligibilityCriteria.maxDTI = type === "government_program" ? 50 : 
-                                  type === "peer_to_peer" ? 50 : 
-                                  type === "credit_union" ? 45 : 43;
-      }
-      
-      // Add preferred asset classes
-      switch (type) {
-        case "bank":
-          eligibilityCriteria.preferredAssetClasses = ["residential_mortgage", "commercial_real_estate", "auto_loan"];
-          break;
-        case "credit_union":
-          eligibilityCriteria.preferredAssetClasses = ["residential_mortgage", "auto_loan", "personal_loan"];
-          break;
-        case "private_equity":
-          eligibilityCriteria.preferredAssetClasses = ["commercial_real_estate", "sme_loan"];
-          eligibilityCriteria.businessRequirements = "Minimum 2 years in operation with demonstrated growth";
-          break;
-        case "institutional_investor":
-          eligibilityCriteria.preferredAssetClasses = ["commercial_real_estate", "residential_mortgage"];
-          break;
-        case "government_program":
-          eligibilityCriteria.preferredAssetClasses = ["residential_mortgage"];
-          break;
-        case "securitization_pool":
-          eligibilityCriteria.preferredAssetClasses = ["residential_mortgage"];
-          break;
-        case "internal_funds":
-          eligibilityCriteria.preferredAssetClasses = ["residential_mortgage", "commercial_real_estate", "sme_loan", "equipment_finance"];
-          break;
-        case "peer_to_peer":
-          eligibilityCriteria.preferredAssetClasses = ["personal_loan", "sme_loan"];
-          break;
-      }
-      
-      // Add location restrictions for some funding sources
-      if (type === "credit_union") {
-        eligibilityCriteria.locationRestrictions = ["CA", "OR", "WA"];
-      }
-      
-      // Generate special programs for some funding sources
-      let specialPrograms: string[] | undefined;
-      if (Math.random() > 0.3) {
-        switch (type) {
-          case "bank":
-            specialPrograms = ["First-time homebuyer", "Small business startup"];
-            break;
-          case "credit_union":
-            specialPrograms = ["Community business grants", "First-time homebuyer assistance"];
-            break;
-          case "private_equity":
-            specialPrograms = ["Growth accelerator", "Acquisition financing"];
-            break;
-          case "government_program":
-            specialPrograms = ["Down payment assistance", "Housing counseling programs"];
-            break;
-          case "peer_to_peer":
-            specialPrograms = ["Fast funding", "Flexible credit requirements"];
-            break;
-          case "internal_funds":
-            specialPrograms = ["Employee program", "Strategic partnerships"];
-            break;
-        }
-      }
-      
-      // Generate contact info for some funding sources
-      let contactInfo: { name: string; email: string; phone: string } | undefined;
-      if (Math.random() > 0.2) {
-        const contactFirstName = firstNames[Math.floor(Math.random() * firstNames.length)];
-        const contactLastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-        const contactName = `${contactFirstName} ${contactLastName}`;
-        const emailDomain = name.toLowerCase().replace(/\s+/g, '').substring(0, 12) + ".example.com";
-        
-        contactInfo = {
-          name: contactName,
-          email: `${contactFirstName.toLowerCase().charAt(0)}${contactLastName.toLowerCase()}@${emailDomain}`,
-          phone: `(555) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`
-        };
-      }
-      
-      // Generate risk tolerance based on funding source type
-      let riskTolerance: "conservative" | "moderate" | "aggressive";
-      if (["bank", "securitization_pool", "institutional_investor"].includes(type)) {
-        riskTolerance = "conservative";
-      } else if (["credit_union", "government_program", "internal_funds"].includes(type)) {
-        riskTolerance = "moderate";
-      } else {
-        riskTolerance = "aggressive";
-      }
-      
-      // Generate process time ranges
-      const minProcessingDays = type === "peer_to_peer" ? 1 : 
-                            type === "internal_funds" ? 2 : 
-                            type === "credit_union" ? 3 : 
-                            type === "bank" ? 5 : 
-                            type === "private_equity" ? 10 : 15;
-                            
-      const maxProcessingDays = minProcessingDays * (1 + Math.floor(Math.random() * 3));
-      
-      // Generate funding amounts
-      const availableFunds = type === "institutional_investor" ? 50000000 + Math.random() * 950000000 :
-                          type === "securitization_pool" ? 100000000 + Math.random() * 400000000 :
-                          type === "private_equity" ? 20000000 + Math.random() * 80000000 :
-                          type === "bank" ? 5000000 + Math.random() * 45000000 :
-                          type === "government_program" ? 10000000 + Math.random() * 190000000 :
-                          type === "credit_union" ? 1000000 + Math.random() * 14000000 :
-                          type === "internal_funds" ? 1000000 + Math.random() * 9000000 :
-                          500000 + Math.random() * 4500000;
-                          
-      const allocatedPercent = Math.random() * 0.7;
-      const allocatedFunds = Math.round(availableFunds * allocatedPercent);
-      
-      return {
-        id,
-        name,
-        type,
-        description: `${type === "bank" ? "Traditional bank" : 
-                    type === "credit_union" ? "Member-owned financial cooperative" : 
-                    type === "private_equity" ? "Private equity firm" : 
-                    type === "institutional_investor" ? "Large institutional investment fund" : 
-                    type === "government_program" ? "Government-backed loan program" : 
-                    type === "securitization_pool" ? "Mortgage-backed security pool" : 
-                    type === "internal_funds" ? "Internal capital allocation" : 
-                    "P2P lending marketplace"} ${type === "bank" ? "offering competitive rates for prime borrowers" : 
-                                              type === "credit_union" ? "offering favorable rates for personal and small business loans" : 
-                                              type === "private_equity" ? "specializing in commercial real estate and high-growth business financing" : 
-                                              type === "institutional_investor" ? "focused on large-scale real estate and business investments" : 
-                                              type === "government_program" ? "designed to help first-time and low-to-moderate income borrowers" : 
-                                              type === "securitization_pool" ? "designed for conforming residential loans" : 
-                                              type === "internal_funds" ? "for strategic partnerships and high-priority loan programs" : 
-                                              "connecting individual investors with borrowers seeking personal and small business loans"}.`,
-        minAmount,
-        maxAmount,
-        interestRateRange: {
-          min: minRate,
-          max: maxRate
-        },
-        eligibilityCriteria,
-        processingTime: {
-          min: minProcessingDays,
-          max: maxProcessingDays
-        },
-        availableFunds: Math.round(availableFunds),
-        allocatedFunds: Math.round(allocatedFunds),
-        status: Math.random() > 0.8 ? "limited" : "active",
-        riskTolerance,
-        specialPrograms,
-        contactInfo,
-        dateAdded: randomDate(new Date(2023, 0, 1), new Date(2023, 11, 31)),
-        lastUpdated: randomDate(new Date(2024, 0, 1), new Date())
-      };
-    });
-  });
-};
-
-// Generate funding recommendations
-export const generateFundingRecommendations = (applications: LoanApplication[], fundingSources: FundingSource[]): FundingRecommendation[] => {
-  // Only generate recommendations for approved or conditionally approved applications
-  const eligibleApps = applications.filter(app => 
-    ["approved", "conditionally_approved", "funding", "funded", "closed"].includes(app.status)
-  );
-  
-  return eligibleApps
-    .filter(() => Math.random() > 0.3) // Only generate recommendations for some applications
-    .map(app => {
-      // Match funding sources based on asset class and amount
-      const eligibleSources = fundingSources.filter(source => 
-        source.minAmount <= app.amount &&
-        source.maxAmount >= app.amount &&
-        source.status === "active" &&
-        (!source.eligibilityCriteria.preferredAssetClasses || 
-         source.eligibilityCriteria.preferredAssetClasses.includes(app.assetClass))
-      );
-      
-      if (eligibleSources.length === 0) return null;
-      
-      // Sort eligible sources by match score (based on various factors)
-      const scoredSources = eligibleSources.map(source => {
-        let score = 70; // Base score
-        
-        // Adjust score based on credit requirements
-        if (source.eligibilityCriteria.minCreditScore && app.borrower.creditScore) {
-          if (app.borrower.creditScore >= source.eligibilityCriteria.minCreditScore + 50) {
-            score += 10; // Well above minimum
-          } else if (app.borrower.creditScore >= source.eligibilityCriteria.minCreditScore) {
-            score += 5; // Meets minimum
-          } else {
-            score -= 20; // Below minimum
-          }
-        }
-        
-        // Adjust score based on LTV if collateral exists
-        if (source.eligibilityCriteria.maxLTV && app.collateral) {
-          const ltv = (app.amount / app.collateral.value) * 100;
-          if (ltv <= source.eligibilityCriteria.maxLTV - 10) {
-            score += 8; // Well below maximum
-          } else if (ltv <= source.eligibilityCriteria.maxLTV) {
-            score += 4; // Meets maximum
-          } else {
-            score -= 15; // Exceeds maximum
-          }
-        }
-        
-        // Adjust score based on asset class preference
-        if (source.eligibilityCriteria.preferredAssetClasses?.includes(app.assetClass)) {
-          score += 10; // Preferred asset class
-        }
-        
-        // Adjust score based on risk alignment
-        if (app.risk === "Low" && source.riskTolerance === "conservative") {
-          score += 8;
-        } else if (app.risk === "Medium" && source.riskTolerance === "moderate") {
-          score += 8;
-        } else if (app.risk === "High" && source.riskTolerance === "aggressive") {
-          score += 8;
-        } else if (app.risk === "High" && source.riskTolerance === "conservative") {
-          score -= 15;
-        }
-        
-        // Add some randomness
-        score += (Math.random() * 10) - 5;
-        
-        // Ensure score is within bounds
-        score = Math.max(10, Math.min(99, score));
-        
-        return {
-          source,
-          score: Math.round(score)
-        };
-      });
-      
-      // Sort by score descending
-      scoredSources.sort((a, b) => b.score - a.score);
-      
-      if (scoredSources.length === 0) return null;
-      
-      const topSource = scoredSources[0];
-      const alternatives = scoredSources.slice(1, 3).map(alt => ({
-        fundingSourceId: alt.source.id,
-        matchScore: alt.score,
-        reasons: generateMatchReasons(app, alt.source, alt.score, false)
-      }));
-      
-      return {
-        applicationId: app.id,
-        fundingSourceId: topSource.source.id,
-        matchScore: topSource.score,
-        reasons: generateMatchReasons(app, topSource.source, topSource.score, true),
-        alternatives,
-        dateGenerated: randomDate(new Date(app.dateApproved || app.dateCreated), new Date()),
-        generatedBy: `funding-agent-${generateId("")}`
-      };
-    })
-    .filter((rec): rec is FundingRecommendation => rec !== null);
-};
-
-// Helper function to generate match reasons
-const generateMatchReasons = (
-  app: LoanApplication, 
-  source: FundingSource, 
-  score: number,
-  isDetailedReason: boolean
-): string[] => {
-  const reasons: string[] = [];
-  
-  // Credit score reason
-  if (source.eligibilityCriteria.minCreditScore && app.borrower.creditScore) {
-    if (app.borrower.creditScore >= source.eligibilityCriteria.minCreditScore + 50) {
-      reasons.push(`Credit score (${app.borrower.creditScore}) well exceeds minimum requirement (${source.eligibilityCriteria.minCreditScore})`);
-    } else if (app.borrower.creditScore >= source.eligibilityCriteria.minCreditScore) {
-      reasons.push(`Credit score (${app.borrower.creditScore}) meets minimum requirement (${source.eligibilityCriteria.minCreditScore})`);
-    }
-  }
-  
-  // Loan amount reason
-  reasons.push(`Loan amount (${formatCurrency(app.amount)}) falls within ${source.type.replace(/_/g, ' ')}'s range (${formatCurrency(source.minAmount)} - ${formatCurrency(source.maxAmount)})`);
-  
-  // LTV reason
-  if (source.eligibilityCriteria.maxLTV && app.collateral) {
-    const ltv = (app.amount / app.collateral.value) * 100;
-    const ltvFormatted = ltv.toFixed(1);
-    if (ltv <= source.eligibilityCriteria.maxLTV - 10) {
-      reasons.push(`LTV ratio (${ltvFormatted}%) is well below maximum (${source.eligibilityCriteria.maxLTV}%)`);
-    } else if (ltv <= source.eligibilityCriteria.maxLTV) {
-      reasons.push(`LTV ratio (${ltvFormatted}%) meets maximum requirement (${source.eligibilityCriteria.maxLTV}%)`);
-    } else {
-      reasons.push(`LTV ratio (${ltvFormatted}%) is slightly above preferred maximum (${source.eligibilityCriteria.maxLTV}%)`);
-    }
-  }
-  
-  // Asset class reason
-  if (source.eligibilityCriteria.preferredAssetClasses?.includes(app.assetClass)) {
-    reasons.push(`${app.assetClass.replace(/_/g, ' ')} is a preferred asset class for this funding source`);
-  }
-  
-  // Risk profile reason
-  if (app.risk && source.riskTolerance) {
-    reasons.push(`${app.risk} risk profile matches ${source.type.replace(/_/g, ' ')}'s ${source.riskTolerance} risk tolerance`);
-  }
-  
-  // Special program match
-  if (source.specialPrograms && source.specialPrograms.length > 0) {
-    if (app.purpose.toLowerCase().includes("first") && source.specialPrograms.some(p => p.toLowerCase().includes("first"))) {
-      reasons.push(`First-time homebuyer purpose matches specialized program`);
-    }
-    
-    if (app.assetClass === "sme_loan" && source.specialPrograms.some(p => p.toLowerCase().includes("business") || p.toLowerCase().includes("startup"))) {
-      reasons.push(`Small business loan matches specialized business funding program`);
-    }
-  }
-  
-  // If it's an alternative option with less detailed reasons
-  if (!isDetailedReason) {
-    if (source.processingTime.max < 10) {
-      reasons.push(`Faster processing time (${source.processingTime.min}-${source.processingTime.max} days)`);
-    }
-    
-    if (source.interestRateRange.min < 5) {
-      reasons.push(`Lower interest rates (from ${source.interestRateRange.min}%)`);
-    }
-    
-    if (source.type === "government_program") {
-      reasons.push(`Government backing with special assistance programs`);
-    }
-    
-    if (source.type === "internal_funds") {
-      reasons.push(`Internal strategic priority with streamlined approval`);
-    }
-    
-    return reasons.slice(0, 2); // Only return top 2 reasons for alternatives
-  }
-  
-  // Processing time reason (only for detailed view)
-  if (app.purpose.toLowerCase().includes("urgent") || app.purpose.toLowerCase().includes("quick")) {
-    if (source.processingTime.max <= 7) {
-      reasons.push(`Quick processing time (${source.processingTime.min}-${source.processingTime.max} days) matches urgent funding need`);
-    }
-  }
-  
-  // Location reason (only for detailed view)
-  if (source.eligibilityCriteria.locationRestrictions && 
-      source.eligibilityCriteria.locationRestrictions.includes(app.borrower.address.state)) {
-    reasons.push(`Borrower location (${app.borrower.address.state}) is within eligible service area`);
-  }
-  
-  // Shuffle and limit reasons
-  return reasons
-    .sort(() => Math.random() - 0.5)
-    .slice(0, Math.min(reasons.length, 5));
-};
-
-// Generate dashboard summary data
-export const generateDashboardSummary = (applications: LoanApplication[]): DashboardSummary => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const todayApplications = applications.filter(app => 
-    new Date(app.dateCreated) >= today
-  );
-
-  const approvedToday = applications.filter(app => 
-    app.dateApproved && new Date(app.dateApproved) >= today
-  );
-
-  const fundedToday = applications.filter(app => 
-    app.dateFunded && new Date(app.dateFunded) >= today
-  );
-
-  const rejectedToday = applications.filter(app => 
-    app.status === "rejected" && app.dateUpdated && new Date(app.dateUpdated) >= today
-  );
-
-  const pendingReview = applications.filter(app => 
-    ["submitted", "reviewing", "information_needed", "underwriting"].includes(app.status)
-  );
-
-  // Count applications by status
-  const applicationsByStatus = applications.reduce((acc, app) => {
-    acc[app.status] = (acc[app.status] || 0) + 1;
-    return acc;
-  }, {} as Record<LoanStatus, number>);
-
-  // Count applications by asset class
-  const applicationsByAssetClass = applications.reduce((acc, app) => {
-    acc[app.assetClass] = (acc[app.assetClass] || 0) + 1;
-    return acc;
-  }, {} as Record<AssetClass, number>);
-
-  // Generate recent activity
-  const recentActivity = Array.from({ length: 10 }).map(() => {
-    const randomApp = applications[Math.floor(Math.random() * applications.length)];
-    const actions = [
-      "Application submitted",
-      "Documents uploaded",
-      "Application updated",
-      "Credit check completed",
-      "Underwriting completed",
-      "Decision rendered",
-      "Documents verified",
-      "Loan funded",
-      "Additional information requested"
-    ];
-    
-    return {
-      timestamp: randomDate(new Date(Date.now() - 24 * 60 * 60 * 1000), new Date()),
-      action: actions[Math.floor(Math.random() * actions.length)],
-      details: `Loan application ${randomApp.id} for ${randomApp.borrower.companyName || `${randomApp.borrower.firstName} ${randomApp.borrower.lastName}`}`,
-      agentId: Math.random() > 0.5 ? Object.values(randomApp.agentAssignments).find(Boolean) : undefined
-    };
-  }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-  // Calculate total portfolio value
-  const totalPortfolioValue = applications
-    .filter(app => ["approved", "conditionally_approved", "funding", "funded", "closed"].includes(app.status))
-    .reduce((total, app) => total + app.amount, 0);
-
-  // Calculate approval rate
-  const decidedApplications = applications.filter(app => 
-    ["approved", "conditionally_approved", "rejected"].includes(app.status)
-  );
-  
-  const approvalRate = decidedApplications.length > 0 
-    ? (decidedApplications.filter(app => ["approved", "conditionally_approved"].includes(app.status)).length / decidedApplications.length) * 100
-    : 0;
+// Function to generate a random Borrower
+const createRandomBorrower = (): Borrower => {
+  const firstName = faker.person.firstName();
+  const lastName = faker.person.lastName();
+  const isCompany = faker.datatype.boolean();
 
   return {
-    totalApplications: applications.length,
-    applicationsToday: todayApplications.length,
-    pendingReview: pendingReview.length,
-    approvedToday: approvedToday.length,
-    fundedToday: fundedToday.length,
-    rejectedToday: rejectedToday.length,
-    applicationsByStatus,
-    applicationsByAssetClass,
-    recentActivity,
-    totalPortfolioValue,
-    approvalRate: parseFloat(approvalRate.toFixed(1))
+    id: 'B-' + faker.string.alphanumeric(8).toUpperCase(),
+    firstName: firstName,
+    lastName: lastName,
+    companyName: isCompany ? faker.company.name() : undefined,
+    email: faker.internet.email({ firstName, lastName }),
+    phone: faker.phone.number(),
+    dateOfBirth: faker.date.birthdate().toISOString().split('T')[0],
+    ssn: faker.string.numeric(9),
+    taxId: faker.string.numeric(9),
+    address: {
+      street: faker.location.streetAddress(),
+      city: faker.location.city(),
+      state: faker.location.state(),
+      zipCode: faker.location.zipCode(),
+      country: faker.location.country(),
+    },
+    creditScore: faker.number.int({ min: 300, max: 850 }),
+    creditRating: faker.helpers.arrayElement(['Excellent', 'Good', 'Fair', 'Poor']),
+    income: faker.number.int({ min: 30000, max: 200000 }),
+    annualRevenue: isCompany ? faker.number.int({ min: 100000, max: 10000000 }) : undefined,
+    employmentStatus: faker.helpers.arrayElement(['Employed', 'Self-Employed', 'Unemployed']),
+    industry: isCompany ? faker.commerce.department() : undefined,
+    yearsInBusiness: isCompany ? faker.number.int({ min: 1, max: 50 }) : undefined,
+    employmentInfo: {
+      employer: faker.company.name(),
+      position: faker.person.jobTitle(),
+      startDate: faker.date.past().toISOString().split('T')[0],
+      endDate: faker.date.future().toISOString().split('T')[0],
+    },
+    relationshipManager: faker.person.fullName(),
+    dateCreated: faker.date.past().toISOString(),
+    dateUpdated: faker.date.recent().toISOString(),
   };
 };
 
-// Initialize the mock data store
-let borrowers: Borrower[] = [];
-let applications: LoanApplication[] = [];
-let agents: Agent[] = [];
-let dashboardSummary: DashboardSummary;
-let fundingSources: FundingSource[] = [];
-let fundingRecommendations: FundingRecommendation[] = [];
+// Function to generate a random LoanApplication
+const createRandomLoanApplication = (): LoanApplicationDTO => {
+  const amount = faker.number.int({ min: 10000, max: 1000000 });
+  const status = getRandomLoanStatus();
+  const assetClass = getRandomAssetClass();
+  const borrower = createRandomBorrower();
 
-// Function to initialize mock data
-export const initMockData = () => {
-  borrowers = generateMockBorrowers(50);
-  applications = generateMockLoanApplications(500, borrowers);
-  agents = generateMockAgents();
-  dashboardSummary = generateDashboardSummary(applications);
-  fundingSources = generateMockFundingSources();
-  fundingRecommendations = generateFundingRecommendations(applications, fundingSources);
-  
-  console.log(`Generated ${borrowers.length} borrowers`);
-  console.log(`Generated ${applications.length} applications`);
-  console.log(`Generated ${agents.length} agent types`);
-  console.log(`Generated ${fundingSources.length} funding sources`);
-  console.log(`Generated ${fundingRecommendations.length} funding recommendations`);
+  return {
+    id: 'APP-' + faker.string.alphanumeric(8).toUpperCase(),
+    borrowerId: borrower.id,
+    assetClass: assetClass,
+    amount: amount,
+    term: faker.number.int({ min: 12, max: 60 }),
+    interestRate: faker.number.float({ min: 3, max: 15, precision: 1 }),
+    purpose: faker.lorem.sentence(),
+    completeness: faker.number.int({ min: 20, max: 100 }),
+    displayStatus: faker.helpers.arrayElement(['Draft', 'Submitted', 'In Review', 'Information Needed', 'In Underwriting', 'Approved', 'Conditionally Approved', 'Rejected', 'Funding In Progress', 'Funded', 'Closed']),
+    risk: faker.helpers.arrayElement(['Low', 'Medium', 'High']),
+    collateral: {
+      type: faker.lorem.word(),
+      value: faker.number.int({ min: 5000, max: 500000 }),
+      description: faker.lorem.sentence(),
+    },
+    status: status,
+    documents: [],
+    notes: [],
+    dateCreated: faker.date.past().toISOString(),
+    dateUpdated: faker.date.recent().toISOString(),
+    dateSubmitted: faker.date.past().toISOString(),
+    dateReviewed: faker.date.past().toISOString(),
+    dateUnderwritten: faker.date.past().toISOString(),
+    dateApproved: faker.date.past().toISOString(),
+    dateFunded: faker.date.past().toISOString(),
+    dateClosed: faker.date.past().toISOString(),
+    agentAssignments: {
+      intakeAgentId: faker.string.uuid(),
+      processingAgentId: faker.string.uuid(),
+      underwritingAgentId: faker.string.uuid(),
+      decisionAgentId: faker.string.uuid(),
+      fundingAgentId: faker.string.uuid(),
+    },
+    recommendedFundingSourceId: faker.string.uuid(),
+  };
 };
 
-// Data access functions
-export const getMockBorrowers = (): Borrower[] => {
-  if (borrowers.length === 0) {
-    initMockData();
+// Function to generate mock LoanApplications
+export const getMockLoanApplications = (count: number = 500): LoanApplication[] => {
+  const applications: LoanApplication[] = [];
+  for (let i = 0; i < count; i++) {
+    const applicationDTO = createRandomLoanApplication();
+    const borrower = createRandomBorrower();
+    const application: LoanApplication = {
+      ...applicationDTO,
+      borrower: borrower,
+    };
+    applications.push(application);
   }
-  return borrowers;
+  return applications;
 };
 
-export const getMockBorrowerById = (id: string): Borrower | undefined => {
-  if (borrowers.length === 0) {
-    initMockData();
-  }
-  return borrowers.find(borrower => borrower.id === id);
-};
-
-// Get all applications with filtering options
-export const getMockLoanApplications = (filters?: {
-  status?: LoanStatus | LoanStatus[],
-  assetClass?: AssetClass | AssetClass[],
-  agentType?: AgentType,
-  search?: string,
-  limit?: number
-}): LoanApplication[] => {
-  if (applications.length === 0) {
-    initMockData();
-  }
-  
-  let filteredApps = [...applications];
-  
-  if (filters) {
-    // Filter by status
-    if (filters.status) {
-      const statuses = Array.isArray(filters.status) ? filters.status : [filters.status];
-      filteredApps = filteredApps.filter(app => statuses.includes(app.status));
-    }
-    
-    // Filter by asset class
-    if (filters.assetClass) {
-      const assetClasses = Array.isArray(filters.assetClass) ? filters.assetClass : [filters.assetClass];
-      filteredApps = filteredApps.filter(app => assetClasses.includes(app.assetClass));
-    }
-    
-    // Filter by agent type
-    if (filters.agentType) {
-      filteredApps = filteredApps.filter(app => {
-        switch (filters.agentType) {
-          case "intake":
-            return app.agentAssignments.intakeAgentId !== undefined;
-          case "processing":
-            return app.agentAssignments.processingAgentId !== undefined;
-          case "underwriting":
-            return app.agentAssignments.underwritingAgentId !== undefined;
-          case "decision":
-            return app.agentAssignments.decisionAgentId !== undefined;
-          default:
-            return true;
-        }
-      });
-    }
-    
-    // Search in borrower name or application ID
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filteredApps = filteredApps.filter(app => {
-        const borrowerName = app.borrower.companyName || `${app.borrower.firstName} ${app.borrower.lastName}`;
-        return app.id.toLowerCase().includes(searchLower) || 
-               borrowerName.toLowerCase().includes(searchLower) ||
-               app.purpose.toLowerCase().includes(searchLower);
-      });
-    }
-    
-    // Apply limit if specified
-    if (filters.limit && filters.limit > 0) {
-      filteredApps = filteredApps.slice(0, filters.limit);
-    }
-  }
-  
-  return filteredApps;
-};
-
-export const getMockLoanApplicationById = (id: string): LoanApplication | undefined => {
-  if (applications.length === 0) {
-    initMockData();
-  }
-  return applications.find(app => app.id === id);
-};
-
-// Get applications for specific agent types
-export const getApplicationsForAgentType = (agentType: AgentType): LoanApplication[] => {
-  if (applications.length === 0) {
-    initMockData();
-  }
-  
-  // Filter applications based on agent type and appropriate statuses
-  switch (agentType) {
-    case "intake":
-      return applications.filter(app => 
-        ["draft", "submitted"].includes(app.status)
-      );
-    case "processing":
-      return applications.filter(app => 
-        ["reviewing", "information_needed"].includes(app.status)
-      );
-    case "underwriting":
-      return applications.filter(app => 
-        app.status === "underwriting"
-      );
-    case "decision":
-      // Decision gets applications that have completed underwriting but not yet decided
-      return applications.filter(app => 
-        app.status === "underwriting" && 
-        app.completeness >= 90
-      );
-    default:
-      return [];
-  }
-};
-
-export const getMockAgents = (): Agent[] => {
-  if (agents.length === 0) {
-    initMockData();
-  }
-  return agents;
-};
-
-export const getMockAgentById = (id: string): Agent | undefined => {
-  if (agents.length === 0) {
-    initMockData();
-  }
-  return agents.find(agent => agent.id === id);
-};
-
-export const getMockDashboardSummary = (): DashboardSummary => {
-  if (!dashboardSummary) {
-    initMockData();
-  }
-  return dashboardSummary;
-};
-
-// Get all funding sources
-export const getMockFundingSources = (): FundingSource[] => {
-  if (fundingSources.length === 0) {
-    initMockData();
-  }
-  return fundingSources;
-};
-
-// Get funding source by ID
-export const getMockFundingSourceById = (id: string): FundingSource | undefined => {
-  if (fundingSources.length === 0) {
-    initMockData();
-  }
-  return fundingSources.find(source => source.id === id);
-};
-
-// Get all funding recommendations
-export const getMockFundingRecommendations = (): FundingRecommendation[] => {
-  if (fundingRecommendations.length === 0) {
-    initMockData();
-  }
-  return fundingRecommendations;
-};
-
-// Get funding recommendation by application ID
-export const getMockFundingRecommendationByApplicationId = (appId: string): FundingRecommendation | undefined => {
-  if (fundingRecommendations.length === 0) {
-    initMockData();
-  }
-  return fundingRecommendations.find(rec => rec.applicationId === appId);
-};
-
-// Function to format currency amounts
+// Function to format currency
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
   }).format(amount);
 };
 
-// Function to get a count of applications by status
-export const getApplicationCountByStatus = (status: LoanStatus | LoanStatus[]): number => {
-  if (applications.length === 0) {
-    initMockData();
+// Function to get application count by status
+export const getApplicationCountByStatus = (statuses: string[]): number => {
+  const applications = getMockLoanApplications();
+  return applications.filter(app => statuses.includes(app.status)).length;
+};
+
+// Generate mock cash flow analysis data for a loan application
+export const generateMockCashFlowAnalysis = (application: LoanApplication): CashFlowAnalysis => {
+  const { amount, assetClass, borrower, risk } = application;
+  const isCompany = !!borrower.companyName;
+  
+  // Set base values according to risk level
+  const riskFactor = risk === "Low" ? 0.8 : risk === "Medium" ? 0.5 : 0.2;
+  const baseRevenue = isCompany ? 
+    (borrower.annualRevenue || amount * 4) : 
+    (borrower.income || amount * 2);
+  
+  // Generate cash flow health and repayment capacity based on risk
+  const cashFlowHealth: CashFlowHealth = riskFactor > 0.7 ? "Strong" : riskFactor > 0.4 ? "Moderate" : "Weak";
+  const repaymentCapacity: RepaymentCapacity = riskFactor > 0.7 ? "Strong" : riskFactor > 0.4 ? "Moderate" : "Limited";
+  
+  // Generate historical financial data
+  const historicalData: CashFlowHistoricalData = {
+    revenue: Math.round(baseRevenue),
+    revenueTrend: Math.round((riskFactor * 15) - 5),
+    cogs: Math.round(baseRevenue * (0.55 - (riskFactor * 0.15))),
+    cogsTrend: Math.round((riskFactor * 5) - 10),
+    operatingExpenses: Math.round(baseRevenue * (0.25 - (riskFactor * 0.05))),
+    operatingExpensesTrend: Math.round((riskFactor * 5) - 10),
+    operatingCashFlow: 0, // Calculate below
+    operatingCashFlowTrend: Math.round((riskFactor * 20) - 5),
+    cashConversionCycle: Math.round(90 - (riskFactor * 60)),
+    cashConversionCycleTrend: Math.round((riskFactor * 15) - 10),
+    capitalExpenditures: Math.round(baseRevenue * 0.08),
+    capitalExpendituresTrend: Math.round((riskFactor * 15) - 5),
+    existingDebtService: Math.round(baseRevenue * 0.08),
+    existingDebtServiceTrend: Math.round((riskFactor * 5) - 15),
+    debtServiceCoverageRatio: 0, // Calculate below
+    debtServiceCoverageTrend: Math.round((riskFactor * 15) - 5),
+  };
+  
+  // Calculate operating cash flow and DSCR based on other metrics
+  historicalData.operatingCashFlow = Math.round(
+    historicalData.revenue - historicalData.cogs - historicalData.operatingExpenses
+  );
+  historicalData.debtServiceCoverageRatio = parseFloat(
+    (historicalData.operatingCashFlow / historicalData.existingDebtService).toFixed(2)
+  );
+  
+  // Generate volatility metrics
+  const volatilityMetrics: CashFlowVolatilityMetrics = {
+    revenueStandardDeviation: Math.round(historicalData.revenue * (0.2 - (riskFactor * 0.15))),
+    revenueVolatilityInterpretation: riskFactor > 0.7 ? "Low volatility" : riskFactor > 0.4 ? "Moderate volatility" : "High volatility",
+    cashBufferMonths: parseFloat((2 + (riskFactor * 8)).toFixed(1)),
+    cashBufferInterpretation: riskFactor > 0.7 ? "Strong buffer" : riskFactor > 0.4 ? "Adequate buffer" : "Insufficient buffer",
+    peakToTroughRatio: parseFloat((1.5 - (riskFactor * 0.5) + 0.5).toFixed(2)),
+    peakToTroughInterpretation: riskFactor > 0.7 ? "Stable revenue" : riskFactor > 0.4 ? "Moderate fluctuations" : "Significant fluctuations",
+  };
+  
+  // Generate projections
+  const projectionPeriod = 36;
+  const projections: CashFlowProjections = {
+    annualRevenue: Math.round(historicalData.revenue * (1 + (historicalData.revenueTrend / 100))),
+    annualGrowthRate: Math.max(0, Math.round(historicalData.revenueTrend)),
+    operatingCashFlow: Math.round(historicalData.operatingCashFlow * (1 + (historicalData.operatingCashFlowTrend / 100))),
+    freeCashFlow: 0, // Calculate below
+    debtServiceCoverageRatio: 0, // Calculate below
+    loanPaymentCapacity: 0, // Calculate below
+  };
+  
+  // Calculate loan payment capacity
+  const monthlyPayment = calculateMonthlyPayment(amount, 5.5, application.term);
+  const newTotalDebtService = monthlyPayment + (historicalData.existingDebtService / 12);
+  
+  projections.freeCashFlow = Math.round(projections.operatingCashFlow - historicalData.capitalExpenditures);
+  projections.debtServiceCoverageRatio = parseFloat(
+    ((projections.operatingCashFlow / 12) / newTotalDebtService).toFixed(2)
+  );
+  projections.loanPaymentCapacity = Math.round((projections.operatingCashFlow / 12) * 0.5);
+  
+  // Determine funding recommendation based on application and analysis
+  const isRabo = riskFactor > 0.6;
+  const recommendedFundingSource = isRabo ? "Rabo Bank" : "ABN AMRO Bank";
+  const recommendedInterestRate = isRabo ? 5.25 : 6.5;
+  const recommendedLoanStructure = 
+    amount > 1000000 
+      ? `${application.term}-month term loan with quarterly financial reporting`
+      : `${application.term}-month term loan with standard repayment terms`;
+  
+  return {
+    cashFlowHealth,
+    repaymentCapacity,
+    recommendation: cashFlowHealth === "Strong" 
+      ? "Recommended for approval" 
+      : cashFlowHealth === "Moderate" 
+      ? "Recommended with conditions" 
+      : "Not recommended based on cash flow analysis",
+    historicalData,
+    volatilityMetrics,
+    strengths: generateStrengths(cashFlowHealth, historicalData, volatilityMetrics),
+    concerns: generateConcerns(cashFlowHealth, historicalData, volatilityMetrics),
+    seasonalityInsights: generateSeasonalityInsights(assetClass),
+    projectionsWhenGenerated: { ...projections },
+    projections,
+    projectionPeriod,
+    stressTestingSummary: generateStressTestingSummary(projections, riskFactor),
+    recommendedFundingSource,
+    recommendedLoanStructure,
+    recommendedInterestRate,
+    fundingRationale: generateFundingRationale(recommendedFundingSource, cashFlowHealth, projections),
+    riskFactors: generateRiskFactors(cashFlowHealth, historicalData, volatilityMetrics),
+    mitigationStrategies: generateMitigationStrategies(cashFlowHealth),
+    improvementRecommendations: generateImprovementRecommendations(historicalData, volatilityMetrics),
+  };
+};
+
+// Helper functions for generating cash flow analysis components
+const calculateMonthlyPayment = (principal: number, annualRate: number, termMonths: number): number => {
+  const monthlyRate = annualRate / 100 / 12;
+  return Math.round(
+    (principal * monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / 
+    (Math.pow(1 + monthlyRate, termMonths) - 1)
+  );
+};
+
+const generateStrengths = (
+  cashFlowHealth: CashFlowHealth, 
+  historicalData: CashFlowHistoricalData, 
+  volatilityMetrics: CashFlowVolatilityMetrics
+): string[] => {
+  const strengths: string[] = [];
+  
+  if (historicalData.debtServiceCoverageRatio > 1.5) {
+    strengths.push("Strong debt service coverage ratio indicates solid repayment capacity");
   }
   
-  const statuses = Array.isArray(status) ? status : [status];
-  return applications.filter(app => statuses.includes(app.status)).length;
+  if (historicalData.revenueTrend > 5) {
+    strengths.push(`Consistent revenue growth (${historicalData.revenueTrend}% year-over-year)`);
+  }
+  
+  if (volatilityMetrics.cashBufferMonths > 3) {
+    strengths.push(`Healthy cash buffer of ${volatilityMetrics.cashBufferMonths.toFixed(1)} months provides stability`);
+  }
+  
+  if (historicalData.operatingCashFlowTrend > 0) {
+    strengths.push("Positive trend in operating cash flow demonstrates improving operational efficiency");
+  }
+  
+  if (historicalData.cashConversionCycle < 60) {
+    strengths.push("Efficient cash conversion cycle of less than 60 days");
+  }
+  
+  if (strengths.length < 3) {
+    if (cashFlowHealth === "Strong") {
+      strengths.push("Diversified revenue streams reduce cash flow volatility");
+      strengths.push("Prudent financial management demonstrated through historical performance");
+    } else if (cashFlowHealth === "Moderate" && strengths.length < 2) {
+      strengths.push("Adequate margins provide some cushion against market fluctuations");
+    }
+  }
+  
+  return strengths.slice(0, 4);
+};
+
+const generateConcerns = (
+  cashFlowHealth: CashFlowHealth, 
+  historicalData: CashFlowHistoricalData, 
+  volatilityMetrics: CashFlowVolatilityMetrics
+): string[] => {
+  const concerns: string[] = [];
+  
+  if (historicalData.debtServiceCoverageRatio < 1.25) {
+    concerns.push("Below target debt service coverage ratio indicates potential repayment risk");
+  }
+  
+  if (historicalData.revenueTrend < 0) {
+    concerns.push(`Declining revenue trend (${historicalData.revenueTrend}% year-over-year)`);
+  }
+  
+  if (volatilityMetrics.cashBufferMonths < 3) {
+    concerns.push(`Limited cash buffer of only ${volatilityMetrics.cashBufferMonths.toFixed(1)} months increases vulnerability to disruptions`);
+  }
+  
+  if (historicalData.operatingCashFlowTrend < 0) {
+    concerns.push("Negative trend in operating cash flow may indicate deteriorating operational efficiency");
+  }
+  
+  if (volatilityMetrics.peakToTroughRatio > 1.5) {
+    concerns.push(`High revenue volatility (${volatilityMetrics.peakToTroughRatio.toFixed(2)}x peak-to-trough ratio)`);
+  }
+  
+  if (historicalData.capitalExpendituresTrend > 15) {
+    concerns.push(`Rapidly increasing capital expenditures (${historicalData.capitalExpendituresTrend}% year-over-year)`);
+  }
+  
+  if (concerns.length < 3 && cashFlowHealth !== "Strong") {
+    if (cashFlowHealth === "Weak") {
+      concerns.push("Inadequate cash reserves relative to operational requirements");
+      concerns.push("Potential challenges meeting additional debt obligations");
+    } else if (cashFlowHealth === "Moderate" && concerns.length < 2) {
+      concerns.push("Moderate seasonality may impact consistent debt service throughout the year");
+    }
+  }
+  
+  if (cashFlowHealth === "Strong" && concerns.length > 1) {
+    // For strong applications, limit concerns
+    return concerns.slice(0, 1);
+  }
+  
+  return concerns.slice(0, 3);
+};
+
+const generateSeasonalityInsights = (assetClass: AssetClass): string[] => {
+  const baseInsights = [
+    "Revenue exhibits predictable seasonality with peaks in Q2 and Q4",
+    "Cash conversion cycle fluctuates within 15% of average throughout the year"
+  ];
+  
+  switch (assetClass) {
+    case "residential_mortgage":
+      return [
+        ...baseInsights,
+        "Strongest origination activity occurs in spring and summer months",
+        "Year-end typically shows 15-20% lower application volume"
+      ];
+    
+    case "commercial_real_estate":
+      return [
+        ...baseInsights,
+        "Cash flows show quarterly patterns corresponding to tenant payment cycles",
+        "Q4 typically includes annual reconciliations and adjustments"
+      ];
+    
+    case "retail_financing":
+      return [
+        ...baseInsights,
+        "Significant revenue increase (35-40%) during holiday season (Nov-Dec)",
+        "January-February shows post-holiday slowdown with 25% below average volume"
+      ];
+    
+    case "equipment_finance":
+      return [
+        ...baseInsights,
+        "Strong correlation with fiscal year-end budgeting cycles",
+        "Q1 typically sees 20-25% higher equipment financing activity"
+      ];
+    
+    default:
+      return [
+        ...baseInsights,
+        "Moderate seasonality observed with approximately 15% variation throughout the year",
+        "Cash reserves adequately buffer seasonal fluctuations in most cases"
+      ];
+  }
+};
+
+const generateStressTestingSummary = (projections: CashFlowProjections, riskFactor: number): string => {
+  if (riskFactor > 0.7) {
+    return `Stress testing indicates robust cash flow resilience. The borrower can withstand significant revenue decreases (up to 20%) while maintaining adequate debt service coverage. Cash reserves provide ${(riskFactor * 10).toFixed(1)} months of operational coverage in adverse scenarios.`;
+  } else if (riskFactor > 0.4) {
+    return `Stress testing shows moderate cash flow resilience. The borrower can maintain adequate debt service coverage under moderate revenue decreases (up to 10%), but would face challenges with more significant disruptions. Cash reserves provide ${(riskFactor * 6).toFixed(1)} months of operational coverage in adverse scenarios.`;
+  } else {
+    return `Stress testing reveals cash flow vulnerability. Even minor revenue decreases (5-10%) would significantly impact debt service coverage. Limited cash reserves provide only ${(riskFactor * 4).toFixed(1)} months of operational coverage in adverse scenarios, suggesting high sensitivity to market disruptions.`;
+  }
+};
+
+const generateFundingRationale = (
+  fundingSource: string, 
+  cashFlowHealth: CashFlowHealth, 
+  projections: CashFlowProjections
+): string => {
+  if (fundingSource === "Rabo Bank") {
+    if (cashFlowHealth === "Strong") {
+      return `Rabo Bank is recommended due to the borrower's strong cash flow position (DSCR of ${projections.debtServiceCoverageRatio.toFixed(2)}x), established operational history, and favorable projected growth rate of ${projections.annualGrowthRate}%. The borrower meets Rabo Bank's preferred risk profile for this asset class, qualifying for their premium loan terms.`;
+    } else {
+      return `Rabo Bank is recommended as the borrower meets their core eligibility criteria despite some moderate cash flow considerations. The projected DSCR of ${projections.debtServiceCoverageRatio.toFixed(2)}x is acceptable, and Rabo's relationship-focused approach aligns well with the borrower's financing needs and growth trajectory.`;
+    }
+  } else {
+    if (cashFlowHealth === "Weak") {
+      return `ABN AMRO Bank is recommended as they offer specialized financing options for borrowers with more complex cash flow situations. Their custom underwriting approach can accommodate the borrower's DSCR of ${projections.debtServiceCoverageRatio.toFixed(2)}x with appropriate risk mitigations, whereas traditional lenders would typically decline this application.`;
+    } else {
+      return `ABN AMRO Bank is recommended due to their competitive rates for this risk profile and their experience with this asset class. The borrower's cash flow metrics (DSCR of ${projections.debtServiceCoverageRatio.toFixed(2)}x) align with ABN AMRO's standard requirements, and their flexible terms can accommodate the borrower's operational cycles.`;
+    }
+  }
+};
+
+const generateRiskFactors = (
+  cashFlowHealth: CashFlowHealth, 
+  historicalData: CashFlowHistoricalData, 
+  volatilityMetrics: CashFlowVolatilityMetrics
+): string[] => {
+  const factors: string[] = [];
+  
+  // Add DSCR factor
+  if (historicalData.debtServiceCoverageRatio > 1.5) {
+    factors.push(`Strong debt service coverage ratio of ${historicalData.debtServiceCoverageRatio.toFixed(2)}x`);
+  } else if (historicalData.debtServiceCoverageRatio > 1.1) {
+    factors.push(`Moderate debt service coverage ratio of ${historicalData.debtServiceCoverageRatio.toFixed(2)}x`);
+  } else {
+    factors.push(`Weak debt service coverage ratio of ${historicalData.debtServiceCoverageRatio.toFixed(2)}x`);
+  }
+  
+  // Add revenue trend factor
+  if (historicalData.revenueTrend > 5) {
+    factors.push(`Positive revenue growth trend of ${historicalData.revenueTrend}%`);
+  } else if (historicalData.revenueTrend > -2) {
+    factors.push(`Flat revenue trend of ${historicalData.revenueTrend}%`);
+  } else {
+    factors.push(`Negative revenue trend of ${historicalData.revenueTrend}%`);
+  }
+  
+  // Add cash buffer factor
+  if (volatilityMetrics.cashBufferMonths > 4) {
+    factors.push(`Strong cash buffer of ${volatilityMetrics.cashBufferMonths.toFixed(1)} months`);
+  } else if (volatilityMetrics.cashBufferMonths > 2) {
+    factors.push(`Moderate cash buffer of ${volatilityMetrics.cashBufferMonths.toFixed(1)} months`);
+  } else {
+    factors.push(`Limited cash buffer of ${volatilityMetrics.cashBufferMonths.toFixed(1)} months`);
+  }
+  
+  // Add volatility factor
+  if (volatilityMetrics.peakToTroughRatio < 1.3) {
+    factors.push(`Low revenue volatility with ${volatilityMetrics.peakToTroughRatio.toFixed(2)}x peak-to-trough ratio`);
+  } else if (volatilityMetrics.peakToTroughRatio < 1.7) {
+    factors.push(`Moderate revenue volatility with ${volatilityMetrics.peakToTroughRatio.toFixed(2)}x peak-to-trough ratio`);
+  } else {
+    factors.push(`High revenue volatility with ${volatilityMetrics.peakToTroughRatio.toFixed(2)}x peak-to-trough ratio`);
+  }
+  
+  return factors;
+};
+
+const generateMitigationStrategies = (cashFlowHealth: CashFlowHealth): string[] => {
+  const baseStrategies = [
+    "Implement quarterly covenant testing focused on debt service coverage ratio",
+    "Establish cash reserve requirements tied to upcoming debt service obligations"
+  ];
+  
+  if (cashFlowHealth === "Strong") {
+    return [
+      ...baseStrategies,
+      "Standard financial reporting on a quarterly basis",
+      "Annual review of cash flow performance against projections"
+    ];
+  } else if (cashFlowHealth === "Moderate") {
+    return [
+      ...baseStrategies,
+      "Implement enhanced financial reporting on a monthly basis",
+      "Set performance-based interest rate adjustments to incentivize cash flow improvements",
+      "Require management review meetings to address any negative trending metrics"
+    ];
+  } else {
+    return [
+      ...baseStrategies,
+      "Require additional collateral or guarantees to offset cash flow risk",
+      "Structure loan with initial interest-only period to allow cash flow stabilization",
+      "Implement mandatory cash flow management consulting",
+      "Establish cash sweep mechanism for excess cash flow periods to build reserves"
+    ];
+  }
+};
+
+const generateImprovementRecommendations = (
+  historicalData: CashFlowHistoricalData, 
+  volatilityMetrics: CashFlowVolatilityMetrics
+): CashFlowImprovementRecommendation[] => {
+  const recommendations: CashFlowImprovementRecommendation[] = [];
+  
+  if (historicalData.cashConversionCycle > 60) {
+    recommendations.push({
+      title: "Optimize Cash Conversion Cycle",
+      description: "Reduce the cash conversion cycle by implementing more efficient inventory management and accounts receivable processes.",
+      tags: ["Accounts Receivable", "Working Capital", "Cash Flow"]
+    });
+  }
+  
+  if (historicalData.operatingExpensesTrend > 0) {
+    recommendations.push({
+      title: "Cost Structure Optimization",
+      description: "Review and optimize operating expenses to improve cash flow, focusing on areas with the highest growth rates.",
+      tags: ["Cost Reduction", "Operational Efficiency", "Expense Management"]
+    });
+  }
+  
+  if (volatilityMetrics.cashBufferMonths < 4) {
+    recommendations.push({
+      title: "Strengthen Cash Reserves",
+      description: "Build additional cash reserves to provide a stronger buffer against seasonal fluctuations and unexpected disruptions.",
+      tags: ["Liquidity Management", "Risk Mitigation", "Cash Planning"]
+    });
+  }
+  
+  if (recommendations.length < 3) {
+    recommendations.push({
+      title: "Implement Cash Flow Forecasting System",
+      description: "Establish a robust rolling 13-week cash flow forecasting process to better anticipate and manage cash needs.",
+      tags: ["Forecasting", "Cash Management", "Planning"]
+    });
+  }
+  
+  // Always include this recommendation if not already addressed
+  if (!recommendations.some(r => r.title.includes("Diversify Revenue"))) {
+    recommendations.push({
+      title: "Diversify Revenue Streams",
+      description: "Explore opportunities to diversify revenue sources to reduce cash flow volatility and strengthen overall financial stability.",
+      tags: ["Strategic Planning", "Growth", "Risk Management"]
+    });
+  }
+  
+  return recommendations.slice(0, 4);
+};
+
+// Fix the handleGenerateReport function in Underwriting.tsx
+export const handleGenerateReport = (appId: string) => {
+  // Function moved from Underwriting.tsx
+  console.log(`Generating report for ${appId}`);
 };

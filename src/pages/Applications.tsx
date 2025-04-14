@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress"; 
 import { 
   Search, Filter, Clock, FileCheck, AlertTriangle, FileX, Eye, 
-  UserCheck, ArrowRight, Download, Loader2, CheckCircle, RefreshCw, PlusCircle
+  UserCheck, ArrowRight, Download, Loader2, CheckCircle, RefreshCw, PlusCircle,
+  TrendingUp, BarChart4
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { 
@@ -132,38 +133,104 @@ const Applications = () => {
   };
 
   const handleSendToAgent = (application: LoanApplication) => {
-    // Determine which agent the application should be sent to based on its status
-    let agentType: string;
-    let agentName: string;
+    // Update to include the new Cash Flow Analysis Agent option
+    const agentTypes = [
+      { type: "intake", name: "Intake Agent", conditions: ["draft", "submitted"] },
+      { type: "processing", name: "Processing Agent", conditions: ["reviewing", "information_needed"] },
+      { type: "underwriting", name: "Underwriting Agent", conditions: ["underwriting"] },
+      { type: "cash-flow-analysis", name: "Cash Flow Analysis Agent", conditions: ["draft", "submitted", "reviewing", "information_needed", "underwriting", "approved", "conditionally_approved"] },
+      { type: "decision", name: "Decision Agent", conditions: [] } // Default
+    ];
     
-    switch(application.status) {
-      case "draft":
-      case "submitted":
-        agentType = "intake";
-        agentName = "Intake Agent";
-        break;
-      case "reviewing":
-      case "information_needed":
-        agentType = "processing";
-        agentName = "Processing Agent";
-        break;
-      case "underwriting":
-        agentType = "underwriting";
-        agentName = "Underwriting Agent";
-        break;
-      default:
-        agentType = "decision";
-        agentName = "Decision Agent";
+    // Find the appropriate agent type based on application status
+    let selectedAgent = agentTypes.find(agent => 
+      agent.conditions.includes(application.status)
+    ) || agentTypes[agentTypes.length - 1]; // Default to Decision Agent
+    
+    // Override for Cash Flow Analysis
+    // Show agent selection menu if more than one agent is applicable
+    if (application.status === "underwriting" || application.status === "reviewing" || application.status === "information_needed") {
+      // Create a popup to select which agent to send to
+      toast(
+        <div className="space-y-2">
+          <p className="font-semibold">Select Agent for Application {application.id}</p>
+          <div className="flex flex-col gap-2 mt-2">
+            {["Processing Agent", "Underwriting Agent", "Cash Flow Analysis Agent"].map(agentName => (
+              <Button 
+                key={agentName} 
+                size="sm" 
+                className="w-full justify-start" 
+                variant="outline"
+                onClick={() => {
+                  let agentType;
+                  let agentIcon;
+                  
+                  if (agentName === "Processing Agent") {
+                    agentType = "processing";
+                    agentIcon = <FileCheck className="h-4 w-4 mr-2" />;
+                  } else if (agentName === "Underwriting Agent") {
+                    agentType = "underwriting";
+                    agentIcon = <CheckCircle className="h-4 w-4 mr-2" />;
+                  } else {
+                    agentType = "cash-flow-analysis";
+                    agentIcon = <TrendingUp className="h-4 w-4 mr-2" />;
+                  }
+                  
+                  toast(
+                    <div className="space-y-2">
+                      <p className="font-semibold">Sending Application to {agentName}</p>
+                      <p>Application {application.id} is being processed</p>
+                      <p className="text-sm text-muted-foreground">Status: {application.displayStatus}</p>
+                      <div className="flex gap-2 mt-2">
+                        <Button size="sm" onClick={() => navigate(`/agents/${agentType}?applicationId=${application.id}`)}>
+                          View Agent Dashboard
+                        </Button>
+                      </div>
+                    </div>,
+                    { duration: 5000 }
+                  );
+                  
+                  toast.dismiss();
+                }}
+              >
+                {agentName === "Processing Agent" && <FileCheck className="h-4 w-4 mr-2" />}
+                {agentName === "Underwriting Agent" && <CheckCircle className="h-4 w-4 mr-2" />}
+                {agentName === "Cash Flow Analysis Agent" && <TrendingUp className="h-4 w-4 mr-2" />}
+                {agentName}
+              </Button>
+            ))}
+          </div>
+        </div>,
+        { duration: 10000 }
+      );
+      return;
     }
     
+    // For other statuses or direct selection
     toast(
       <div className="space-y-2">
-        <p className="font-semibold">Sending Application to {agentName}</p>
+        <p className="font-semibold">Sending Application to {selectedAgent.name}</p>
         <p>Application {application.id} is being processed</p>
         <p className="text-sm text-muted-foreground">Status: {application.displayStatus}</p>
         <div className="flex gap-2 mt-2">
-          <Button size="sm" onClick={() => navigate(`/agents/${agentType}?applicationId=${application.id}`)}>
+          <Button size="sm" onClick={() => navigate(`/agents/${selectedAgent.type}?applicationId=${application.id}`)}>
             View Agent Dashboard
+          </Button>
+        </div>
+      </div>,
+      { duration: 5000 }
+    );
+  };
+
+  const handleSendToCashFlowAnalysis = (application: LoanApplication) => {
+    toast(
+      <div className="space-y-2">
+        <p className="font-semibold">Sending Application to Cash Flow Analysis Agent</p>
+        <p>Application {application.id} is being analyzed</p>
+        <p className="text-sm text-muted-foreground">Status: {application.displayStatus}</p>
+        <div className="flex gap-2 mt-2">
+          <Button size="sm" onClick={() => navigate(`/agents/cash-flow-analysis?applicationId=${application.id}`)}>
+            View Cash Flow Analysis
           </Button>
         </div>
       </div>,
@@ -412,6 +479,14 @@ const Applications = () => {
                                   title="Send to Agent"
                                 >
                                   <ArrowRight className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleSendToCashFlowAnalysis(app)}
+                                  title="Cash Flow Analysis"
+                                >
+                                  <BarChart4 className="h-4 w-4" />
                                 </Button>
                               </div>
                             </TableCell>
