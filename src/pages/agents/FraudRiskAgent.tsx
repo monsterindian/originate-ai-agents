@@ -1,5 +1,5 @@
-
 import React, { useState } from "react";
+import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -365,81 +365,83 @@ const FraudRules = () => {
 
 const FraudRiskAgent = () => {
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center mb-6">
-        <ShieldAlert className="mr-2 h-6 w-6 text-red-500" />
-        <h1 className="text-2xl font-bold">Fraud Risk Agent</h1>
-      </div>
-      
-      <Tabs defaultValue="alerts">
-        <TabsList className="mb-4">
-          <TabsTrigger value="alerts">
-            <CircleAlert className="mr-2 h-4 w-4" />
-            Fraud Alerts
-          </TabsTrigger>
-          <TabsTrigger value="analytics">
-            <CreditCard className="mr-2 h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="rules">
-            <FlagTriangleRight className="mr-2 h-4 w-4" />
-            Detection Rules
-          </TabsTrigger>
-        </TabsList>
+    <MainLayout>
+      <div className="container mx-auto py-6">
+        <div className="flex items-center mb-6">
+          <ShieldAlert className="mr-2 h-6 w-6 text-red-500" />
+          <h1 className="text-2xl font-bold">Fraud Risk Agent</h1>
+        </div>
         
-        <TabsContent value="alerts">
-          <FraudFilters />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {fraudRiskItems.map((alert) => (
-              <FraudAlert key={alert.id} alert={alert} />
-            ))}
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="analytics">
-          <FraudAnalytics />
+        <Tabs defaultValue="alerts">
+          <TabsList className="mb-4">
+            <TabsTrigger value="alerts">
+              <CircleAlert className="mr-2 h-4 w-4" />
+              Fraud Alerts
+            </TabsTrigger>
+            <TabsTrigger value="analytics">
+              <CreditCard className="mr-2 h-4 w-4" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="rules">
+              <FlagTriangleRight className="mr-2 h-4 w-4" />
+              Detection Rules
+            </TabsTrigger>
+          </TabsList>
           
-          <div className="mt-8">
-            <h3 className="text-lg font-medium mb-4">Fraud Detection by Category</h3>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="h-[300px] flex items-center justify-center">
-                  <p className="text-muted-foreground">Fraud detection analytics visualization would appear here</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <TabsContent value="alerts">
+            <FraudFilters />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {fraudRiskItems.map((alert) => (
+                <FraudAlert key={alert.id} alert={alert} />
+              ))}
+            </div>
+          </TabsContent>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-md">Fraud by Application Type</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[200px] flex items-center justify-center">
-                  <p className="text-muted-foreground">Chart visualization would appear here</p>
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="analytics">
+            <FraudAnalytics />
             
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-md">Fraud Detection Timeline</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[200px] flex items-center justify-center">
-                  <p className="text-muted-foreground">Timeline visualization would appear here</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="rules">
-          <FraudRules />
-        </TabsContent>
-      </Tabs>
-    </div>
+            <div className="mt-8">
+              <h3 className="text-lg font-medium mb-4">Fraud Detection by Category</h3>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="h-[300px] flex items-center justify-center">
+                    <p className="text-muted-foreground">Fraud detection analytics visualization would appear here</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-md">Fraud by Application Type</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px] flex items-center justify-center">
+                    <p className="text-muted-foreground">Chart visualization would appear here</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-md">Fraud Detection Timeline</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[200px] flex items-center justify-center">
+                    <p className="text-muted-foreground">Timeline visualization would appear here</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="rules">
+            <FraudRules />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </MainLayout>
   );
 };
 

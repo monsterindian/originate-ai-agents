@@ -1,5 +1,5 @@
-
 import React, { useState } from "react";
+import MainLayout from "@/components/layout/MainLayout";
 import {
   Card,
   CardContent,
@@ -757,335 +757,337 @@ const FundingAgent = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
-            <PiggyBank className="h-6 w-6" />
-            Funding Recommendation Agent
-          </h1>
-          <p className="text-muted-foreground">
-            AI-powered funding source matching for optimal loan financing
-          </p>
+    <MainLayout>
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
+              <PiggyBank className="h-6 w-6" />
+              Funding Recommendation Agent
+            </h1>
+            <p className="text-muted-foreground">
+              AI-powered funding source matching for optimal loan financing
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={activeTab} onValueChange={setActiveTab}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select view" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="applications">Pending Applications</SelectItem>
+                <SelectItem value="sources">Funding Sources</SelectItem>
+                <SelectItem value="recommendations">Recommendations</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={activeTab} onValueChange={setActiveTab}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select view" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="applications">Pending Applications</SelectItem>
-              <SelectItem value="sources">Funding Sources</SelectItem>
-              <SelectItem value="recommendations">Recommendations</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="applications">Applications</TabsTrigger>
-          <TabsTrigger value="sources">Funding Sources</TabsTrigger>
-          <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
-        </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
+            <TabsTrigger value="applications">Applications</TabsTrigger>
+            <TabsTrigger value="sources">Funding Sources</TabsTrigger>
+            <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
+          </TabsList>
 
-        {/* Pending Applications Tab */}
-        <TabsContent value="applications" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Applications Requiring Funding</CardTitle>
-              <CardDescription>
-                Approved applications awaiting funding source recommendations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Application ID</TableHead>
-                      <TableHead>Borrower</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Asset Class</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Recommendation</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pendingApplications.map((application) => {
-                      const recommendation = getRecommendationForApplication(application.id);
-                      const recommendedSource = recommendation 
-                        ? getFundingSourceById(recommendation.fundingSourceId) 
-                        : undefined;
-                      
-                      return (
-                        <TableRow key={application.id}>
-                          <TableCell className="font-medium">{application.id}</TableCell>
-                          <TableCell>
-                            {application.borrower.companyName || 
-                             `${application.borrower.firstName} ${application.borrower.lastName}`}
-                          </TableCell>
-                          <TableCell>{formatCurrency(application.amount)}</TableCell>
-                          <TableCell className="capitalize">
-                            {application.assetClass.replace(/_/g, ' ')}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                              {application.displayStatus}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {recommendation ? (
-                              <div className="flex items-center gap-1">
-                                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                <span className="text-sm">{recommendedSource?.name}</span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1">
-                                <AlertCircle className="h-4 w-4 text-amber-500" />
-                                <span className="text-sm">Needed</span>
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {recommendation ? (
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="ghost" size="sm">View Details</Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-3xl">
-                                  <DialogHeader>
-                                    <DialogTitle>Funding Recommendation for {application.id}</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="mt-4">
-                                    <RecommendationDetails recommendation={recommendation} />
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
-                            ) : (
-                              <Button size="sm" variant="secondary">Generate</Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Funding Sources Tab */}
-        <TabsContent value="sources" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Funding Sources</CardTitle>
-              <CardDescription>
-                Manage and view all funding sources for loan applications
-              </CardDescription>
-              <div className="flex flex-col sm:flex-row gap-4 mt-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    type="search"
-                    placeholder="Search sources..."
-                    className="pl-8"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Select
-                  value={sourceTypeFilter}
-                  onValueChange={setSourceTypeFilter}
-                >
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                    <SelectValue placeholder="Filter by type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    {sourceTypes.map((type) => (
-                      <SelectItem key={type} value={type} className="capitalize">
-                        {type.replace(/_/g, ' ')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredSources.map((source) => (
-                  <Card key={source.id} className="overflow-hidden">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">{source.name}</CardTitle>
-                        <Badge
-                          variant={
-                            source.status === "active"
-                              ? "success"
-                              : source.status === "limited"
-                              ? "warning"
-                              : "destructive"
-                          }
-                        >
-                          {source.status.charAt(0).toUpperCase() + source.status.slice(1)}
-                        </Badge>
-                      </div>
-                      <CardDescription className="capitalize flex items-center gap-1">
-                        <span>{source.type.replace(/_/g, ' ')}</span>
-                        <span>•</span>
-                        <span>{source.riskTolerance}</span>
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <div className="text-sm line-clamp-2 mb-2">{source.description}</div>
-                      
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-3">
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4 text-muted-foreground" />
-                          <span>{formatCurrency(source.minAmount)} - {formatCurrency(source.maxAmount)}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <CreditCard className="h-4 w-4 text-muted-foreground" />
-                          <span>{source.interestRateRange.min}% - {source.interestRateRange.max}%</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <CalendarClock className="h-4 w-4 text-muted-foreground" />
-                          <span>{source.processingTime.min}-{source.processingTime.max} days</span>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Available Funds</span>
-                          <span className="font-medium">{Math.round((source.allocatedFunds / source.availableFunds) * 100)}%</span>
-                        </div>
-                        <Progress value={(source.allocatedFunds / source.availableFunds) * 100} />
-                      </div>
-                    </CardContent>
-                    <div className="px-6 py-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="w-full">View Details</Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>{source.name}</DialogTitle>
-                          </DialogHeader>
-                          <ScrollArea className="max-h-[70vh]">
-                            <div className="p-2">
-                              <FundingSourceDetails source={source} />
-                            </div>
-                          </ScrollArea>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Recommendations Tab */}
-        <TabsContent value="recommendations" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Generated Funding Recommendations</CardTitle>
-              <CardDescription>
-                AI-powered recommendations for optimal funding matches
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {recommendations.map((recommendation) => {
-                  const application = pendingApplications.find(app => app.id === recommendation.applicationId);
-                  const source = fundingSources.find(src => src.id === recommendation.fundingSourceId);
-                  
-                  if (!application || !source) return null;
-                  
-                  return (
-                    <Card key={recommendation.applicationId} className="border-green-200">
-                      <CardHeader className="pb-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                          <div>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              <span>{application.id}</span>
-                              <Badge className="capitalize">
-                                {application.assetClass.replace(/_/g, ' ')}
+          {/* Pending Applications Tab */}
+          <TabsContent value="applications" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Applications Requiring Funding</CardTitle>
+                <CardDescription>
+                  Approved applications awaiting funding source recommendations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Application ID</TableHead>
+                        <TableHead>Borrower</TableHead>
+                        <TableHead>Amount</TableHead>
+                        <TableHead>Asset Class</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Recommendation</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pendingApplications.map((application) => {
+                        const recommendation = getRecommendationForApplication(application.id);
+                        const recommendedSource = recommendation 
+                          ? getFundingSourceById(recommendation.fundingSourceId) 
+                          : undefined;
+                        
+                        return (
+                          <TableRow key={application.id}>
+                            <TableCell className="font-medium">{application.id}</TableCell>
+                            <TableCell>
+                              {application.borrower.companyName || 
+                               `${application.borrower.firstName} ${application.borrower.lastName}`}
+                            </TableCell>
+                            <TableCell>{formatCurrency(application.amount)}</TableCell>
+                            <TableCell className="capitalize">
+                              {application.assetClass.replace(/_/g, ' ')}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                {application.displayStatus}
                               </Badge>
-                            </CardTitle>
-                            <CardDescription>
-                              <span>
-                                {application.borrower.companyName || 
-                                 `${application.borrower.firstName} ${application.borrower.lastName}`}
-                              </span>
-                              <span> • </span>
-                              <span>{formatCurrency(application.amount)}</span>
-                            </CardDescription>
-                          </div>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">
-                                View Full Recommendation
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-3xl">
-                              <DialogHeader>
-                                <DialogTitle>Funding Recommendation for {application.id}</DialogTitle>
-                              </DialogHeader>
-                              <div className="mt-4">
-                                <RecommendationDetails recommendation={recommendation} />
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                            </TableCell>
+                            <TableCell>
+                              {recommendation ? (
+                                <div className="flex items-center gap-1">
+                                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                  <span className="text-sm">{recommendedSource?.name}</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                                  <span className="text-sm">Needed</span>
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {recommendation ? (
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="sm">View Details</Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-3xl">
+                                    <DialogHeader>
+                                      <DialogTitle>Funding Recommendation for {application.id}</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="mt-4">
+                                      <RecommendationDetails recommendation={recommendation} />
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              ) : (
+                                <Button size="sm" variant="secondary">Generate</Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Funding Sources Tab */}
+          <TabsContent value="sources" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Available Funding Sources</CardTitle>
+                <CardDescription>
+                  Manage and view all funding sources for loan applications
+                </CardDescription>
+                <div className="flex flex-col sm:flex-row gap-4 mt-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      type="search"
+                      placeholder="Search sources..."
+                      className="pl-8"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Select
+                    value={sourceTypeFilter}
+                    onValueChange={setSourceTypeFilter}
+                  >
+                    <SelectTrigger className="w-full sm:w-[200px]">
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      {sourceTypes.map((type) => (
+                        <SelectItem key={type} value={type} className="capitalize">
+                          {type.replace(/_/g, ' ')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredSources.map((source) => (
+                    <Card key={source.id} className="overflow-hidden">
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-lg">{source.name}</CardTitle>
+                          <Badge
+                            variant={
+                              source.status === "active"
+                                ? "success"
+                                : source.status === "limited"
+                                ? "warning"
+                                : "destructive"
+                            }
+                          >
+                            {source.status.charAt(0).toUpperCase() + source.status.slice(1)}
+                          </Badge>
                         </div>
+                        <CardDescription className="capitalize flex items-center gap-1">
+                          <span>{source.type.replace(/_/g, ' ')}</span>
+                          <span>•</span>
+                          <span>{source.riskTolerance}</span>
+                        </CardDescription>
                       </CardHeader>
-                      <CardContent>
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-4">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-12 w-12">
-                              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                {source.name.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <h4 className="font-semibold">{source.name}</h4>
-                              <p className="text-sm text-muted-foreground capitalize">{source.type.replace(/_/g, ' ')}</p>
-                            </div>
+                      <CardContent className="pb-2">
+                        <div className="text-sm line-clamp-2 mb-2">{source.description}</div>
+                        
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-3">
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-4 w-4 text-muted-foreground" />
+                            <span>{formatCurrency(source.minAmount)} - {formatCurrency(source.maxAmount)}</span>
                           </div>
-                          <div className="flex-1 flex items-center gap-2">
-                            <div className="text-sm font-medium">Match Score:</div>
-                            <div className="flex-1 flex items-center gap-2">
-                              <Progress value={recommendation.matchScore} className="h-2" />
-                              <span className="font-semibold">{recommendation.matchScore}%</span>
-                            </div>
+                          <div className="flex items-center gap-1">
+                            <CreditCard className="h-4 w-4 text-muted-foreground" />
+                            <span>{source.interestRateRange.min}% - {source.interestRateRange.max}%</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                            <span>{source.processingTime.min}-{source.processingTime.max} days</span>
                           </div>
                         </div>
                         
-                        <div className="space-y-3">
-                          <div className="flex gap-1 items-center">
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                            <h5 className="text-sm font-medium">Top Reasons for Match</h5>
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Available Funds</span>
+                            <span className="font-medium">{Math.round((source.allocatedFunds / source.availableFunds) * 100)}%</span>
                           </div>
-                          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 ml-5 list-disc text-sm">
-                            {recommendation.reasons.slice(0, 4).map((reason, idx) => (
-                              <li key={idx}>{reason}</li>
-                            ))}
-                          </ul>
+                          <Progress value={(source.allocatedFunds / source.availableFunds) * 100} />
                         </div>
                       </CardContent>
+                      <div className="px-6 py-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="w-full">View Details</Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                              <DialogTitle>{source.name}</DialogTitle>
+                            </DialogHeader>
+                            <ScrollArea className="max-h-[70vh]">
+                              <div className="p-2">
+                                <FundingSourceDetails source={source} />
+                              </div>
+                            </ScrollArea>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </Card>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Recommendations Tab */}
+          <TabsContent value="recommendations" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Generated Funding Recommendations</CardTitle>
+                <CardDescription>
+                  AI-powered recommendations for optimal funding matches
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {recommendations.map((recommendation) => {
+                    const application = pendingApplications.find(app => app.id === recommendation.applicationId);
+                    const source = fundingSources.find(src => src.id === recommendation.fundingSourceId);
+                    
+                    if (!application || !source) return null;
+                    
+                    return (
+                      <Card key={recommendation.applicationId} className="border-green-200">
+                        <CardHeader className="pb-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                <span>{application.id}</span>
+                                <Badge className="capitalize">
+                                  {application.assetClass.replace(/_/g, ' ')}
+                                </Badge>
+                              </CardTitle>
+                              <CardDescription>
+                                <span>
+                                  {application.borrower.companyName || 
+                                   `${application.borrower.firstName} ${application.borrower.lastName}`}
+                                </span>
+                                <span> • </span>
+                                <span>{formatCurrency(application.amount)}</span>
+                              </CardDescription>
+                            </div>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="outline" size="sm">
+                                  View Full Recommendation
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-3xl">
+                                <DialogHeader>
+                                  <DialogTitle>Funding Recommendation for {application.id}</DialogTitle>
+                                </DialogHeader>
+                                <div className="mt-4">
+                                  <RecommendationDetails recommendation={recommendation} />
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-4">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-12 w-12">
+                                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                  {source.name.split(' ').map(n => n[0]).join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <h4 className="font-semibold">{source.name}</h4>
+                                <p className="text-sm text-muted-foreground capitalize">{source.type.replace(/_/g, ' ')}</p>
+                              </div>
+                            </div>
+                            <div className="flex-1 flex items-center gap-2">
+                              <div className="text-sm font-medium">Match Score:</div>
+                              <div className="flex-1 flex items-center gap-2">
+                                <Progress value={recommendation.matchScore} className="h-2" />
+                                <span className="font-semibold">{recommendation.matchScore}%</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex gap-1 items-center">
+                              <Info className="h-4 w-4 text-muted-foreground" />
+                              <h5 className="text-sm font-medium">Top Reasons for Match</h5>
+                            </div>
+                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 ml-5 list-disc text-sm">
+                              {recommendation.reasons.slice(0, 4).map((reason, idx) => (
+                                <li key={idx}>{reason}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </MainLayout>
   );
 };
 
