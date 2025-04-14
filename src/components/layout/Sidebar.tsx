@@ -35,7 +35,7 @@ const Sidebar = () => {
       <div className="flex items-center justify-between px-4 h-14">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <Logo size="sm" />
+            <Logo size="sm" showTagline={false} />
           </div>
         )}
         <Button 

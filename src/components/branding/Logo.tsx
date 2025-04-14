@@ -5,12 +5,14 @@ interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   variant?: 'default' | 'white' | 'mono';
+  showTagline?: boolean;
 }
 
 const Logo: React.FC<LogoProps> = ({ 
   className = "", 
   size = "md",
-  variant = "default"
+  variant = "default",
+  showTagline = false
 }) => {
   const getSizeClass = () => {
     switch (size) {
@@ -23,12 +25,15 @@ const Logo: React.FC<LogoProps> = ({
   };
 
   return (
-    <div className={`flex items-center ${className}`}>
+    <div className={`flex flex-col items-center ${className}`}>
       <img 
-        src="/lovable-uploads/0d3ec1fe-d1d5-42dd-83cd-4ff52a00544a.png" 
-        alt="gaigentic Logo" 
+        src="/lovable-uploads/e4b25188-2fa1-497d-ae5d-db4b07d5cd39.png" 
+        alt="Credion Logo" 
         className={`${getSizeClass()}`}
       />
+      {showTagline && (
+        <span className="text-xs mt-1 font-medium">Beter gefinancierd</span>
+      )}
     </div>
   );
 };
