@@ -4,7 +4,8 @@ import {
   LoanApplication, 
   LoanStatus, 
   AssetClass, 
-  LoanApplicationDTO 
+  LoanApplicationDTO,
+  Document
 } from "@/types";
 import { createRandomBorrower } from "./borrowerService";
 import { LOAN_STATUSES, ASSET_CLASSES, FRAUD_RISK_FACTORS, DOCUMENT_VERIFICATION_STATUSES, RISK_LEVELS } from "./loanConstants";
@@ -20,15 +21,67 @@ export const getRandomAssetClass = (): AssetClass => {
   return getRandomElement(ASSET_CLASSES);
 };
 
+// Function to generate random documents for an application
+export const createRandomDocuments = (applicationId: string, count: number = 3): Document[] => {
+  const documentTypes = [
+    "Income Verification", "Bank Statements", "Tax Returns", "Credit Report",
+    "Business Financial Statements", "Collateral Assessment", "Identification",
+    "Property Appraisal", "Business Plan", "Insurance Documentation",
+    "Title Documentation", "Employment Verification"
+  ];
+  
+  const aiSummaries = [
+    "Document appears valid with all required information present.",
+    "Information matches application data with 95% confidence.",
+    "Some discrepancies detected in reported income figures.",
+    "Document verified successfully with no issues detected.",
+    "All verification checks passed with high confidence score.",
+    "Information consistent with other provided documentation.",
+    "Minor inconsistencies found but within acceptable margins.",
+    "Document formatting confirms to expected standards for this type."
+  ];
+  
+  return Array.from({ length: faker.number.int({ min: count, max: count + 3 }) }, (_, i) => {
+    const uploadDate = faker.date.past();
+    const status = faker.helpers.arrayElement(["pending", "verified", "rejected"]);
+    const aiAnalysisComplete = status !== "pending" || faker.datatype.boolean(0.7);
+    
+    return {
+      id: `DOC-${applicationId}-${i}`,
+      name: `${faker.helpers.arrayElement(documentTypes)}_${faker.string.alphanumeric(6)}.pdf`,
+      type: faker.helpers.arrayElement(documentTypes),
+      url: `https://example.com/documents/${applicationId}/${i}`,
+      uploadedBy: faker.internet.email(),
+      uploadedAt: uploadDate.toISOString(),
+      status: status,
+      aiAnalysisComplete: aiAnalysisComplete,
+      aiAnalysisSummary: aiAnalysisComplete ? faker.helpers.arrayElement(aiSummaries) : undefined
+    };
+  });
+};
+
 // Function to generate a random LoanApplication
 export const createRandomLoanApplication = (): LoanApplicationDTO => {
   const amount = faker.number.int({ min: 10000, max: 1000000 });
   const status = getRandomLoanStatus();
   const assetClass = getRandomAssetClass();
   const borrower = createRandomBorrower();
+  const appId = 'APP-' + faker.string.alphanumeric(8).toUpperCase();
+  
+  // Generate random documents
+  const documents = createRandomDocuments(appId);
+
+  // Generate notes
+  const notes = Array.from({ length: faker.number.int({ min: 0, max: 5 }) }, () => ({
+    id: faker.string.uuid(),
+    content: faker.lorem.paragraph(),
+    createdBy: faker.helpers.arrayElement(["System", "Processing Agent", "Intake Agent", "Underwriter"]),
+    createdAt: faker.date.past().toISOString(),
+    isAgentNote: faker.datatype.boolean(0.7)
+  }));
 
   return {
-    id: 'APP-' + faker.string.alphanumeric(8).toUpperCase(),
+    id: appId,
     borrowerId: borrower.id,
     assetClass: assetClass,
     amount: amount,
@@ -39,13 +92,13 @@ export const createRandomLoanApplication = (): LoanApplicationDTO => {
     displayStatus: faker.helpers.arrayElement(['Draft', 'Submitted', 'In Review', 'Information Needed', 'In Underwriting', 'Approved', 'Conditionally Approved', 'Rejected', 'Funding In Progress', 'Funded', 'Closed']),
     risk: getRandomElement(RISK_LEVELS),
     collateral: {
-      type: faker.lorem.word(),
+      type: faker.helpers.arrayElement(['Real Estate', 'Vehicle', 'Equipment', 'Inventory', 'Accounts Receivable', 'Securities']),
       value: faker.number.int({ min: 5000, max: 500000 }),
       description: faker.lorem.sentence(),
     },
     status: status,
-    documents: [],
-    notes: [],
+    documents: documents,
+    notes: notes,
     dateCreated: faker.date.past().toISOString(),
     dateUpdated: faker.date.recent().toISOString(),
     dateSubmitted: faker.date.past().toISOString(),
@@ -159,6 +212,17 @@ export const getApplicationsForAgentType = (agentType: string, count: number = 5
         ["reviewing", "information_needed"], 
         minAppCount
       );
+      
+      // Make sure processing applications have documents
+      filteredApps = filteredApps.map(app => {
+        if (app.documents.length === 0) {
+          return {
+            ...app,
+            documents: createRandomDocuments(app.id, 3)
+          };
+        }
+        return app;
+      });
       break;
     case "underwriting":
       filteredApps = ensureMinimumApplicationsForStatus(
