@@ -158,29 +158,10 @@ export const getApplicationsForAgentType = (agentType: string, count: number = 1
       );
       break;
     case "fraud-risk":
-      // Ensure we return at least 100 applications for fraud risk
       filteredApps = applications.map(app => ({
         ...app,
         risk: faker.helpers.arrayElement(['Low', 'Medium', 'High']),
-        // Add additional fraud risk indicators
-        fraudRiskIndicators: {
-          identityVerificationScore: faker.number.int({ min: 20, max: 100 }),
-          suspiciousActivity: faker.datatype.boolean(0.3),
-          documentVerification: faker.helpers.arrayElement(['Verified', 'Pending', 'Failed']),
-          riskFactors: Array.from({ length: faker.number.int({ min: 0, max: 5 }) }, () => 
-            faker.helpers.arrayElement([
-              'Multiple applications',
-              'Address mismatch',
-              'Credit bureau alerts',
-              'Unusual transaction pattern',
-              'Device risk',
-              'Geolocation inconsistency',
-              'Document manipulation detected',
-              'Velocity checks failed'
-            ])
-          )
-        }
-      }));
+      })).slice(0, count);
       break;
     case "cash-flow-analysis":
       filteredApps = applications.filter(app => 
@@ -198,7 +179,7 @@ export const getApplicationsForAgentType = (agentType: string, count: number = 1
   
   // Ensure we have at least 100 applications for any agent type
   if (filteredApps.length < 100) {
-    // Add more applications until we reach 100
+    // Add more applications until we reach at least 100
     const additionalNeeded = 100 - filteredApps.length;
     const additionalApps = applications
       .filter(app => !filteredApps.some(filteredApp => filteredApp.id === app.id))
@@ -219,6 +200,9 @@ export const getApplicationsForAgentType = (agentType: string, count: number = 1
           case "decision":
             newStatus = "underwriting";
             break;
+          case "cash-flow-analysis":
+            newStatus = "reviewing";
+            break;
           case "funding":
             newStatus = "approved";
             break;
@@ -233,6 +217,31 @@ export const getApplicationsForAgentType = (agentType: string, count: number = 1
       });
       
     filteredApps = [...filteredApps, ...additionalApps];
+  }
+
+  // Add fraud risk indicators for fraud-risk agent
+  if (agentType === "fraud-risk") {
+    return filteredApps.map(app => {
+      const fraudData = {
+        ...app,
+        fraudRiskScore: faker.number.int({ min: 20, max: 100 }),
+        suspiciousActivity: faker.datatype.boolean(0.3),
+        documentVerification: faker.helpers.arrayElement(['Verified', 'Pending', 'Failed']),
+        riskFactors: Array.from({ length: faker.number.int({ min: 0, max: 5 }) }, () => 
+          faker.helpers.arrayElement([
+            'Multiple applications',
+            'Address mismatch',
+            'Credit bureau alerts',
+            'Unusual transaction pattern',
+            'Device risk',
+            'Geolocation inconsistency',
+            'Document manipulation detected',
+            'Velocity checks failed'
+          ])
+        )
+      };
+      return fraudData;
+    });
   }
   
   return filteredApps.slice(0, count);

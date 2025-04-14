@@ -5,7 +5,7 @@ type OpenAIStatusIndicatorProps = {
   status?: string;
 };
 
-const OpenAIStatusIndicator = ({ status = "disconnected" }: OpenAIStatusIndicatorProps) => {
+const OpenAIStatusIndicator = ({ status = "connected" }: OpenAIStatusIndicatorProps) => {
   const isConnected = status === "connected";
   
   return (

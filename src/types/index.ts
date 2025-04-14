@@ -97,6 +97,11 @@ export type LoanApplicationDTO = {
 
 export type LoanApplication = LoanApplicationDTO & {
   borrower: Borrower;
+  // Add fraud risk indicators for fraud risk agent
+  fraudRiskScore?: number;
+  suspiciousActivity?: boolean;
+  documentVerification?: 'Verified' | 'Pending' | 'Failed';
+  riskFactors?: string[];
 };
 
 export type Document = {
