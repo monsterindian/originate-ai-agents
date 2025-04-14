@@ -8,6 +8,9 @@ type Activity = {
   action: string;
   details: string;
   agentId?: string;
+  agentType?: string;
+  actionResult?: string;
+  applicationId?: string;
 };
 
 type RecentActivityListProps = {
@@ -29,6 +32,42 @@ const RecentActivityList = ({ activities, className }: RecentActivityListProps) 
     }
   };
 
+  // Render agent badge based on agent type
+  const renderAgentBadge = (agentType?: string) => {
+    if (!agentType) return "AI Agent";
+    
+    switch (agentType.toLowerCase()) {
+      case "intake":
+        return "Intake AI Agent";
+      case "processing":
+        return "Processing AI Agent";
+      case "underwriting":
+        return "Underwriting AI Agent";
+      case "decision":
+        return "Decision AI Agent";
+      default:
+        return "AI Agent";
+    }
+  };
+
+  // Determine badge color based on agent type
+  const getAgentBadgeColor = (agentType?: string) => {
+    if (!agentType) return "bg-green-500";
+    
+    switch (agentType.toLowerCase()) {
+      case "intake":
+        return "bg-blue-500";
+      case "processing":
+        return "bg-indigo-500";
+      case "underwriting":
+        return "bg-purple-500";
+      case "decision":
+        return "bg-emerald-500";
+      default:
+        return "bg-green-500";
+    }
+  };
+
   return (
     <Card className={className}>
       <CardHeader>
@@ -39,7 +78,7 @@ const RecentActivityList = ({ activities, className }: RecentActivityListProps) 
           {activities.map((activity, index) => (
             <div key={index} className="flex">
               <div className="flex flex-col items-center mr-4">
-                <div className="h-2.5 w-2.5 rounded-full bg-primary"></div>
+                <div className={cn("h-2.5 w-2.5 rounded-full", activity.agentType ? getAgentBadgeColor(activity.agentType) : "bg-primary")}></div>
                 {index < activities.length - 1 && (
                   <div className="h-full w-px bg-gray-200 my-1"></div>
                 )}
@@ -52,15 +91,25 @@ const RecentActivityList = ({ activities, className }: RecentActivityListProps) 
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">{activity.details}</p>
+                {activity.actionResult && (
+                  <p className="text-xs text-muted-foreground italic">
+                    Result: {activity.actionResult}
+                  </p>
+                )}
+                {activity.applicationId && (
+                  <p className="text-xs text-muted-foreground">
+                    Application: {activity.applicationId}
+                  </p>
+                )}
                 {activity.agentId && (
                   <div className="text-xs text-muted-foreground flex items-center mt-1">
                     <span 
                       className={cn(
                         "inline-block w-2 h-2 rounded-full mr-1.5",
-                        "bg-green-500"
+                        activity.agentType ? getAgentBadgeColor(activity.agentType) : "bg-green-500"
                       )}
                     />
-                    <span>Processed by AI Agent</span>
+                    <span>{renderAgentBadge(activity.agentType)}</span>
                   </div>
                 )}
               </div>
