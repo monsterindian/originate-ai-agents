@@ -1,4 +1,3 @@
-
 import { faker } from "@faker-js/faker";
 import { LoanApplication, LoanStatus, AssetClass, Borrower, LoanApplicationDTO, CashFlowAnalysis, CashFlowHealth, RepaymentCapacity, CashFlowHistoricalData, CashFlowVolatilityMetrics, CashFlowProjections, CashFlowImprovementRecommendation, DashboardSummary } from "@/types";
 
@@ -76,7 +75,7 @@ const createRandomLoanApplication = (): LoanApplicationDTO => {
     assetClass: assetClass,
     amount: amount,
     term: faker.number.int({ min: 12, max: 60 }),
-    interestRate: faker.number.float({ min: 3, max: 15, precision: 1 }),
+    interestRate: faker.number.float({ min: 3, max: 15, fractionDigits: 1 }),
     purpose: faker.lorem.sentence(),
     completeness: faker.number.int({ min: 20, max: 100 }),
     displayStatus: faker.helpers.arrayElement(['Draft', 'Submitted', 'In Review', 'Information Needed', 'In Underwriting', 'Approved', 'Conditionally Approved', 'Rejected', 'Funding In Progress', 'Funded', 'Closed']),
@@ -616,6 +615,8 @@ export const getMockDashboardSummary = (): DashboardSummary => {
   // Calculate total applications
   const totalApplications = Object.values(applicationsByStatus).reduce((sum, count) => sum + count, 0);
 
+  const approvalRate = faker.number.float({ min: 0.6, max: 0.85, fractionDigits: 2 });
+
   return {
     totalApplications,
     applicationsToday: faker.number.int({ min: 3, max: 15 }),
@@ -627,7 +628,7 @@ export const getMockDashboardSummary = (): DashboardSummary => {
     applicationsByAssetClass,
     recentActivity,
     totalPortfolioValue: faker.number.int({ min: 5000000, max: 20000000 }),
-    approvalRate: faker.number.float({ min: 0.6, max: 0.85, precision: 0.01 }),
+    approvalRate,
   };
 };
 
