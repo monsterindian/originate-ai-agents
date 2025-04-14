@@ -66,16 +66,17 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
               <span>Net Cash Flow</span>
             </div>
           </div>
-          <LineChart
-            data={monthlyTrendData}
-            dataKey="month"
-            categories={["Revenue", "Expenses", "Net Cash Flow"]}
-            colors={["#22C55E", "#EF4444", "#2563EB"]}
-            valueFormatter={currencyFormatter}
-            showLegend={false}
-            showGrid
-            height={300}
-          />
+          <div className="h-[300px]">
+            <LineChart
+              data={monthlyTrendData}
+              dataKey="month"
+              categories={["Revenue", "Expenses", "Net Cash Flow"]}
+              colors={["#22C55E", "#EF4444", "#2563EB"]}
+              valueFormatter={currencyFormatter}
+              showLegend={false}
+              showGrid
+            />
+          </div>
           <div className="flex items-center text-xs text-muted-foreground mt-2">
             <Info className="w-3 h-3 mr-1" />
             <span>Monthly fluctuations may be influenced by seasonality and business cycles</span>
@@ -92,16 +93,17 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <BarChart
-            data={historicalData}
-            dataKey="period"
-            categories={["Operating Cash Flow", "Free Cash Flow"]}
-            colors={["#2563EB", "#8B5CF6"]}
-            valueFormatter={currencyFormatter}
-            showLegend
-            showGrid
-            height={300}
-          />
+          <div className="h-[300px]">
+            <BarChart
+              data={historicalData}
+              dataKey="period"
+              categories={["Operating Cash Flow", "Free Cash Flow"]}
+              colors={["#2563EB", "#8B5CF6"]}
+              valueFormatter={currencyFormatter}
+              showLegend
+              showGrid
+            />
+          </div>
           <Separator className="my-4" />
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -135,16 +137,17 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <LineChart
-            data={projectionsData.slice(0, 12)} // Show first 12 months
-            dataKey="period"
-            categories={["Operating Cash Flow", "Free Cash Flow", "Debt Service"]}
-            colors={["#2563EB", "#8B5CF6", "#F59E0B"]}
-            valueFormatter={currencyFormatter}
-            showLegend
-            showGrid
-            height={300}
-          />
+          <div className="h-[300px]">
+            <LineChart
+              data={projectionsData.slice(0, 12)} // Show first 12 months
+              dataKey="period"
+              categories={["Operating Cash Flow", "Free Cash Flow", "Debt Service"]}
+              colors={["#2563EB", "#8B5CF6", "#F59E0B"]}
+              valueFormatter={currencyFormatter}
+              showLegend
+              showGrid
+            />
+          </div>
           <div className="flex flex-col space-y-2 mt-4">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Annual Growth Rate:</span>
@@ -212,16 +215,17 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <LineChart
-            data={projectionsData.slice(0, 12)}
-            dataKey="period"
-            categories={["DSCR"]}
-            colors={["#22C55E"]}
-            valueFormatter={(value: number) => value.toFixed(2) + "x"}
-            showLegend={false}
-            showGrid
-            height={300}
-          />
+          <div className="h-[300px]">
+            <LineChart
+              data={projectionsData.slice(0, 12)}
+              dataKey="period"
+              categories={["DSCR"]}
+              colors={["#22C55E"]}
+              valueFormatter={(value: number) => value.toFixed(2) + "x"}
+              showLegend={false}
+              showGrid
+            />
+          </div>
           <div className="mt-4 p-3 bg-muted/30 rounded-md">
             <div className="text-sm font-medium">Key DSCR Thresholds</div>
             <div className="grid grid-cols-3 gap-2 mt-2 text-xs">

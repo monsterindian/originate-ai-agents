@@ -131,24 +131,24 @@ export const generateProjectionsData = (analysis: CashFlowAnalysis) => {
 
 // Generate cash flow source breakdown data for a pie chart
 export const generateCashFlowSourceData = (analysis: CashFlowAnalysis) => {
-  const { historicalData } = analysis;
+  const { historicalData, cashFlowHealth } = analysis;
   
   // Get total revenue
   const totalRevenue = historicalData.revenue;
   
-  // Create realistic revenue distribution with some variance based on business type
+  // Create realistic revenue distribution with some variance based on cash flow health
   let primaryRevenue, secondaryRevenue, otherRevenue;
   
-  if (analysis.businessType === "established") {
-    // Established businesses tend to have a more even revenue distribution
+  if (cashFlowHealth === "Strong") {
+    // Strong cash flow businesses tend to have a more even revenue distribution
     primaryRevenue = Math.round(totalRevenue * faker.number.float({ min: 0.45, max: 0.65 }));
     secondaryRevenue = Math.round(totalRevenue * faker.number.float({ min: 0.2, max: 0.35 }));
-  } else if (analysis.businessType === "startup") {
-    // Startups often have one primary revenue source
+  } else if (cashFlowHealth === "Weak") {
+    // Weak cash flow businesses often have one primary revenue source
     primaryRevenue = Math.round(totalRevenue * faker.number.float({ min: 0.7, max: 0.85 }));
     secondaryRevenue = Math.round(totalRevenue * faker.number.float({ min: 0.1, max: 0.2 }));
   } else {
-    // Default distribution
+    // Default distribution for moderate cash flow
     primaryRevenue = Math.round(totalRevenue * 0.65);
     secondaryRevenue = Math.round(totalRevenue * 0.25);
   }

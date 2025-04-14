@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +22,7 @@ import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from "
 import MainLayout from "@/components/layout/MainLayout";
 import { LoanApplication } from '@/types';
 import { generateMockCashFlowAnalysis } from '@/services/mock';
-import { getApplicationsForAgentType } from '@/services/mock/loanApplicationService';
+import { getApplicationsForAgentType } from '@/services/mock';
 import { CashFlowCharts } from '@/components/cashflow/CashFlowCharts';
 
 const CashFlowAnalysisAgent = () => {
@@ -35,11 +34,9 @@ const CashFlowAnalysisAgent = () => {
   const [showBasicAnalysisModal, setShowBasicAnalysisModal] = useState(false);
 
   useEffect(() => {
-    // Simulate loading applications
     const loadApplications = async () => {
       try {
         setIsLoading(true);
-        // Get applications for cash flow analysis
         const apps = getApplicationsForAgentType('cash-flow-analysis', 50);
         setApplications(apps);
       } catch (error) {
@@ -227,7 +224,6 @@ const CashFlowAnalysisAgent = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Cash Flow Analysis Modal */}
         <Dialog open={showAnalysisModal} onOpenChange={setShowAnalysisModal}>
           <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
             {selectedApplication && (
@@ -342,7 +338,6 @@ const CashFlowAnalysisAgent = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Basic Analysis Modal */}
         <Dialog open={showBasicAnalysisModal} onOpenChange={setShowBasicAnalysisModal}>
           <DialogContent className="max-w-3xl">
             {selectedApplication && (
@@ -364,33 +359,33 @@ const CashFlowAnalysisAgent = () => {
                         <span className="text-sm text-muted-foreground">Revenue Volatility:</span>
                         <Badge 
                           variant={
-                            generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.revenueVolatility < 10 
+                            generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio < 1.3
                               ? "outline" 
-                              : generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.revenueVolatility < 20 
+                              : generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio < 1.7
                                 ? "secondary" 
                                 : "destructive"
                           }
                         >
-                          {generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.revenueVolatility.toFixed(1)}%
+                          {(generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio * 10 - 10).toFixed(1)}%
                         </Badge>
                       </div>
                       <div className="h-2.5 w-full bg-gray-200 rounded-full mt-2">
                         <div 
                           className="h-2.5 rounded-full bg-blue-600" 
                           style={{ 
-                            width: `${Math.min(generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.revenueVolatility * 3, 100)}%`,
-                            backgroundColor: generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.revenueVolatility < 10 
+                            width: `${Math.min((generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio - 1) * 100, 100)}%`,
+                            backgroundColor: generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio < 1.3
                               ? '#22c55e' 
-                              : generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.revenueVolatility < 20 
+                              : generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio < 1.7
                                 ? '#f59e0b' 
                                 : '#ef4444'
                           }}
                         />
                       </div>
                       <p className="text-sm mt-3">
-                        {generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.revenueVolatility < 10 
+                        {generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio < 1.3
                           ? "The business shows strong revenue stability with minimal fluctuations." 
-                          : generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.revenueVolatility < 20 
+                          : generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio < 1.7
                             ? "The business shows moderate revenue fluctuations, typical for the industry." 
                             : "Revenue shows significant volatility, which may impact debt servicing ability."
                         }

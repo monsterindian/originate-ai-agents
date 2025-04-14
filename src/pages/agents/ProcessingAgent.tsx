@@ -5,6 +5,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Check, Clock, Info, X, ListFilter, CheckCircle, AlertCircle, FileText } from "lucide-react";
 import { getApplicationsForAgentType } from "@/services/mock/loanApplicationService";
