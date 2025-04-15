@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +22,7 @@ import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from "
 import MainLayout from "@/components/layout/MainLayout";
 import { LoanApplication } from '@/types';
 import { generateMockCashFlowAnalysis } from '@/services/mock';
-import { getApplicationsForAgentType, getLoanApplicationById } from '@/services/mock';
+import { getApplicationsForAgentType, getMockLoanApplicationById } from '@/services/mock';
 import { CashFlowCharts } from '@/components/cashflow/CashFlowCharts';
 
 const CashFlowAnalysisAgent = () => {
@@ -42,7 +41,7 @@ const CashFlowAnalysisAgent = () => {
         
         // If we have an ID in the URL, prioritize loading that specific application
         if (id) {
-          const app = getLoanApplicationById(id);
+          const app = getMockLoanApplicationById(id);
           if (app) {
             setSelectedApplication(app);
             setShowAnalysisModal(true);
@@ -70,7 +69,7 @@ const CashFlowAnalysisAgent = () => {
     const appId = queryParams.get('applicationId');
     
     if (appId && !selectedApplication) {
-      const app = getLoanApplicationById(appId);
+      const app = getMockLoanApplicationById(appId);
       if (app) {
         setSelectedApplication(app);
         setShowAnalysisModal(true);
