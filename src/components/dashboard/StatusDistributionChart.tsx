@@ -73,7 +73,7 @@ const StatusDistributionChart = ({ data, className }: StatusDistributionChartPro
                 fill="#8884d8"
                 dataKey="value"
                 nameKey="name"
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent }) => `${name}: ${Math.round(percent * 100)}%`}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
@@ -81,7 +81,7 @@ const StatusDistributionChart = ({ data, className }: StatusDistributionChartPro
               </Pie>
               <Tooltip 
                 formatter={(value: number, name: string) => [
-                  `${value} applications`, name
+                  `${Math.round(value)} applications`, name
                 ]}
               />
               <Legend 

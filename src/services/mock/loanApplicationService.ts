@@ -1,4 +1,3 @@
-
 import { faker } from "@faker-js/faker";
 import { 
   LoanApplication, 
@@ -373,16 +372,12 @@ export const getApplicationsForAgentType = (agentType: string, count: number = 5
         minAppCount
       );
       
-      // Ensure all pre-qualification apps have documents
-      filteredApps = filteredApps.map(app => {
-        if (app.documents.length < 2) {
-          return {
-            ...app,
-            documents: createRandomDocuments(app.id, 3)
-          };
-        }
-        return app;
-      });
+      // Update all pre-qualification apps to have the correct display status
+      filteredApps = filteredApps.map(app => ({
+        ...app,
+        displayStatus: "Intake Complete",
+        documents: app.documents.length < 2 ? createRandomDocuments(app.id, 3) : app.documents
+      }));
       break;
     case "processing":
       // For processing, ensure all applications have "pre_qualification_complete" status

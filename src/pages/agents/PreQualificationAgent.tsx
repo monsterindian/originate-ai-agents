@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import MainLayout from "@/components/layout/MainLayout";
@@ -33,11 +32,9 @@ const PreQualificationAgent = () => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        // Get applications for pre-qualification agent
         const apps = getApplicationsForAgentType('pre-qualification', 50);
         setApplications(apps);
         
-        // If applicationId is provided, fetch that specific application
         if (applicationId) {
           const app = apps.find(a => a.id === applicationId);
           if (app) {
@@ -67,7 +64,6 @@ const PreQualificationAgent = () => {
     setIsProcessing(true);
     setProcessingProgress(0);
     
-    // Simulate processing progress
     const interval = setInterval(() => {
       setProcessingProgress(prev => {
         const newProgress = prev + Math.random() * 10;
@@ -75,8 +71,7 @@ const PreQualificationAgent = () => {
           clearInterval(interval);
           setIsProcessing(false);
           
-          // Create pre-qualification data
-          const preQualificationScore = Math.floor(Math.random() * 40) + 50; // 50-90
+          const preQualificationScore = Math.floor(Math.random() * 40) + 50;
           const scoreLabel = preQualificationScore >= 80 
             ? "Excellent" 
             : preQualificationScore >= 70 
@@ -85,11 +80,9 @@ const PreQualificationAgent = () => {
                 ? "Moderate" 
                 : "Fair";
           
-          // Update application with pre-qualification data
           setApplication(prev => {
             if (!prev) return null;
             
-            // Create factors
             const factors: PreQualificationFactor[] = [
               {
                 factor: "Credit Score",
@@ -177,7 +170,6 @@ const PreQualificationAgent = () => {
     return () => clearInterval(interval);
   };
 
-  // Function to get appropriate color based on score
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-green-600";
     if (score >= 70) return "text-emerald-600";
@@ -187,7 +179,6 @@ const PreQualificationAgent = () => {
     return "text-red-600";
   };
 
-  // Function to get appropriate background color based on score
   const getScoreBgColor = (score: number) => {
     if (score >= 80) return "bg-green-100";
     if (score >= 70) return "bg-emerald-100";
@@ -197,7 +188,6 @@ const PreQualificationAgent = () => {
     return "bg-red-100";
   };
 
-  // Function to get badge variant based on factor impact
   const getFactorBadgeVariant = (impact: "positive" | "negative" | "neutral") => {
     switch (impact) {
       case "positive": return "bg-green-100 text-green-800";
@@ -207,7 +197,6 @@ const PreQualificationAgent = () => {
     }
   };
 
-  // Function to get icon based on factor impact
   const getFactorIcon = (impact: "positive" | "negative" | "neutral") => {
     switch (impact) {
       case "positive": return <ChevronUp className="w-4 h-4 text-green-600" />;
@@ -230,7 +219,6 @@ const PreQualificationAgent = () => {
     );
   }
 
-  // If no application is selected, show the application list
   if (!application) {
     return (
       <MainLayout>
@@ -259,7 +247,7 @@ const PreQualificationAgent = () => {
                         {app.borrower.companyName || `${app.borrower.firstName} ${app.borrower.lastName}`}
                       </CardTitle>
                       <Badge variant="outline">
-                        {app.displayStatus || app.status}
+                        {app.displayStatus}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -275,7 +263,7 @@ const PreQualificationAgent = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Status:</span>
-                        <span className="font-medium">{app.displayStatus || app.status}</span>
+                        <span className="font-medium">{app.displayStatus}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Documents:</span>
@@ -324,7 +312,6 @@ const PreQualificationAgent = () => {
     );
   }
 
-  // Show selected application details
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -345,7 +332,7 @@ const PreQualificationAgent = () => {
               Back to List
             </Button>
             <Badge variant="outline">
-              {application.displayStatus || application.status}
+              {application.displayStatus}
             </Badge>
             
             <Button 
@@ -359,7 +346,6 @@ const PreQualificationAgent = () => {
           </div>
         </div>
 
-        {/* Application Info */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -414,7 +400,6 @@ const PreQualificationAgent = () => {
                   </div>
                 </div>
                 
-                {/* Pre-qualification score summary (if available) */}
                 {application.preQualification && (
                   <div className={`p-4 rounded-md mt-2 ${getScoreBgColor(application.preQualification.score)}`}>
                     <div className="flex flex-col md:flex-row md:items-center justify-between">
@@ -443,7 +428,6 @@ const PreQualificationAgent = () => {
           </CardContent>
         </Card>
         
-        {/* Application Tabs for Details */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid grid-cols-4 md:w-auto md:inline-flex mb-2">
             <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -452,7 +436,6 @@ const PreQualificationAgent = () => {
             <TabsTrigger value="borrower">Borrower</TabsTrigger>
           </TabsList>
           
-          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
@@ -576,7 +559,6 @@ const PreQualificationAgent = () => {
             </div>
           </TabsContent>
           
-          {/* Qualification Tab */}
           <TabsContent value="qualification" className="space-y-4">
             {application.preQualification ? (
               <div className="space-y-4">
@@ -704,7 +686,6 @@ const PreQualificationAgent = () => {
             )}
           </TabsContent>
           
-          {/* Documents Tab */}
           <TabsContent value="documents" className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold tracking-tight">Documents</h2>
@@ -769,7 +750,6 @@ const PreQualificationAgent = () => {
             )}
           </TabsContent>
           
-          {/* Borrower Tab */}
           <TabsContent value="borrower" className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold tracking-tight">Borrower Information</h2>
