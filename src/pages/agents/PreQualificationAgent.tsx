@@ -17,6 +17,7 @@ import {
 import { getApplicationsForAgentType } from "@/services/mock/loanApplicationService";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoanApplication, PreQualificationFactor } from "@/types";
+import { formatCurrency } from "@/services/mock/formatters";
 
 const PreQualificationAgent = () => {
   const [searchParams] = useSearchParams();
@@ -108,7 +109,7 @@ const PreQualificationAgent = () => {
                 factor: "Collateral Value",
                 score: Math.floor(Math.random() * 20) + 70,
                 weight: 3,
-                explanation: `Collateral value of $${prev.collateral?.value.toLocaleString()} provides adequate security.`,
+                explanation: `Collateral value of ${formatCurrency(prev.collateral?.value || 0).split('.')[0]} provides adequate security.`,
                 impact: "positive"
               },
               {
@@ -270,7 +271,7 @@ const PreQualificationAgent = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Loan Amount:</span>
-                        <span className="font-medium">${app.amount.toLocaleString()}</span>
+                        <span className="font-medium">{formatCurrency(app.amount).split('.')[0]}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Status:</span>
@@ -282,7 +283,7 @@ const PreQualificationAgent = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Completeness:</span>
-                        <span className="font-medium">{app.completeness}%</span>
+                        <span className="font-medium">{Math.round(app.completeness)}%</span>
                       </div>
                     </div>
                     <Separator className="my-3" />
@@ -369,7 +370,7 @@ const PreQualificationAgent = () => {
             </CardTitle>
             <CardDescription>
               {application.borrower.companyName || `${application.borrower.firstName} ${application.borrower.lastName}`} - 
-              ${application.amount.toLocaleString()} {application.purpose}
+              {formatCurrency(application.amount).split('.')[0]} {application.purpose}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -408,7 +409,7 @@ const PreQualificationAgent = () => {
                         value={application.completeness} 
                         className="h-2 mt-1" 
                       />
-                      <span className="text-xs mt-1 inline-block">{application.completeness}%</span>
+                      <span className="text-xs mt-1 inline-block">{Math.round(application.completeness)}%</span>
                     </div>
                   </div>
                 </div>
@@ -463,13 +464,13 @@ const PreQualificationAgent = () => {
                 <CardContent className="space-y-2">
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="text-muted-foreground">Amount:</div>
-                    <div className="font-medium">${application.amount.toLocaleString()}</div>
+                    <div className="font-medium">{formatCurrency(application.amount).split('.')[0]}</div>
                     
                     <div className="text-muted-foreground">Term:</div>
-                    <div className="font-medium">{application.term} months</div>
+                    <div className="font-medium">{Math.round(application.term)} months</div>
                     
                     <div className="text-muted-foreground">Interest Rate:</div>
-                    <div className="font-medium">{application.interestRate}%</div>
+                    <div className="font-medium">{Math.round(application.interestRate || 0)}%</div>
                     
                     <div className="text-muted-foreground">Asset Class:</div>
                     <div className="font-medium">{application.assetClass.replace('_', ' ')}</div>
@@ -496,7 +497,7 @@ const PreQualificationAgent = () => {
                       <div className="font-medium">{application.collateral.type}</div>
                       
                       <div className="text-muted-foreground">Value:</div>
-                      <div className="font-medium">${application.collateral.value.toLocaleString()}</div>
+                      <div className="font-medium">{formatCurrency(application.collateral.value).split('.')[0]}</div>
                       
                       <div className="text-muted-foreground">Description:</div>
                       <div className="font-medium">{application.collateral.description}</div>
@@ -557,7 +558,7 @@ const PreQualificationAgent = () => {
                     <div className="text-muted-foreground">Completeness:</div>
                     <div className="font-medium">
                       <Progress value={application.completeness} className="h-2 mt-1" />
-                      <span className="text-xs mt-1 inline-block">{application.completeness}%</span>
+                      <span className="text-xs mt-1 inline-block">{Math.round(application.completeness)}%</span>
                     </div>
                     
                     <div className="text-muted-foreground">Document Count:</div>

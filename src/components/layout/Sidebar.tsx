@@ -13,7 +13,8 @@ import {
   Database,
   ShieldAlert,
   PiggyBank,
-  BarChart4
+  BarChart4,
+  Calculator
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -72,6 +73,13 @@ const Sidebar = () => {
             to="/agents/intake" 
             icon={<Bot size={20} />} 
             label="Intake Agent" 
+            collapsed={collapsed}
+            extra={<AgentStatusIndicator active />}
+          />
+          <NavItem 
+            to="/agents/pre-qualification" 
+            icon={<Calculator size={20} />} 
+            label="Pre-Qualification Agent" 
             collapsed={collapsed}
             extra={<AgentStatusIndicator active />}
           />
