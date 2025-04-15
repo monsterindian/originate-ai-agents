@@ -66,7 +66,7 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
               <span>Net Cash Flow</span>
             </div>
           </div>
-          <div className="h-[300px] flex items-center justify-center">
+          <div className="h-[300px] w-full" style={{ minHeight: '300px' }}>
             <LineChart
               data={monthlyTrendData}
               dataKey="month"
@@ -93,7 +93,7 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
+          <div className="h-[300px] w-full" style={{ minHeight: '300px' }}>
             <BarChart
               data={historicalData}
               dataKey="period"
@@ -141,7 +141,7 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
+          <div className="h-[300px] w-full" style={{ minHeight: '300px' }}>
             <LineChart
               data={projectionsData.slice(0, 12)} // Show first 12 months
               dataKey="period"
@@ -219,7 +219,7 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center">
+          <div className="h-[300px] w-full" style={{ minHeight: '300px' }}>
             <LineChart
               data={projectionsData.slice(0, 12)}
               dataKey="period"
@@ -258,3 +258,4 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
     </div>
   );
 };
+

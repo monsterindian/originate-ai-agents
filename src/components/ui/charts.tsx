@@ -59,7 +59,7 @@ export function BarChart({
       config={chartColors}
       className={className}
     >
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight={300}>
         <RechartsBarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
           {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} />}
           <XAxis
@@ -129,7 +129,7 @@ export function LineChart({
       config={chartColors}
       className={className}
     >
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight={300}>
         <RechartsLineChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
           {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} />}
           <XAxis
@@ -211,7 +211,7 @@ export function PieChart({
       config={chartColors}
       className={className}
     >
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" minHeight={200}>
         <RechartsPieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
           <Pie
             data={data}
@@ -240,3 +240,4 @@ export function PieChart({
     </ChartContainer>
   )
 }
+
