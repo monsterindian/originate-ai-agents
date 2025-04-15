@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { FileText, CreditCard, Clock, AlertCircle, CheckCircle, TrendingUp, Users } from "lucide-react";
 import MainLayout from "@/components/layout/MainLayout";

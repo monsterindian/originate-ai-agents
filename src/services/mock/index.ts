@@ -7,7 +7,8 @@ export * from './cashFlowChartData';
 export * from './utils';
 export * from './formatters';
 export * from './loanConstants';
+export * from './dashboardService';
 
 // Add helper function to get application by ID
-import { getLoanApplicationById } from './loanApplicationService';
-export { getLoanApplicationById };
+import { getMockLoanApplicationById } from './loanApplicationService';
+export { getMockLoanApplicationById };
