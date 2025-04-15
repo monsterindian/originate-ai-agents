@@ -27,7 +27,8 @@ const StatusDistributionChart = ({ data, className }: StatusDistributionChartPro
     rejected: "Rejected",
     funding: "Funding",
     funded: "Funded",
-    closed: "Closed"
+    closed: "Closed",
+    pre_qualification_complete: "Pre-Qualification Complete"
   };
 
   const statusColors: Record<LoanStatus, string> = {
@@ -42,6 +43,7 @@ const StatusDistributionChart = ({ data, className }: StatusDistributionChartPro
     funding: "#A78BFA", // violet-400
     funded: "#34D399", // emerald-400
     closed: "#6B7280", // gray-500
+    pre_qualification_complete: "#8B5CF6" // violet-500
   };
 
   const chartData = Object.entries(data)
