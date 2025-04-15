@@ -10,7 +10,8 @@ export type LoanStatus =
   | "rejected" 
   | "funding" 
   | "funded" 
-  | "closed";
+  | "closed"
+  | "pre_qualification_complete";
 
 export type AssetClass = 
   | "residential_mortgage" 
@@ -56,6 +57,26 @@ export type Borrower = {
   dateUpdated: string;
 };
 
+export type PreQualificationFactor = {
+  factor: string;
+  score: number;
+  weight: number;
+  explanation: string;
+  impact: "positive" | "negative" | "neutral";
+};
+
+export type PreQualification = {
+  score: number;
+  scoreLabel: string;
+  recommendation: string;
+  factors: PreQualificationFactor[];
+  dateGenerated: string;
+  algorithmVersion: string;
+  thresholdForApproval: number;
+  generatedBy: string;
+  overrideReason?: string;
+};
+
 export type LoanApplicationDTO = {
   id: string;
   borrowerId: string;
@@ -84,6 +105,8 @@ export type LoanApplicationDTO = {
   dateApproved?: string;
   dateFunded?: string;
   dateClosed?: string;
+  datePreQualified?: string;
+  preQualification?: PreQualification;
   agentAssignments: {
     intakeAgentId?: string;
     processingAgentId?: string;
@@ -91,6 +114,7 @@ export type LoanApplicationDTO = {
     decisionAgentId?: string;
     fundingAgentId?: string;
     cashFlowAnalysisAgentId?: string;
+    preQualificationAgentId?: string;
   };
   recommendedFundingSourceId?: string;
 };

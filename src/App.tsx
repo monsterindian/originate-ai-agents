@@ -17,6 +17,7 @@ import DecisionAgent from "./pages/agents/DecisionAgent";
 import FraudRiskAgent from "./pages/agents/FraudRiskAgent";
 import FundingAgent from "./pages/agents/FundingAgent";
 import CashFlowAnalysisAgent from "./pages/agents/CashFlowAnalysisAgent";
+import PreQualificationAgent from "./pages/agents/PreQualificationAgent";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           
           <Route path="/agents/intake" element={<IntakeAgent />} />
+          <Route path="/agents/pre-qualification" element={<PreQualificationAgent />} />
           <Route path="/agents/processing" element={<ProcessingAgent />} />
           <Route path="/agents/underwriting" element={<UnderwritingAgent />} />
           <Route path="/agents/decision" element={<DecisionAgent />} />

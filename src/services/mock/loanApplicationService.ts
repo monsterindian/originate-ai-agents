@@ -5,10 +5,20 @@ import {
   LoanStatus, 
   AssetClass, 
   LoanApplicationDTO,
-  Document
+  Document,
+  PreQualification,
+  PreQualificationFactor
 } from "@/types";
 import { createRandomBorrower } from "./borrowerService";
-import { LOAN_STATUSES, ASSET_CLASSES, FRAUD_RISK_FACTORS, DOCUMENT_VERIFICATION_STATUSES, RISK_LEVELS } from "./loanConstants";
+import { 
+  LOAN_STATUSES, 
+  ASSET_CLASSES, 
+  FRAUD_RISK_FACTORS, 
+  DOCUMENT_VERIFICATION_STATUSES, 
+  RISK_LEVELS,
+  PRE_QUALIFICATION_SCORES,
+  PRE_QUALIFICATION_FACTORS 
+} from "./loanConstants";
 import { getRandomElement } from "./utils";
 
 // Function to generate a random LoanStatus
@@ -60,6 +70,146 @@ export const createRandomDocuments = (applicationId: string, count: number = 3):
   });
 };
 
+// Generate a random pre-qualification factor
+export const createRandomPreQualificationFactor = (): PreQualificationFactor => {
+  const factor = faker.helpers.arrayElement(PRE_QUALIFICATION_FACTORS);
+  const impact = faker.helpers.arrayElement(["positive", "negative", "neutral"] as const);
+  const score = impact === "positive" 
+    ? faker.number.int({ min: 65, max: 100 }) 
+    : impact === "negative" 
+      ? faker.number.int({ min: 10, max: 45 }) 
+      : faker.number.int({ min: 46, max: 64 });
+  
+  const explanations = {
+    'Credit Score': [
+      "Credit score falls within approved range for this loan type.",
+      "Credit score below minimum threshold for automatic approval.",
+      "Recent credit score improvement shows positive trend.",
+      "Multiple recent credit inquiries raise potential concerns."
+    ],
+    'Income Verification': [
+      "Income stability demonstrated over required time period.",
+      "Income sources diversified and well-documented.",
+      "Income verification documents incomplete or inconsistent.",
+      "Income level insufficient for requested loan amount."
+    ],
+    'Employment History': [
+      "Stable employment history exceeding minimum requirements.",
+      "Recent job changes may indicate employment instability.",
+      "Length of employment meets minimum criteria.",
+      "Employment in unstable or high-risk industry sector."
+    ],
+    'Debt-to-Income Ratio': [
+      "DTI ratio well within acceptable parameters.",
+      "DTI ratio slightly exceeds guidelines but compensating factors present.",
+      "High debt obligations relative to income level.",
+      "Recent increase in debt obligations noted."
+    ],
+    'Business Performance': [
+      "Strong consistent growth in business revenue.",
+      "Business shows stable cash flow and profitability.",
+      "Recent decline in business performance metrics.",
+      "Business revenue fluctuations indicate potential instability."
+    ],
+    'Industry Risk Assessment': [
+      "Business operates in stable, low-risk industry.",
+      "Industry facing moderate regulatory or market challenges.",
+      "High-risk industry classification requires additional review.",
+      "Industry experiencing significant disruption or contraction."
+    ],
+    'Market Conditions': [
+      "Local market conditions favorable for this asset class.",
+      "Market indicators show stable valuation trends.",
+      "Market volatility in this sector raises risk profile.",
+      "Economic indicators suggest potential market contraction."
+    ],
+    'Collateral Value': [
+      "Collateral value exceeds loan amount with healthy margin.",
+      "Collateral valuation verified by recent appraisal.",
+      "Collateral value marginally covers loan obligation.",
+      "Collateral type or condition raises valuation concerns."
+    ],
+    'Previous Loan History': [
+      "Excellent repayment history on previous loans.",
+      "No negative repayment history indicators present.",
+      "Previous late payments require additional explanation.",
+      "No established loan repayment history available."
+    ],
+    'Documentation Completeness': [
+      "All required documentation provided and verified.",
+      "Key documentation complete and consistent.",
+      "Missing or incomplete supporting documentation.",
+      "Documentation inconsistencies require verification."
+    ]
+  };
+  
+  const factorKey = factor as keyof typeof explanations;
+  const explanation = faker.helpers.arrayElement(explanations[factorKey]);
+  
+  return {
+    factor,
+    score,
+    weight: faker.number.int({ min: 1, max: 5 }),
+    explanation,
+    impact
+  };
+};
+
+// Generate random pre-qualification data
+export const createRandomPreQualification = (): PreQualification => {
+  // Generate 3-6 random factors
+  const factorCount = faker.number.int({ min: 3, max: 6 });
+  const factors: PreQualificationFactor[] = Array.from(
+    { length: factorCount },
+    () => createRandomPreQualificationFactor()
+  );
+  
+  // Calculate weighted average score
+  const totalWeight = factors.reduce((sum, factor) => sum + factor.weight, 0);
+  const weightedScore = factors.reduce(
+    (sum, factor) => sum + (factor.score * factor.weight), 
+    0
+  ) / totalWeight;
+  
+  // Round to nearest whole number
+  const finalScore = Math.round(weightedScore);
+  
+  // Find the appropriate score label
+  const scoreInfo = PRE_QUALIFICATION_SCORES.find(
+    s => finalScore >= s.score
+  ) || PRE_QUALIFICATION_SCORES[PRE_QUALIFICATION_SCORES.length - 1];
+  
+  const recommendations = [
+    `Application meets pre-qualification criteria with a score of ${finalScore}. Recommended for processing.`,
+    `Pre-qualification score of ${finalScore} indicates potential viability. Proceed with standard processing.`,
+    `Score of ${finalScore} falls within acceptable range. Review noted concerns before processing.`,
+    `Pre-qualification score of ${finalScore} indicates caution. Additional verification recommended.`,
+    `Low pre-qualification score of ${finalScore}. Consider requesting additional documentation.`
+  ];
+  
+  return {
+    score: finalScore,
+    scoreLabel: scoreInfo.label,
+    recommendation: finalScore > 60 
+      ? recommendations[0] 
+      : finalScore > 45 
+        ? recommendations[1] 
+        : finalScore > 30 
+          ? recommendations[2] 
+          : finalScore > 15 
+            ? recommendations[3] 
+            : recommendations[4],
+    factors: factors,
+    dateGenerated: faker.date.recent().toISOString(),
+    algorithmVersion: `v${faker.number.int({ min: 1, max: 3 })}.${faker.number.int({ min: 0, max: 9 })}.${faker.number.int({ min: 0, max: 9 })}`,
+    thresholdForApproval: 60,
+    generatedBy: "Pre-Qualification Agent",
+    overrideReason: faker.datatype.boolean(0.1) 
+      ? "Manual override based on exceptional circumstances or additional documentation provided." 
+      : undefined
+  };
+};
+
 // Function to generate a random LoanApplication
 export const createRandomLoanApplication = (): LoanApplicationDTO => {
   const amount = faker.number.int({ min: 10000, max: 1000000 });
@@ -75,10 +225,13 @@ export const createRandomLoanApplication = (): LoanApplicationDTO => {
   const notes = Array.from({ length: faker.number.int({ min: 0, max: 5 }) }, () => ({
     id: faker.string.uuid(),
     content: faker.lorem.paragraph(),
-    createdBy: faker.helpers.arrayElement(["System", "Processing Agent", "Intake Agent", "Underwriter"]),
+    createdBy: faker.helpers.arrayElement(["System", "Processing Agent", "Intake Agent", "Underwriter", "Pre-Qualification Agent"]),
     createdAt: faker.date.past().toISOString(),
     isAgentNote: faker.datatype.boolean(0.7)
   }));
+  
+  const preQualified = faker.datatype.boolean(0.8);
+  const preQualification = preQualified ? createRandomPreQualification() : undefined;
 
   return {
     id: appId,
@@ -89,7 +242,11 @@ export const createRandomLoanApplication = (): LoanApplicationDTO => {
     interestRate: faker.number.float({ min: 3, max: 15, fractionDigits: 1 }),
     purpose: faker.lorem.sentence(),
     completeness: faker.number.int({ min: 20, max: 100 }),
-    displayStatus: faker.helpers.arrayElement(['Draft', 'Submitted', 'In Review', 'Information Needed', 'In Underwriting', 'Approved', 'Conditionally Approved', 'Rejected', 'Funding In Progress', 'Funded', 'Closed']),
+    displayStatus: faker.helpers.arrayElement([
+      'Draft', 'Submitted', 'In Review', 'Information Needed', 'Pre-Qualification Complete',
+      'In Underwriting', 'Approved', 'Conditionally Approved', 'Rejected', 
+      'Funding In Progress', 'Funded', 'Closed'
+    ]),
     risk: getRandomElement(RISK_LEVELS),
     collateral: {
       type: faker.helpers.arrayElement(['Real Estate', 'Vehicle', 'Equipment', 'Inventory', 'Accounts Receivable', 'Securities']),
@@ -107,6 +264,8 @@ export const createRandomLoanApplication = (): LoanApplicationDTO => {
     dateApproved: faker.date.past().toISOString(),
     dateFunded: faker.date.past().toISOString(),
     dateClosed: faker.date.past().toISOString(),
+    datePreQualified: preQualified ? faker.date.recent().toISOString() : undefined,
+    preQualification: preQualification,
     agentAssignments: {
       intakeAgentId: faker.string.uuid(),
       processingAgentId: faker.string.uuid(),
@@ -114,6 +273,7 @@ export const createRandomLoanApplication = (): LoanApplicationDTO => {
       decisionAgentId: faker.string.uuid(),
       fundingAgentId: faker.string.uuid(),
       cashFlowAnalysisAgentId: faker.string.uuid(),
+      preQualificationAgentId: preQualified ? faker.string.uuid() : undefined,
     },
     recommendedFundingSourceId: faker.string.uuid(),
   };
@@ -202,20 +362,44 @@ export const getApplicationsForAgentType = (agentType: string, count: number = 5
     case "intake":
       filteredApps = ensureMinimumApplicationsForStatus(
         applications, 
-        ["draft", "submitted", "reviewing"], 
+        ["draft", "submitted"], 
         minAppCount
       );
       break;
-    case "processing":
+    case "pre-qualification":
       filteredApps = ensureMinimumApplicationsForStatus(
         applications, 
-        ["reviewing", "information_needed"], 
+        ["submitted"], 
         minAppCount
       );
       
+      // Ensure all pre-qualification apps have documents
+      filteredApps = filteredApps.map(app => {
+        if (app.documents.length < 2) {
+          return {
+            ...app,
+            documents: createRandomDocuments(app.id, 3)
+          };
+        }
+        return app;
+      });
+      break;
+    case "processing":
+      // For processing, ensure all applications have "pre_qualification_complete" status
+      filteredApps = applications.map(app => ({
+        ...app,
+        status: "pre_qualification_complete",
+        displayStatus: "Pre-Qualification Complete",
+        preQualification: app.preQualification || createRandomPreQualification(),
+        datePreQualified: app.datePreQualified || faker.date.recent().toISOString()
+      }));
+      
+      // Take only what we need
+      filteredApps = filteredApps.slice(0, minAppCount);
+      
       // Make sure processing applications have documents
       filteredApps = filteredApps.map(app => {
-        if (app.documents.length === 0) {
+        if (app.documents.length < 2) {
           return {
             ...app,
             documents: createRandomDocuments(app.id, 3)
