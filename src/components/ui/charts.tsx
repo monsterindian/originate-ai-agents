@@ -59,44 +59,46 @@ export function BarChart({
       config={chartColors}
       className={className}
     >
-      <RechartsBarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
-        {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} />}
-        <XAxis
-          dataKey={dataKey}
-          axisLine={false}
-          tickLine={false}
-          tickMargin={10}
-          tick={{ fontSize: 12 }}
-        />
-        <YAxis
-          width={yAxisWidth}
-          axisLine={false}
-          tickLine={false}
-          tickMargin={10}
-          tick={{ fontSize: 12 }}
-          tickFormatter={valueFormatter}
-        />
-        {showTooltip && (
-          <ChartTooltip content={<ChartTooltipContent formatter={valueFormatter} />} />
-        )}
-        {showLegend && (
-          <Legend
-            verticalAlign="top"
-            height={40}
-            fontSize={12}
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsBarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+          {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} />}
+          <XAxis
+            dataKey={dataKey}
+            axisLine={false}
+            tickLine={false}
+            tickMargin={10}
+            tick={{ fontSize: 12 }}
           />
-        )}
-        {categories.map((category, i) => (
-          <Bar
-            key={category}
-            name={category}
-            type="monotone"
-            dataKey={category}
-            fill={colors[i % colors.length]}
-            radius={[4, 4, 0, 0]}
+          <YAxis
+            width={yAxisWidth}
+            axisLine={false}
+            tickLine={false}
+            tickMargin={10}
+            tick={{ fontSize: 12 }}
+            tickFormatter={valueFormatter}
           />
-        ))}
-      </RechartsBarChart>
+          {showTooltip && (
+            <ChartTooltip content={<ChartTooltipContent formatter={valueFormatter} />} />
+          )}
+          {showLegend && (
+            <Legend
+              verticalAlign="top"
+              height={40}
+              fontSize={12}
+            />
+          )}
+          {categories.map((category, i) => (
+            <Bar
+              key={category}
+              name={category}
+              type="monotone"
+              dataKey={category}
+              fill={colors[i % colors.length]}
+              radius={[4, 4, 0, 0]}
+            />
+          ))}
+        </RechartsBarChart>
+      </ResponsiveContainer>
     </ChartContainer>
   )
 }
@@ -127,45 +129,47 @@ export function LineChart({
       config={chartColors}
       className={className}
     >
-      <RechartsLineChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
-        {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} />}
-        <XAxis
-          dataKey={dataKey}
-          axisLine={false}
-          tickLine={false}
-          tickMargin={10}
-          tick={{ fontSize: 12 }}
-        />
-        <YAxis
-          width={yAxisWidth}
-          axisLine={false}
-          tickLine={false}
-          tickMargin={10}
-          tick={{ fontSize: 12 }}
-          tickFormatter={valueFormatter}
-        />
-        {showTooltip && (
-          <ChartTooltip content={<ChartTooltipContent formatter={valueFormatter} />} />
-        )}
-        {showLegend && (
-          <Legend
-            verticalAlign="top"
-            height={40}
-            fontSize={12}
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsLineChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+          {showGrid && <CartesianGrid strokeDasharray="3 3" vertical={false} />}
+          <XAxis
+            dataKey={dataKey}
+            axisLine={false}
+            tickLine={false}
+            tickMargin={10}
+            tick={{ fontSize: 12 }}
           />
-        )}
-        {categories.map((category, i) => (
-          <Line
-            key={category}
-            name={category}
-            type="monotone"
-            dataKey={category}
-            stroke={colors[i % colors.length]}
-            activeDot={{ r: 6 }}
-            strokeWidth={2}
+          <YAxis
+            width={yAxisWidth}
+            axisLine={false}
+            tickLine={false}
+            tickMargin={10}
+            tick={{ fontSize: 12 }}
+            tickFormatter={valueFormatter}
           />
-        ))}
-      </RechartsLineChart>
+          {showTooltip && (
+            <ChartTooltip content={<ChartTooltipContent formatter={valueFormatter} />} />
+          )}
+          {showLegend && (
+            <Legend
+              verticalAlign="top"
+              height={40}
+              fontSize={12}
+            />
+          )}
+          {categories.map((category, i) => (
+            <Line
+              key={category}
+              name={category}
+              type="monotone"
+              dataKey={category}
+              stroke={colors[i % colors.length]}
+              activeDot={{ r: 6 }}
+              strokeWidth={2}
+            />
+          ))}
+        </RechartsLineChart>
+      </ResponsiveContainer>
     </ChartContainer>
   )
 }
@@ -207,30 +211,32 @@ export function PieChart({
       config={chartColors}
       className={className}
     >
-      <RechartsPieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
-        <Pie
-          data={data}
-          dataKey={categories[0]}
-          nameKey={dataKey}
-          cx="50%"
-          cy="50%"
-          outerRadius={80}
-          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-          ))}
-        </Pie>
-        {showTooltip && <Tooltip formatter={valueFormatter} />}
-        {showLegend && (
-          <Legend 
-            layout="vertical" 
-            verticalAlign="middle" 
-            align="right"
-            wrapperStyle={{ paddingLeft: 20 }}
-          />
-        )}
-      </RechartsPieChart>
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsPieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+          <Pie
+            data={data}
+            dataKey={categories[0]}
+            nameKey={dataKey}
+            cx="50%"
+            cy="50%"
+            outerRadius={80}
+            label={({ name, percent }) => `${name}: ${Math.round(percent * 100)}%`}
+          >
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+            ))}
+          </Pie>
+          {showTooltip && <Tooltip formatter={(value: any) => [valueFormatter(value), ""]} />}
+          {showLegend && (
+            <Legend 
+              layout="vertical" 
+              verticalAlign="middle" 
+              align="right"
+              wrapperStyle={{ paddingLeft: 20 }}
+            />
+          )}
+        </RechartsPieChart>
+      </ResponsiveContainer>
     </ChartContainer>
   )
 }

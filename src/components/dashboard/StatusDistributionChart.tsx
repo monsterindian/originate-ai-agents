@@ -50,7 +50,7 @@ const StatusDistributionChart = ({ data, className }: StatusDistributionChartPro
     .filter(([_, value]) => value > 0) // Only include statuses with applications
     .map(([status, value]) => ({
       name: statusNames[status as LoanStatus],
-      value,
+      value: Math.round(value), // Ensure whole numbers
       status,
       color: statusColors[status as LoanStatus]
     }));
@@ -61,7 +61,7 @@ const StatusDistributionChart = ({ data, className }: StatusDistributionChartPro
         <CardTitle className="text-lg font-semibold">Application Status Distribution</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-80">
+        <div className="h-80 flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,11 +23,12 @@ import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from "
 import MainLayout from "@/components/layout/MainLayout";
 import { LoanApplication } from '@/types';
 import { generateMockCashFlowAnalysis } from '@/services/mock';
-import { getApplicationsForAgentType } from '@/services/mock';
+import { getApplicationsForAgentType, getLoanApplicationById } from '@/services/mock';
 import { CashFlowCharts } from '@/components/cashflow/CashFlowCharts';
 
 const CashFlowAnalysisAgent = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const [applications, setApplications] = useState<LoanApplication[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedApplication, setSelectedApplication] = useState<LoanApplication | null>(null);
@@ -37,6 +39,18 @@ const CashFlowAnalysisAgent = () => {
     const loadApplications = async () => {
       try {
         setIsLoading(true);
+        
+        // If we have an ID in the URL, prioritize loading that specific application
+        if (id) {
+          const app = getLoanApplicationById(id);
+          if (app) {
+            setSelectedApplication(app);
+            setShowAnalysisModal(true);
+          } else {
+            toast.error("Application not found");
+          }
+        }
+        
         const apps = getApplicationsForAgentType('cash-flow-analysis', 50);
         setApplications(apps);
       } catch (error) {
@@ -49,6 +63,20 @@ const CashFlowAnalysisAgent = () => {
 
     loadApplications();
   }, [id]);
+
+  // Check URL parameters for specific application analysis
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const appId = queryParams.get('applicationId');
+    
+    if (appId && !selectedApplication) {
+      const app = getLoanApplicationById(appId);
+      if (app) {
+        setSelectedApplication(app);
+        setShowAnalysisModal(true);
+      }
+    }
+  }, [location.search, selectedApplication]);
 
   const handleViewCashFlowAnalysis = (application: LoanApplication) => {
     setSelectedApplication(application);
@@ -135,7 +163,7 @@ const CashFlowAnalysisAgent = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Loan Amount:</span>
-                          <span className="font-medium">${application.amount.toLocaleString()}</span>
+                          <span className="font-medium">${Math.round(application.amount).toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Status:</span>
@@ -195,7 +223,7 @@ const CashFlowAnalysisAgent = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Loan Amount:</span>
-                        <span className="font-medium">${application.amount.toLocaleString()}</span>
+                        <span className="font-medium">${Math.round(application.amount).toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Status:</span>
@@ -366,14 +394,14 @@ const CashFlowAnalysisAgent = () => {
                                 : "destructive"
                           }
                         >
-                          {(generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio * 10 - 10).toFixed(1)}%
+                          {Math.round((generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio * 10 - 10))}%
                         </Badge>
                       </div>
                       <div className="h-2.5 w-full bg-gray-200 rounded-full mt-2">
                         <div 
                           className="h-2.5 rounded-full bg-blue-600" 
                           style={{ 
-                            width: `${Math.min((generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio - 1) * 100, 100)}%`,
+                            width: `${Math.min(Math.round((generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio - 1) * 100), 100)}%`,
                             backgroundColor: generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio < 1.3
                               ? '#22c55e' 
                               : generateMockCashFlowAnalysis(selectedApplication).volatilityMetrics.peakToTroughRatio < 1.7
@@ -409,7 +437,7 @@ const CashFlowAnalysisAgent = () => {
                           <div className="text-sm text-muted-foreground mb-1">Annual Trend</div>
                           <div className="text-xl font-medium flex items-center">
                             {generateMockCashFlowAnalysis(selectedApplication).historicalData.operatingCashFlowTrend > 0 ? '+' : ''}
-                            {generateMockCashFlowAnalysis(selectedApplication).historicalData.operatingCashFlowTrend.toFixed(1)}%
+                            {Math.round(generateMockCashFlowAnalysis(selectedApplication).historicalData.operatingCashFlowTrend)}%
                             {generateMockCashFlowAnalysis(selectedApplication).historicalData.operatingCashFlowTrend > 0 
                               ? <TrendingUp className="ml-1 text-green-500 w-4 h-4" /> 
                               : <TrendingUp className="ml-1 text-red-500 w-4 h-4 rotate-180" />
@@ -443,7 +471,7 @@ const CashFlowAnalysisAgent = () => {
                               ? 'text-yellow-600' 
                               : 'text-red-600'
                         }`}>
-                          {generateMockCashFlowAnalysis(selectedApplication).projections.debtServiceCoverageRatio.toFixed(2)}x
+                          {Math.round(generateMockCashFlowAnalysis(selectedApplication).projections.debtServiceCoverageRatio)}x
                         </span>
                       </div>
                       <p className="text-sm mb-3">

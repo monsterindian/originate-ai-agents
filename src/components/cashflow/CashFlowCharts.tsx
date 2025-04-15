@@ -66,7 +66,7 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
               <span>Net Cash Flow</span>
             </div>
           </div>
-          <div className="h-[300px]">
+          <div className="h-[300px] flex items-center justify-center">
             <LineChart
               data={monthlyTrendData}
               dataKey="month"
@@ -93,7 +93,7 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px]">
+          <div className="h-[300px] flex items-center justify-center">
             <BarChart
               data={historicalData}
               dataKey="period"
@@ -110,8 +110,10 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
               <div className="text-muted-foreground">Avg. Operating CF</div>
               <div className="font-medium">
                 {currencyFormatter(
-                  historicalData.reduce((sum, item) => sum + (item["Operating Cash Flow"] as number), 0) / 
-                  historicalData.length
+                  Math.round(
+                    historicalData.reduce((sum, item) => sum + (item["Operating Cash Flow"] as number), 0) / 
+                    historicalData.length
+                  )
                 )}
               </div>
             </div>
@@ -119,8 +121,10 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
               <div className="text-muted-foreground">Avg. Free CF</div>
               <div className="font-medium">
                 {currencyFormatter(
-                  historicalData.reduce((sum, item) => sum + (item["Free Cash Flow"] as number), 0) / 
-                  historicalData.length
+                  Math.round(
+                    historicalData.reduce((sum, item) => sum + (item["Free Cash Flow"] as number), 0) / 
+                    historicalData.length
+                  )
                 )}
               </div>
             </div>
@@ -137,7 +141,7 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px]">
+          <div className="h-[300px] flex items-center justify-center">
             <LineChart
               data={projectionsData.slice(0, 12)} // Show first 12 months
               dataKey="period"
@@ -152,13 +156,13 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Annual Growth Rate:</span>
               <Badge variant={analysis.projections.annualGrowthRate > 5 ? "success" : "outline"}>
-                {analysis.projections.annualGrowthRate.toFixed(1)}%
+                {Math.round(analysis.projections.annualGrowthRate)}%
               </Badge>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Avg. Projected DSCR:</span>
               <Badge variant={analysis.projections.debtServiceCoverageRatio >= 1.5 ? "success" : "outline"}>
-                {analysis.projections.debtServiceCoverageRatio.toFixed(2)}x
+                {Math.round(analysis.projections.debtServiceCoverageRatio)}x
               </Badge>
             </div>
           </div>
@@ -174,7 +178,7 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center items-center mb-4">
             <div className="w-64 h-64">
               <PieChart
                 data={cashFlowSourceData}
@@ -215,13 +219,13 @@ export const CashFlowCharts: React.FC<CashFlowChartsProps> = ({ analysis }) => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px]">
+          <div className="h-[300px] flex items-center justify-center">
             <LineChart
               data={projectionsData.slice(0, 12)}
               dataKey="period"
               categories={["DSCR"]}
               colors={["#22C55E"]}
-              valueFormatter={(value: number) => value.toFixed(2) + "x"}
+              valueFormatter={(value: number) => Math.round(value) + "x"}
               showLegend={false}
               showGrid
             />

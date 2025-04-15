@@ -22,6 +22,30 @@ const Dashboard = () => {
         // Simulating API delay
         await new Promise(resolve => setTimeout(resolve, 1000));
         const data = getMockDashboardSummary();
+        
+        // Ensure all values are whole numbers
+        if (data) {
+          data.totalApplications = Math.round(data.totalApplications);
+          data.applicationsToday = Math.round(data.applicationsToday);
+          data.pendingReview = Math.round(data.pendingReview);
+          data.approvedToday = Math.round(data.approvedToday);
+          data.fundedToday = Math.round(data.fundedToday);
+          data.rejectedToday = Math.round(data.rejectedToday);
+          data.totalPortfolioValue = Math.round(data.totalPortfolioValue);
+          
+          // Round values in applicationsByStatus
+          Object.keys(data.applicationsByStatus).forEach(key => {
+            data.applicationsByStatus[key as keyof typeof data.applicationsByStatus] = 
+              Math.round(data.applicationsByStatus[key as keyof typeof data.applicationsByStatus]);
+          });
+          
+          // Round values in applicationsByAssetClass
+          Object.keys(data.applicationsByAssetClass).forEach(key => {
+            data.applicationsByAssetClass[key as keyof typeof data.applicationsByAssetClass] = 
+              Math.round(data.applicationsByAssetClass[key as keyof typeof data.applicationsByAssetClass]);
+          });
+        }
+        
         setSummary(data);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -104,14 +128,14 @@ const Dashboard = () => {
           <div className="space-y-4">
             <DashboardCard 
               title="Funded Today" 
-              value={`$${(summary.fundedToday * 125000).toLocaleString()}`}
+              value={`$${Math.round(summary.fundedToday * 125000).toLocaleString()}`}
               icon={<CreditCard />}
               description="Total loan value funded today"
             />
             
             <DashboardCard 
               title="Active Borrowers" 
-              value={summary.totalApplications * 0.7} // Just a mock calculation
+              value={Math.round(summary.totalApplications * 0.7)} // Just a mock calculation
               icon={<Users />}
               trend={{ value: 8, label: "growth this quarter", positive: true }}
             />
