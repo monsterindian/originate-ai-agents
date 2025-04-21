@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,7 +135,6 @@ const DocumentTracking = () => {
     fileSize: "1.0 MB",
   });
 
-  // Function to compute document statistics
   const getDocumentStats = () => {
     const total = documents.length;
     const today = new Date();
@@ -169,8 +167,6 @@ const DocumentTracking = () => {
     
     return matchesSearch && matchesProperty && matchesDocType;
   });
-
-  const documentStats = getDocumentStats();
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
