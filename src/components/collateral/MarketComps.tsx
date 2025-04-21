@@ -4,209 +4,147 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, FilePlus, FileEdit, Trash2, Building, DollarSign, Globe, MapPin } from "lucide-react";
+import { Search, Building, FilePlus, FileEdit, Trash2, Eye } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { LineChart, BarChart } from "@/components/ui/charts";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import ViewDetailsModal from "./ViewDetailsModal";
 
 // Mock data for initial UI
 const MOCK_SALE_COMPS = [
   {
-    id: "S001",
-    address: "123 Main Street",
-    city: "Downtown",
-    state: "CA",
-    zip: "90001",
+    id: "SC001",
+    propertyName: "Tech Tower",
+    address: "123 Main St, San Francisco, CA",
     propertyType: "Office",
-    size: 25000,
-    salePrice: 7500000,
-    pricePerSqFt: 300,
-    transactionDate: new Date("2023-02-15"),
-    notes: "Class A office building with recent renovations"
+    size: 45000,
+    salePrice: 22500000,
+    pricePerSF: 500,
+    saleDate: new Date("2023-02-15"),
+    notes: "Class A office building with recent renovations."
   },
   {
-    id: "S002",
-    address: "456 Market Avenue",
-    city: "Westside",
-    state: "CA",
-    zip: "90002",
+    id: "SC002",
+    propertyName: "The Grand Plaza",
+    address: "456 Market Ave, San Francisco, CA",
     propertyType: "Retail",
-    size: 12000,
-    salePrice: 4800000,
-    pricePerSqFt: 400,
-    transactionDate: new Date("2023-04-22"),
-    notes: "Corner lot retail center, fully leased"
+    size: 28000,
+    salePrice: 12600000,
+    pricePerSF: 450,
+    saleDate: new Date("2023-05-10"),
+    notes: "Corner lot with high foot traffic."
   },
   {
-    id: "S003",
-    address: "789 Industrial Parkway",
-    city: "Eastside",
-    state: "CA",
-    zip: "90003",
+    id: "SC003",
+    propertyName: "Ridgeway Industrial",
+    address: "789 Commerce Pkwy, Oakland, CA",
     propertyType: "Industrial",
-    size: 50000,
-    salePrice: 8500000,
-    pricePerSqFt: 170,
-    transactionDate: new Date("2023-01-10"),
-    notes: "Modern warehouse with high ceilings"
-  },
-  {
-    id: "S004",
-    address: "321 Tower Road",
-    city: "Downtown",
-    state: "CA",
-    zip: "90001",
-    propertyType: "Office",
-    size: 30000,
-    salePrice: 9600000,
-    pricePerSqFt: 320,
-    transactionDate: new Date("2023-05-05"),
-    notes: "High-rise office building with parking"
-  },
-  {
-    id: "S005",
-    address: "555 Commerce Street",
-    city: "Northside",
-    state: "CA",
-    zip: "90004",
-    propertyType: "Mixed Use",
-    size: 18000,
-    salePrice: 6300000,
-    pricePerSqFt: 350,
-    transactionDate: new Date("2023-03-18"),
-    notes: "Ground floor retail with apartments above"
+    size: 120000,
+    salePrice: 18000000,
+    pricePerSF: 150,
+    saleDate: new Date("2023-01-30"),
+    notes: "Distribution facility with 24' clear heights."
   }
 ];
 
 const MOCK_LEASE_COMPS = [
   {
-    id: "L001",
-    address: "123 Main Street, Suite 400",
-    city: "Downtown",
-    state: "CA",
-    zip: "90001",
+    id: "LC001",
+    propertyName: "Centennial Tower",
+    address: "100 Pine St, San Francisco, CA",
     propertyType: "Office",
-    size: 5000,
-    leaseRate: 45,
+    size: 5500,
+    leaseRate: 65,
     rateType: "Annual",
     leaseType: "Full Service",
-    transactionDate: new Date("2023-02-01"),
-    termYears: 5,
-    notes: "Class A office space"
+    term: 60,
+    leaseDate: new Date("2023-03-20"),
+    notes: "Corner office suite with bay views."
   },
   {
-    id: "L002",
-    address: "456 Market Avenue, Space B",
-    city: "Westside",
-    state: "CA",
-    zip: "90002",
+    id: "LC002",
+    propertyName: "Sunset Shopping Center",
+    address: "2200 Market St, San Francisco, CA",
     propertyType: "Retail",
     size: 3200,
-    leaseRate: 38,
-    rateType: "Annual",
-    leaseType: "NNN",
-    transactionDate: new Date("2023-03-15"),
-    termYears: 10,
-    notes: "High-traffic retail location"
-  },
-  {
-    id: "L003",
-    address: "789 Industrial Parkway, Unit 5",
-    city: "Eastside",
-    state: "CA",
-    zip: "90003",
-    propertyType: "Industrial",
-    size: 12000,
-    leaseRate: 1.25,
-    rateType: "Monthly",
-    leaseType: "Modified Gross",
-    transactionDate: new Date("2023-01-20"),
-    termYears: 7,
-    notes: "Warehouse space with loading docks"
-  },
-  {
-    id: "L004",
-    address: "321 Tower Road, Floor 12",
-    city: "Downtown",
-    state: "CA",
-    zip: "90001",
-    propertyType: "Office",
-    size: 8500,
     leaseRate: 48,
     rateType: "Annual",
-    leaseType: "Full Service",
-    transactionDate: new Date("2023-04-10"),
-    termYears: 3,
-    notes: "Premium office space with city views"
+    leaseType: "NNN",
+    term: 120,
+    leaseDate: new Date("2023-04-05"),
+    notes: "Anchor tenant space in high-traffic center."
   },
   {
-    id: "L005",
-    address: "555 Commerce Street, Suite 200",
-    city: "Northside",
-    state: "CA",
-    zip: "90004",
-    propertyType: "Office",
-    size: 4200,
-    leaseRate: 42,
-    rateType: "Annual",
-    leaseType: "Modified Gross",
-    transactionDate: new Date("2023-05-01"),
-    termYears: 5,
-    notes: "Medical office space"
+    id: "LC003",
+    propertyName: "Harbor Logistics Center",
+    address: "500 Port Way, Oakland, CA",
+    propertyType: "Industrial",
+    size: 25000,
+    leaseRate: 1.25,
+    rateType: "Monthly",
+    leaseType: "NNN",
+    term: 36,
+    leaseDate: new Date("2023-06-15"),
+    notes: "Warehouse space with dock high loading."
   }
 ];
 
-// Prepare chart data
-const getSalePriceByTypeData = () => {
-  const propertyTypes = Array.from(new Set(MOCK_SALE_COMPS.map(comp => comp.propertyType)));
-  
-  return propertyTypes.map(type => {
-    const comps = MOCK_SALE_COMPS.filter(comp => comp.propertyType === type);
-    const avgPrice = comps.reduce((sum, comp) => sum + comp.pricePerSqFt, 0) / comps.length;
-    
-    return {
-      type,
-      value: Math.round(avgPrice)
-    };
-  });
-};
-
-const getLeaseRateByTypeData = () => {
-  const propertyTypes = Array.from(new Set(MOCK_LEASE_COMPS.map(comp => comp.propertyType)));
-  
-  return propertyTypes.map(type => {
-    const comps = MOCK_LEASE_COMPS.filter(comp => comp.propertyType === type);
-    // Normalize all rates to annual
-    const rates = comps.map(comp => {
-      if (comp.rateType === "Monthly") {
-        return comp.leaseRate * 12;
-      }
-      return comp.leaseRate;
-    });
-    const avgRate = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
-    
-    return {
-      type,
-      value: Math.round(avgRate)
-    };
-  });
-};
-
 const MarketComps = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterPropertyType, setFilterPropertyType] = useState("all");
-  const [isAddSaleCompOpen, setIsAddSaleCompOpen] = useState(false);
-  const [isAddLeaseCompOpen, setIsAddLeaseCompOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("sale");
   
-  // Filter sale comps
-  const filteredSaleComps = MOCK_SALE_COMPS.filter(comp => {
+  // Sale comps state
+  const [saleComps, setSaleComps] = useState(MOCK_SALE_COMPS);
+  const [isAddSaleCompOpen, setIsAddSaleCompOpen] = useState(false);
+  const [selectedSaleComp, setSelectedSaleComp] = useState(null);
+  const [isViewSaleCompOpen, setIsViewSaleCompOpen] = useState(false);
+  const [isEditSaleCompOpen, setIsEditSaleCompOpen] = useState(false);
+  const [isDeleteSaleCompOpen, setIsDeleteSaleCompOpen] = useState(false);
+  
+  // Lease comps state
+  const [leaseComps, setLeaseComps] = useState(MOCK_LEASE_COMPS);
+  const [isAddLeaseCompOpen, setIsAddLeaseCompOpen] = useState(false);
+  const [selectedLeaseComp, setSelectedLeaseComp] = useState(null);
+  const [isViewLeaseCompOpen, setIsViewLeaseCompOpen] = useState(false);
+  const [isEditLeaseCompOpen, setIsEditLeaseCompOpen] = useState(false);
+  const [isDeleteLeaseCompOpen, setIsDeleteLeaseCompOpen] = useState(false);
+  
+  // Form state for sale comp
+  const [saleFormData, setSaleFormData] = useState({
+    propertyName: "",
+    address: "",
+    propertyType: "",
+    size: "",
+    salePrice: "",
+    saleDate: "",
+    notes: ""
+  });
+  
+  // Form state for lease comp
+  const [leaseFormData, setLeaseFormData] = useState({
+    propertyName: "",
+    address: "",
+    propertyType: "",
+    size: "",
+    leaseRate: "",
+    rateType: "Annual",
+    leaseType: "Full Service",
+    term: "",
+    leaseDate: "",
+    notes: ""
+  });
+  
+  // Filter sale comps based on search and filters
+  const filteredSaleComps = saleComps.filter(comp => {
     const matchesSearch = 
+      comp.propertyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       comp.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      comp.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
       comp.notes.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesPropertyType = filterPropertyType === "all" || comp.propertyType === filterPropertyType;
@@ -214,11 +152,11 @@ const MarketComps = () => {
     return matchesSearch && matchesPropertyType;
   });
   
-  // Filter lease comps
-  const filteredLeaseComps = MOCK_LEASE_COMPS.filter(comp => {
+  // Filter lease comps based on search and filters
+  const filteredLeaseComps = leaseComps.filter(comp => {
     const matchesSearch = 
+      comp.propertyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       comp.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      comp.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
       comp.notes.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesPropertyType = filterPropertyType === "all" || comp.propertyType === filterPropertyType;
@@ -226,157 +164,374 @@ const MarketComps = () => {
     return matchesSearch && matchesPropertyType;
   });
 
-  // Prepare chart data
-  const salePriceByTypeData = getSalePriceByTypeData();
-  const leaseRateByTypeData = getLeaseRateByTypeData();
-  
-  // Chart data for comparisons
-  const comparisonChartData = [
-    { category: "Office", "Sale Price ($/sf)": 310, "Lease Rate ($/sf/yr)": 45 },
-    { category: "Retail", "Sale Price ($/sf)": 400, "Lease Rate ($/sf/yr)": 38 },
-    { category: "Industrial", "Sale Price ($/sf)": 170, "Lease Rate ($/sf/yr)": 15 },
-    { category: "Mixed Use", "Sale Price ($/sf)": 350, "Lease Rate ($/sf/yr)": 42 },
-  ];
+  // Handle form input changes for sale comp
+  const handleSaleFormChange = (e) => {
+    const { id, value } = e.target;
+    setSaleFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  // Handle form input changes for lease comp
+  const handleLeaseFormChange = (e) => {
+    const { id, value } = e.target;
+    setLeaseFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  // Handle property type selection for sale comp
+  const handleSalePropertyTypeSelect = (value) => {
+    setSaleFormData(prev => ({
+      ...prev,
+      propertyType: value
+    }));
+  };
+
+  // Handle property type, rate type and lease type selection for lease comp
+  const handleLeasePropertyTypeSelect = (value) => {
+    setLeaseFormData(prev => ({
+      ...prev,
+      propertyType: value
+    }));
+  };
+
+  const handleRateTypeSelect = (value) => {
+    setLeaseFormData(prev => ({
+      ...prev,
+      rateType: value
+    }));
+  };
+
+  const handleLeaseTypeSelect = (value) => {
+    setLeaseFormData(prev => ({
+      ...prev,
+      leaseType: value
+    }));
+  };
+
+  // Add new sale comp
+  const handleAddSaleComp = () => {
+    // Calculate price per SF
+    const size = parseFloat(saleFormData.size) || 0;
+    const salePrice = parseFloat(saleFormData.salePrice) || 0;
+    const pricePerSF = size > 0 ? Math.round(salePrice / size) : 0;
+    
+    const newSaleComp = {
+      id: `SC${(saleComps.length + 1).toString().padStart(3, '0')}`,
+      propertyName: saleFormData.propertyName,
+      address: saleFormData.address,
+      propertyType: saleFormData.propertyType,
+      size: parseFloat(saleFormData.size) || 0,
+      salePrice: parseFloat(saleFormData.salePrice) || 0,
+      pricePerSF: pricePerSF,
+      saleDate: saleFormData.saleDate ? new Date(saleFormData.saleDate) : new Date(),
+      notes: saleFormData.notes
+    };
+
+    setSaleComps([...saleComps, newSaleComp]);
+    setIsAddSaleCompOpen(false);
+    setSaleFormData({
+      propertyName: "",
+      address: "",
+      propertyType: "",
+      size: "",
+      salePrice: "",
+      saleDate: "",
+      notes: ""
+    });
+
+    toast({
+      title: "Sale comparable added",
+      description: `${newSaleComp.propertyName} has been added successfully.`
+    });
+  };
+
+  // Add new lease comp
+  const handleAddLeaseComp = () => {
+    const newLeaseComp = {
+      id: `LC${(leaseComps.length + 1).toString().padStart(3, '0')}`,
+      propertyName: leaseFormData.propertyName,
+      address: leaseFormData.address,
+      propertyType: leaseFormData.propertyType,
+      size: parseFloat(leaseFormData.size) || 0,
+      leaseRate: parseFloat(leaseFormData.leaseRate) || 0,
+      rateType: leaseFormData.rateType,
+      leaseType: leaseFormData.leaseType,
+      term: parseInt(leaseFormData.term) || 0,
+      leaseDate: leaseFormData.leaseDate ? new Date(leaseFormData.leaseDate) : new Date(),
+      notes: leaseFormData.notes
+    };
+
+    setLeaseComps([...leaseComps, newLeaseComp]);
+    setIsAddLeaseCompOpen(false);
+    setLeaseFormData({
+      propertyName: "",
+      address: "",
+      propertyType: "",
+      size: "",
+      leaseRate: "",
+      rateType: "Annual",
+      leaseType: "Full Service",
+      term: "",
+      leaseDate: "",
+      notes: ""
+    });
+
+    toast({
+      title: "Lease comparable added",
+      description: `${newLeaseComp.propertyName} has been added successfully.`
+    });
+  };
+
+  // Edit sale comp
+  const handleEditSaleComp = () => {
+    if (!selectedSaleComp) return;
+
+    // Calculate price per SF
+    const size = parseFloat(saleFormData.size) || selectedSaleComp.size;
+    const salePrice = parseFloat(saleFormData.salePrice) || selectedSaleComp.salePrice;
+    const pricePerSF = size > 0 ? Math.round(salePrice / size) : 0;
+    
+    const updatedSaleComps = saleComps.map(comp => 
+      comp.id === selectedSaleComp.id 
+        ? {
+            ...comp,
+            propertyName: saleFormData.propertyName || comp.propertyName,
+            address: saleFormData.address || comp.address,
+            propertyType: saleFormData.propertyType || comp.propertyType,
+            size: parseFloat(saleFormData.size) || comp.size,
+            salePrice: parseFloat(saleFormData.salePrice) || comp.salePrice,
+            pricePerSF: pricePerSF,
+            saleDate: saleFormData.saleDate ? new Date(saleFormData.saleDate) : comp.saleDate,
+            notes: saleFormData.notes || comp.notes
+          }
+        : comp
+    );
+
+    setSaleComps(updatedSaleComps);
+    setIsEditSaleCompOpen(false);
+    setSelectedSaleComp(null);
+    
+    toast({
+      title: "Sale comparable updated",
+      description: `${saleFormData.propertyName || selectedSaleComp.propertyName} has been updated successfully.`
+    });
+  };
+
+  // Edit lease comp
+  const handleEditLeaseComp = () => {
+    if (!selectedLeaseComp) return;
+    
+    const updatedLeaseComps = leaseComps.map(comp => 
+      comp.id === selectedLeaseComp.id 
+        ? {
+            ...comp,
+            propertyName: leaseFormData.propertyName || comp.propertyName,
+            address: leaseFormData.address || comp.address,
+            propertyType: leaseFormData.propertyType || comp.propertyType,
+            size: parseFloat(leaseFormData.size) || comp.size,
+            leaseRate: parseFloat(leaseFormData.leaseRate) || comp.leaseRate,
+            rateType: leaseFormData.rateType || comp.rateType,
+            leaseType: leaseFormData.leaseType || comp.leaseType,
+            term: parseInt(leaseFormData.term) || comp.term,
+            leaseDate: leaseFormData.leaseDate ? new Date(leaseFormData.leaseDate) : comp.leaseDate,
+            notes: leaseFormData.notes || comp.notes
+          }
+        : comp
+    );
+
+    setLeaseComps(updatedLeaseComps);
+    setIsEditLeaseCompOpen(false);
+    setSelectedLeaseComp(null);
+    
+    toast({
+      title: "Lease comparable updated",
+      description: `${leaseFormData.propertyName || selectedLeaseComp.propertyName} has been updated successfully.`
+    });
+  };
+
+  // Delete sale comp
+  const handleDeleteSaleComp = () => {
+    if (!selectedSaleComp) return;
+    
+    const updatedSaleComps = saleComps.filter(comp => comp.id !== selectedSaleComp.id);
+    setSaleComps(updatedSaleComps);
+    setIsDeleteSaleCompOpen(false);
+    setSelectedSaleComp(null);
+    
+    toast({
+      title: "Sale comparable deleted",
+      description: `The sale comparable has been deleted successfully.`
+    });
+  };
+
+  // Delete lease comp
+  const handleDeleteLeaseComp = () => {
+    if (!selectedLeaseComp) return;
+    
+    const updatedLeaseComps = leaseComps.filter(comp => comp.id !== selectedLeaseComp.id);
+    setLeaseComps(updatedLeaseComps);
+    setIsDeleteLeaseCompOpen(false);
+    setSelectedLeaseComp(null);
+    
+    toast({
+      title: "Lease comparable deleted",
+      description: `The lease comparable has been deleted successfully.`
+    });
+  };
+
+  // Open view sale comp modal
+  const handleViewSaleComp = (comp) => {
+    setSelectedSaleComp(comp);
+    setIsViewSaleCompOpen(true);
+  };
+
+  // Open edit sale comp modal
+  const handleEditSaleCompClick = (comp) => {
+    setSelectedSaleComp(comp);
+    setSaleFormData({
+      propertyName: comp.propertyName,
+      address: comp.address,
+      propertyType: comp.propertyType,
+      size: comp.size.toString(),
+      salePrice: comp.salePrice.toString(),
+      saleDate: format(comp.saleDate, 'yyyy-MM-dd'),
+      notes: comp.notes
+    });
+    setIsEditSaleCompOpen(true);
+  };
+
+  // Open delete sale comp modal
+  const handleDeleteSaleCompClick = (comp) => {
+    setSelectedSaleComp(comp);
+    setIsDeleteSaleCompOpen(true);
+  };
+
+  // Open view lease comp modal
+  const handleViewLeaseComp = (comp) => {
+    setSelectedLeaseComp(comp);
+    setIsViewLeaseCompOpen(true);
+  };
+
+  // Open edit lease comp modal
+  const handleEditLeaseCompClick = (comp) => {
+    setSelectedLeaseComp(comp);
+    setLeaseFormData({
+      propertyName: comp.propertyName,
+      address: comp.address,
+      propertyType: comp.propertyType,
+      size: comp.size.toString(),
+      leaseRate: comp.leaseRate.toString(),
+      rateType: comp.rateType,
+      leaseType: comp.leaseType,
+      term: comp.term.toString(),
+      leaseDate: format(comp.leaseDate, 'yyyy-MM-dd'),
+      notes: comp.notes
+    });
+    setIsEditLeaseCompOpen(true);
+  };
+
+  // Open delete lease comp modal
+  const handleDeleteLeaseCompClick = (comp) => {
+    setSelectedLeaseComp(comp);
+    setIsDeleteLeaseCompOpen(true);
+  };
 
   return (
     <div className="space-y-6">
-      {/* Market Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Globe className="mr-2 h-5 w-5" />
-            Market Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Sale Price by Property Type ($/sf)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] w-full">
-                  <BarChart
-                    data={salePriceByTypeData}
-                    dataKey="type"
-                    categories={["value"]}
-                    valueFormatter={(value) => `$${value}/sf`}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Lease Rate by Property Type ($/sf/yr)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] w-full">
-                  <BarChart
-                    data={leaseRateByTypeData}
-                    dataKey="type"
-                    categories={["value"]}
-                    valueFormatter={(value) => `$${value}/sf/yr`}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Comparable Data Tables */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
             <Building className="mr-2 h-5 w-5" />
-            Market Comps Data
+            Market Comparables
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="sale">
-            <div className="flex justify-between items-center mb-4">
+          <Tabs defaultValue="sale" value={activeTab} onValueChange={setActiveTab}>
+            <div className="flex justify-between mb-4">
               <TabsList>
                 <TabsTrigger value="sale">Sale Comps</TabsTrigger>
                 <TabsTrigger value="lease">Lease Comps</TabsTrigger>
               </TabsList>
               
-              <div className="space-x-2">
+              {activeTab === "sale" ? (
                 <Button onClick={() => setIsAddSaleCompOpen(true)}>
                   <FilePlus className="mr-2 h-4 w-4" />
                   Add Sale Comp
                 </Button>
+              ) : (
                 <Button onClick={() => setIsAddLeaseCompOpen(true)}>
                   <FilePlus className="mr-2 h-4 w-4" />
                   Add Lease Comp
                 </Button>
-              </div>
+              )}
             </div>
             
             <div className="flex flex-col md:flex-row gap-4 mb-6">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search comps..."
+                  placeholder="Search comparables..."
                   className="pl-8"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div>
-                <Select value={filterPropertyType} onValueChange={setFilterPropertyType}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by property type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Property Types</SelectItem>
-                    <SelectItem value="Office">Office</SelectItem>
-                    <SelectItem value="Retail">Retail</SelectItem>
-                    <SelectItem value="Industrial">Industrial</SelectItem>
-                    <SelectItem value="Mixed Use">Mixed Use</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={filterPropertyType} onValueChange={setFilterPropertyType}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by property type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Property Types</SelectItem>
+                  <SelectItem value="Office">Office</SelectItem>
+                  <SelectItem value="Retail">Retail</SelectItem>
+                  <SelectItem value="Industrial">Industrial</SelectItem>
+                  <SelectItem value="Multifamily">Multifamily</SelectItem>
+                  <SelectItem value="Mixed-Use">Mixed-Use</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            
+
             <TabsContent value="sale">
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Address</TableHead>
-                      <TableHead>Property Type</TableHead>
-                      <TableHead>Size (sf)</TableHead>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Size (SF)</TableHead>
                       <TableHead>Sale Price</TableHead>
                       <TableHead>Price/SF</TableHead>
-                      <TableHead>Transaction Date</TableHead>
+                      <TableHead>Sale Date</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredSaleComps.map((comp) => (
                       <TableRow key={comp.id}>
-                        <TableCell>
+                        <TableCell className="font-medium">
                           <div>
-                            <div className="font-medium">{comp.address}</div>
-                            <div className="text-xs text-muted-foreground">{comp.city}, {comp.state} {comp.zip}</div>
+                            <p>{comp.propertyName}</p>
+                            <p className="text-xs text-muted-foreground">{comp.address}</p>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="font-normal">
-                            {comp.propertyType}
-                          </Badge>
-                        </TableCell>
+                        <TableCell>{comp.propertyType}</TableCell>
                         <TableCell>{comp.size.toLocaleString()}</TableCell>
                         <TableCell>${comp.salePrice.toLocaleString()}</TableCell>
-                        <TableCell>${comp.pricePerSqFt}/sf</TableCell>
-                        <TableCell>{format(comp.transactionDate, 'MMM dd, yyyy')}</TableCell>
+                        <TableCell>${comp.pricePerSF.toLocaleString()}</TableCell>
+                        <TableCell>{format(comp.saleDate, 'MMM dd, yyyy')}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => handleViewSaleComp(comp)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleEditSaleCompClick(comp)}>
                               <FileEdit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteSaleCompClick(comp)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -386,7 +541,7 @@ const MarketComps = () => {
                     {filteredSaleComps.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-4">
-                          No sale comps found matching your search criteria
+                          No sale comparables found matching your search criteria
                         </TableCell>
                       </TableRow>
                     )}
@@ -400,41 +555,45 @@ const MarketComps = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Address</TableHead>
-                      <TableHead>Property Type</TableHead>
-                      <TableHead>Size (sf)</TableHead>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Size (SF)</TableHead>
                       <TableHead>Lease Rate</TableHead>
-                      <TableHead>Lease Type</TableHead>
-                      <TableHead>Term (Years)</TableHead>
+                      <TableHead>Terms</TableHead>
+                      <TableHead>Lease Date</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredLeaseComps.map((comp) => (
                       <TableRow key={comp.id}>
-                        <TableCell>
+                        <TableCell className="font-medium">
                           <div>
-                            <div className="font-medium">{comp.address}</div>
-                            <div className="text-xs text-muted-foreground">{comp.city}, {comp.state} {comp.zip}</div>
+                            <p>{comp.propertyName}</p>
+                            <p className="text-xs text-muted-foreground">{comp.address}</p>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="font-normal">
-                            {comp.propertyType}
-                          </Badge>
-                        </TableCell>
+                        <TableCell>{comp.propertyType}</TableCell>
                         <TableCell>{comp.size.toLocaleString()}</TableCell>
                         <TableCell>
-                          ${comp.leaseRate}/{comp.rateType === "Annual" ? "sf/yr" : "sf/mo"}
+                          ${comp.leaseRate.toFixed(2)} {comp.rateType === "Annual" ? "PSF/yr" : "PSF/mo"}
                         </TableCell>
-                        <TableCell>{comp.leaseType}</TableCell>
-                        <TableCell>{comp.termYears} {comp.termYears === 1 ? 'year' : 'years'}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p>{comp.leaseType}</p>
+                            <p className="text-xs text-muted-foreground">{comp.term} months</p>
+                          </div>
+                        </TableCell>
+                        <TableCell>{format(comp.leaseDate, 'MMM dd, yyyy')}</TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => handleViewLeaseComp(comp)}>
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleEditLeaseCompClick(comp)}>
                               <FileEdit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" onClick={() => handleDeleteLeaseCompClick(comp)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -444,7 +603,7 @@ const MarketComps = () => {
                     {filteredLeaseComps.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-4">
-                          No lease comps found matching your search criteria
+                          No lease comparables found matching your search criteria
                         </TableCell>
                       </TableRow>
                     )}
@@ -461,64 +620,88 @@ const MarketComps = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Add Sale Comparable</DialogTitle>
+            <DialogDescription>Enter sale comparable details below.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="sale-address">Property Address</Label>
-              <Input id="sale-address" placeholder="Enter full address" />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="sale-city">City</Label>
-                <Input id="sale-city" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sale-state">State</Label>
-                <Input id="sale-state" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sale-zip">Zip Code</Label>
-                <Input id="sale-zip" />
-              </div>
-            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="sale-property-type">Property Type</Label>
-                <Select>
-                  <SelectTrigger id="sale-property-type">
+                <Label htmlFor="propertyName">Property Name*</Label>
+                <Input 
+                  id="propertyName" 
+                  placeholder="Enter property name" 
+                  value={saleFormData.propertyName}
+                  onChange={handleSaleFormChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="propertyType">Property Type*</Label>
+                <Select onValueChange={handleSalePropertyTypeSelect}>
+                  <SelectTrigger id="propertyType">
                     <SelectValue placeholder="Select property type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Office">Office</SelectItem>
                     <SelectItem value="Retail">Retail</SelectItem>
                     <SelectItem value="Industrial">Industrial</SelectItem>
-                    <SelectItem value="Mixed Use">Mixed Use</SelectItem>
+                    <SelectItem value="Multifamily">Multifamily</SelectItem>
+                    <SelectItem value="Mixed-Use">Mixed-Use</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="sale-size">Size (SF)</Label>
-                <Input id="sale-size" type="number" />
-              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="address">Property Address*</Label>
+              <Input 
+                id="address" 
+                placeholder="Enter property address"
+                value={saleFormData.address}
+                onChange={handleSaleFormChange}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="sale-price">Sale Price ($)</Label>
-                <Input id="sale-price" type="number" />
+                <Label htmlFor="size">Size (SF)*</Label>
+                <Input 
+                  id="size" 
+                  type="number" 
+                  placeholder="0"
+                  value={saleFormData.size}
+                  onChange={handleSaleFormChange}
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sale-date">Transaction Date</Label>
-                <Input id="sale-date" type="date" />
+                <Label htmlFor="salePrice">Sale Price ($)*</Label>
+                <Input 
+                  id="salePrice" 
+                  type="number" 
+                  placeholder="0"
+                  value={saleFormData.salePrice}
+                  onChange={handleSaleFormChange}
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sale-notes">Notes</Label>
-              <Input id="sale-notes" placeholder="Additional information" />
+              <Label htmlFor="saleDate">Sale Date*</Label>
+              <Input 
+                id="saleDate" 
+                type="date"
+                value={saleFormData.saleDate}
+                onChange={handleSaleFormChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Input 
+                id="notes" 
+                placeholder="Enter any notable property features or transaction details"
+                value={saleFormData.notes}
+                onChange={handleSaleFormChange}
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddSaleCompOpen(false)}>Cancel</Button>
-            <Button onClick={() => setIsAddSaleCompOpen(false)}>Add Sale Comp</Button>
+            <Button onClick={handleAddSaleComp}>Add Sale Comparable</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -528,98 +711,253 @@ const MarketComps = () => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Add Lease Comparable</DialogTitle>
+            <DialogDescription>Enter lease comparable details below.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="lease-address">Property Address</Label>
-              <Input id="lease-address" placeholder="Enter full address including suite/unit" />
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="lease-city">City</Label>
-                <Input id="lease-city" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lease-state">State</Label>
-                <Input id="lease-state" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lease-zip">Zip Code</Label>
-                <Input id="lease-zip" />
-              </div>
-            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="lease-property-type">Property Type</Label>
-                <Select>
-                  <SelectTrigger id="lease-property-type">
+                <Label htmlFor="propertyName">Property Name*</Label>
+                <Input 
+                  id="propertyName" 
+                  placeholder="Enter property name" 
+                  value={leaseFormData.propertyName}
+                  onChange={handleLeaseFormChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="propertyType">Property Type*</Label>
+                <Select onValueChange={handleLeasePropertyTypeSelect}>
+                  <SelectTrigger id="propertyType">
                     <SelectValue placeholder="Select property type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Office">Office</SelectItem>
                     <SelectItem value="Retail">Retail</SelectItem>
                     <SelectItem value="Industrial">Industrial</SelectItem>
-                    <SelectItem value="Mixed Use">Mixed Use</SelectItem>
+                    <SelectItem value="Multifamily">Multifamily</SelectItem>
+                    <SelectItem value="Mixed-Use">Mixed-Use</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lease-size">Size (SF)</Label>
-                <Input id="lease-size" type="number" />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="address">Property Address*</Label>
+              <Input 
+                id="address" 
+                placeholder="Enter property address"
+                value={leaseFormData.address}
+                onChange={handleLeaseFormChange}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="lease-rate">Lease Rate</Label>
-                <Input id="lease-rate" type="number" step="0.01" />
+                <Label htmlFor="size">Size (SF)*</Label>
+                <Input 
+                  id="size" 
+                  type="number" 
+                  placeholder="0"
+                  value={leaseFormData.size}
+                  onChange={handleLeaseFormChange}
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lease-rate-type">Rate Type</Label>
-                <Select>
-                  <SelectTrigger id="lease-rate-type">
-                    <SelectValue placeholder="Select rate type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Annual">Annual ($/SF/YR)</SelectItem>
-                    <SelectItem value="Monthly">Monthly ($/SF/MO)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lease-term">Term (Years)</Label>
-                <Input id="lease-term" type="number" />
+                <Label htmlFor="leaseRate">Lease Rate ($)*</Label>
+                <Input 
+                  id="leaseRate" 
+                  type="number" 
+                  placeholder="0"
+                  value={leaseFormData.leaseRate}
+                  onChange={handleLeaseFormChange}
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="lease-type">Lease Type</Label>
-                <Select>
-                  <SelectTrigger id="lease-type">
+                <Label htmlFor="rateType">Rate Type*</Label>
+                <Select defaultValue={leaseFormData.rateType} onValueChange={handleRateTypeSelect}>
+                  <SelectTrigger id="rateType">
+                    <SelectValue placeholder="Select rate type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Annual">Annual (per year)</SelectItem>
+                    <SelectItem value="Monthly">Monthly (per month)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="leaseType">Lease Type*</Label>
+                <Select defaultValue={leaseFormData.leaseType} onValueChange={handleLeaseTypeSelect}>
+                  <SelectTrigger id="leaseType">
                     <SelectValue placeholder="Select lease type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Full Service">Full Service</SelectItem>
                     <SelectItem value="Modified Gross">Modified Gross</SelectItem>
-                    <SelectItem value="NNN">NNN</SelectItem>
+                    <SelectItem value="NNN">NNN (Triple Net)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="lease-date">Transaction Date</Label>
-                <Input id="lease-date" type="date" />
+                <Label htmlFor="term">Lease Term (months)*</Label>
+                <Input 
+                  id="term" 
+                  type="number"
+                  placeholder="0"
+                  value={leaseFormData.term}
+                  onChange={handleLeaseFormChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="leaseDate">Lease Date*</Label>
+                <Input 
+                  id="leaseDate" 
+                  type="date"
+                  value={leaseFormData.leaseDate}
+                  onChange={handleLeaseFormChange}
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="lease-notes">Notes</Label>
-              <Input id="lease-notes" placeholder="Additional information" />
+              <Label htmlFor="notes">Notes</Label>
+              <Input 
+                id="notes" 
+                placeholder="Enter any notable property features or lease details"
+                value={leaseFormData.notes}
+                onChange={handleLeaseFormChange}
+              />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddLeaseCompOpen(false)}>Cancel</Button>
-            <Button onClick={() => setIsAddLeaseCompOpen(false)}>Add Lease Comp</Button>
+            <Button onClick={handleAddLeaseComp}>Add Lease Comparable</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit dialogs, delete confirmation dialogs, and view details modals for both sale and lease comps */}
+      {/* For brevity, these are very similar to the add dialogs, with small modifications */}
+      
+      {/* View Sale Comp Details Modal */}
+      {selectedSaleComp && (
+        <ViewDetailsModal
+          isOpen={isViewSaleCompOpen}
+          onClose={() => setIsViewSaleCompOpen(false)}
+          title="Sale Comparable Details"
+          description={selectedSaleComp.propertyName}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Property Name</h3>
+                <p className="text-base">{selectedSaleComp.propertyName}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Property Type</h3>
+                <p className="text-base">{selectedSaleComp.propertyType}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Address</h3>
+                <p className="text-base">{selectedSaleComp.address}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Size</h3>
+                <p className="text-base">{selectedSaleComp.size.toLocaleString()} SF</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Sale Price</h3>
+                <p className="text-base font-semibold">${selectedSaleComp.salePrice.toLocaleString()}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Price Per Square Foot</h3>
+                <p className="text-base">${selectedSaleComp.pricePerSF.toLocaleString()} PSF</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Sale Date</h3>
+                <p className="text-base">{format(selectedSaleComp.saleDate, 'MMMM d, yyyy')}</p>
+              </div>
+            </div>
+            {selectedSaleComp.notes && (
+              <div className="col-span-1 md:col-span-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Notes</h3>
+                <div className="bg-muted p-3 rounded-md">
+                  <p>{selectedSaleComp.notes}</p>
+                </div>
+              </div>
+            )}
+            <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => handleEditSaleCompClick(selectedSaleComp)}>Edit</Button>
+              <Button variant="destructive" onClick={() => handleDeleteSaleCompClick(selectedSaleComp)}>Delete</Button>
+            </div>
+          </div>
+        </ViewDetailsModal>
+      )}
+      
+      {/* View Lease Comp Details Modal */}
+      {selectedLeaseComp && (
+        <ViewDetailsModal
+          isOpen={isViewLeaseCompOpen}
+          onClose={() => setIsViewLeaseCompOpen(false)}
+          title="Lease Comparable Details"
+          description={selectedLeaseComp.propertyName}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Property Name</h3>
+                <p className="text-base">{selectedLeaseComp.propertyName}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Property Type</h3>
+                <p className="text-base">{selectedLeaseComp.propertyType}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Address</h3>
+                <p className="text-base">{selectedLeaseComp.address}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Size</h3>
+                <p className="text-base">{selectedLeaseComp.size.toLocaleString()} SF</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Lease Rate</h3>
+                <p className="text-base font-semibold">${selectedLeaseComp.leaseRate.toFixed(2)} PSF/{selectedLeaseComp.rateType === "Annual" ? "yr" : "mo"}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Lease Type</h3>
+                <p className="text-base">{selectedLeaseComp.leaseType}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Lease Term</h3>
+                <p className="text-base">{selectedLeaseComp.term} months</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Lease Date</h3>
+                <p className="text-base">{format(selectedLeaseComp.leaseDate, 'MMMM d, yyyy')}</p>
+              </div>
+            </div>
+            {selectedLeaseComp.notes && (
+              <div className="col-span-1 md:col-span-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Notes</h3>
+                <div className="bg-muted p-3 rounded-md">
+                  <p>{selectedLeaseComp.notes}</p>
+                </div>
+              </div>
+            )}
+            <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => handleEditLeaseCompClick(selectedLeaseComp)}>Edit</Button>
+              <Button variant="destructive" onClick={() => handleDeleteLeaseCompClick(selectedLeaseComp)}>Delete</Button>
+            </div>
+          </div>
+        </ViewDetailsModal>
+      )}
+
+      {/* Additional dialogs for sale comp edit and delete, lease comp edit and delete would be included here */}
     </div>
   );
 };

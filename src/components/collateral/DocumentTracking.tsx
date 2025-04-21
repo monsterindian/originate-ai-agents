@@ -1,17 +1,17 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Search, FilePlus, FileUp, FileEdit, Trash2, AlertTriangle, Download } from "lucide-react";
+import { FileText, Search, FilePlus, FileUp, FileEdit, Trash2, AlertTriangle, Download, Eye } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format, addDays, isAfter, isBefore, differenceInDays } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import ViewDetailsModal from "./ViewDetailsModal";
 
-// Mock data for initial UI
 const MOCK_DOCUMENTS = [
   {
     id: "D001",
@@ -95,7 +95,6 @@ const MOCK_DOCUMENTS = [
   }
 ];
 
-// Helper function to determine document status
 const getDocumentStatus = (doc) => {
   if (!doc.expirationDate) return "permanent";
   
@@ -108,53 +107,182 @@ const getDocumentStatus = (doc) => {
 };
 
 const DocumentTracking = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterProperty, setFilterProperty] = useState("all");
   const [filterDocType, setFilterDocType] = useState("all");
   const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false);
+  const [documents, setDocuments] = useState(MOCK_DOCUMENTS);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [isViewDocumentOpen, setIsViewDocumentOpen] = useState(false);
+  const [isEditDocumentOpen, setIsEditDocumentOpen] = useState(false);
+  const [isDeleteDocumentOpen, setIsDeleteDocumentOpen] = useState(false);
   
-  // Filter documents based on search and filters
-  const filteredDocuments = MOCK_DOCUMENTS.filter(doc => {
-    // Search term filtering
+  const [formData, setFormData] = useState({
+    propertyId: "",
+    documentType: "",
+    description: "",
+    expirationDate: "",
+    fileName: "",
+    fileSize: "1.0 MB",
+  });
+
+  const filteredDocuments = documents.filter(doc => {
     const matchesSearch = 
       doc.propertyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.documentType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doc.fileName.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Property filtering
     const matchesProperty = filterProperty === "all" || doc.propertyId === filterProperty;
     
-    // Document type filtering
     const matchesDocType = filterDocType === "all" || doc.documentType === filterDocType;
     
     return matchesSearch && matchesProperty && matchesDocType;
   });
 
-  // Get stats for the dashboard
-  const getDocumentStats = () => {
-    const expiringDocs = MOCK_DOCUMENTS.filter(doc => {
-      if (!doc.expirationDate) return false;
-      
-      const today = new Date();
-      const daysUntilExpiration = differenceInDays(doc.expirationDate, today);
-      return daysUntilExpiration >= 0 && daysUntilExpiration <= 90;
-    });
-    
-    const expiredDocs = MOCK_DOCUMENTS.filter(doc => {
-      if (!doc.expirationDate) return false;
-      
-      const today = new Date();
-      return doc.expirationDate < today;
-    });
-    
-    return {
-      total: MOCK_DOCUMENTS.length,
-      expiringSoon: expiringDocs.length,
-      expired: expiredDocs.length
-    };
+  const documentStats = getDocumentStats();
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
   };
 
-  const documentStats = getDocumentStats();
+  const handlePropertySelect = (value) => {
+    const propertyName = {
+      "P001": "Oakwood Tower",
+      "P002": "Riverfront Plaza",
+      "P003": "Metro Business Center",
+      "P004": "Parkside Office Park"
+    }[value] || "";
+
+    setFormData(prev => ({
+      ...prev,
+      propertyId: value,
+      propertyName
+    }));
+  };
+
+  const handleDocTypeSelect = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      documentType: value
+    }));
+  };
+
+  const handleAddDocument = () => {
+    const fileName = formData.fileName || `${formData.documentType.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
+    
+    const newDocument = {
+      id: `D${(documents.length + 1).toString().padStart(3, '0')}`,
+      propertyId: formData.propertyId,
+      propertyName: {
+        "P001": "Oakwood Tower",
+        "P002": "Riverfront Plaza",
+        "P003": "Metro Business Center",
+        "P004": "Parkside Office Park"
+      }[formData.propertyId] || "",
+      documentType: formData.documentType,
+      fileName: fileName,
+      uploadDate: new Date(),
+      expirationDate: formData.expirationDate ? new Date(formData.expirationDate) : null,
+      fileSize: formData.fileSize,
+      description: formData.description || "",
+    };
+
+    setDocuments([...documents, newDocument]);
+    setIsAddDocumentOpen(false);
+    setFormData({
+      propertyId: "",
+      documentType: "",
+      description: "",
+      expirationDate: "",
+      fileName: "",
+      fileSize: "1.0 MB",
+    });
+
+    toast({
+      title: "Document uploaded",
+      description: `${newDocument.documentType} for ${newDocument.propertyName} has been uploaded successfully.`
+    });
+  };
+
+  const handleEditDocument = () => {
+    if (!selectedDocument) return;
+
+    const updatedDocuments = documents.map(doc => 
+      doc.id === selectedDocument.id 
+        ? {
+            ...doc,
+            propertyId: formData.propertyId || doc.propertyId,
+            propertyName: {
+              "P001": "Oakwood Tower",
+              "P002": "Riverfront Plaza",
+              "P003": "Metro Business Center",
+              "P004": "Parkside Office Park"
+            }[formData.propertyId] || doc.propertyName,
+            documentType: formData.documentType || doc.documentType,
+            expirationDate: formData.expirationDate ? new Date(formData.expirationDate) : doc.expirationDate,
+            description: formData.description || doc.description,
+          }
+        : doc
+    );
+
+    setDocuments(updatedDocuments);
+    setIsEditDocumentOpen(false);
+    setSelectedDocument(null);
+    
+    toast({
+      title: "Document updated",
+      description: `${formData.documentType || selectedDocument.documentType} has been updated successfully.`
+    });
+  };
+
+  const handleDeleteDocument = () => {
+    if (!selectedDocument) return;
+    
+    const updatedDocuments = documents.filter(doc => doc.id !== selectedDocument.id);
+    setDocuments(updatedDocuments);
+    setIsDeleteDocumentOpen(false);
+    setSelectedDocument(null);
+    
+    toast({
+      title: "Document deleted",
+      description: `Document has been deleted successfully.`
+    });
+  };
+
+  const handleViewDocument = (doc) => {
+    setSelectedDocument(doc);
+    setIsViewDocumentOpen(true);
+  };
+
+  const handleEditDocumentClick = (doc) => {
+    setSelectedDocument(doc);
+    setFormData({
+      propertyId: doc.propertyId,
+      documentType: doc.documentType,
+      description: doc.description || "",
+      expirationDate: doc.expirationDate ? format(doc.expirationDate, 'yyyy-MM-dd') : "",
+      fileName: doc.fileName,
+      fileSize: doc.fileSize,
+    });
+    setIsEditDocumentOpen(true);
+  };
+
+  const handleDeleteDocumentClick = (doc) => {
+    setSelectedDocument(doc);
+    setIsDeleteDocumentOpen(true);
+  };
+
+  const handleDownloadDocument = (doc) => {
+    toast({
+      title: "Downloading document",
+      description: `${doc.fileName} is being downloaded.`
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -282,13 +410,16 @@ const DocumentTracking = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" onClick={() => handleViewDocument(doc)}>
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDownloadDocument(doc)}>
                             <Download className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" onClick={() => handleEditDocumentClick(doc)}>
                             <FileEdit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" onClick={() => handleDeleteDocumentClick(doc)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -309,17 +440,17 @@ const DocumentTracking = () => {
         </CardContent>
       </Card>
 
-      {/* Upload Document Dialog */}
       <Dialog open={isAddDocumentOpen} onOpenChange={setIsAddDocumentOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Upload Document</DialogTitle>
+            <DialogDescription>Upload a new document to the library.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="doc-property">Property</Label>
-                <Select>
+                <Label htmlFor="doc-property">Property*</Label>
+                <Select onValueChange={handlePropertySelect}>
                   <SelectTrigger id="doc-property">
                     <SelectValue placeholder="Select property" />
                   </SelectTrigger>
@@ -332,8 +463,8 @@ const DocumentTracking = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="doc-type">Document Type</Label>
-                <Select>
+                <Label htmlFor="doc-type">Document Type*</Label>
+                <Select onValueChange={handleDocTypeSelect}>
                   <SelectTrigger id="doc-type">
                     <SelectValue placeholder="Select document type" />
                   </SelectTrigger>
@@ -351,16 +482,35 @@ const DocumentTracking = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="doc-description">Document Description</Label>
-              <Input id="doc-description" placeholder="Enter optional description" />
+              <Input 
+                id="description" 
+                placeholder="Enter optional description"
+                value={formData.description}
+                onChange={handleInputChange}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="doc-expiration">Expiration Date (if applicable)</Label>
-                <Input id="doc-expiration" type="date" />
+                <Input 
+                  id="expirationDate" 
+                  type="date"
+                  value={formData.expirationDate}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doc-filename">File Name (optional)</Label>
+                <Input 
+                  id="fileName" 
+                  placeholder="Auto-generated if left blank"
+                  value={formData.fileName}
+                  onChange={handleInputChange}
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="doc-file">File</Label>
+              <Label htmlFor="doc-file">File*</Label>
               <div className="border-2 border-dashed rounded-md p-6 flex flex-col items-center justify-center gap-2">
                 <FileUp className="h-8 w-8 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">Drag and drop your file here, or click to browse</p>
@@ -373,10 +523,174 @@ const DocumentTracking = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAddDocumentOpen(false)}>Cancel</Button>
-            <Button onClick={() => setIsAddDocumentOpen(false)}>Upload Document</Button>
+            <Button onClick={handleAddDocument}>Upload Document</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isEditDocumentOpen} onOpenChange={setIsEditDocumentOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Document</DialogTitle>
+            <DialogDescription>Update document details below.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="doc-property">Property*</Label>
+                <Select onValueChange={handlePropertySelect}>
+                  <SelectTrigger id="doc-property">
+                    <SelectValue placeholder="Select property" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="P001">Oakwood Tower</SelectItem>
+                    <SelectItem value="P002">Riverfront Plaza</SelectItem>
+                    <SelectItem value="P003">Metro Business Center</SelectItem>
+                    <SelectItem value="P004">Parkside Office Park</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doc-type">Document Type*</Label>
+                <Select onValueChange={handleDocTypeSelect}>
+                  <SelectTrigger id="doc-type">
+                    <SelectValue placeholder="Select document type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Deed">Deed</SelectItem>
+                    <SelectItem value="Title Report">Title Report</SelectItem>
+                    <SelectItem value="Appraisal">Appraisal</SelectItem>
+                    <SelectItem value="Environmental Report">Environmental Report</SelectItem>
+                    <SelectItem value="Insurance Certificate">Insurance Certificate</SelectItem>
+                    <SelectItem value="Loan Agreement">Loan Agreement</SelectItem>
+                    <SelectItem value="Survey">Survey</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="doc-description">Document Description</Label>
+              <Input 
+                id="description" 
+                placeholder="Enter optional description"
+                value={formData.description}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="doc-expiration">Expiration Date (if applicable)</Label>
+                <Input 
+                  id="expirationDate" 
+                  type="date"
+                  value={formData.expirationDate}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="doc-filename">File Name (optional)</Label>
+                <Input 
+                  id="fileName" 
+                  placeholder="Auto-generated if left blank"
+                  value={formData.fileName}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDocumentOpen(false)}>Cancel</Button>
+            <Button onClick={handleEditDocument}>Update Document</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDocumentOpen} onOpenChange={setIsDeleteDocumentOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this document? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setIsDeleteDocumentOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteDocument}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {selectedDocument && (
+        <ViewDetailsModal
+          isOpen={isViewDocumentOpen}
+          onClose={() => setIsViewDocumentOpen(false)}
+          title="Document Details"
+          description={`${selectedDocument.documentType} - ${selectedDocument.propertyName}`}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Property</h3>
+                <p className="text-base">{selectedDocument.propertyName}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Document Type</h3>
+                <p className="text-base">{selectedDocument.documentType}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">File Name</h3>
+                <p className="text-base font-mono text-sm">{selectedDocument.fileName}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">File Size</h3>
+                <p className="text-base">{selectedDocument.fileSize}</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Upload Date</h3>
+                <p className="text-base">{format(selectedDocument.uploadDate, 'MMMM d, yyyy')}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Expiration Date</h3>
+                <p className="text-base">
+                  {selectedDocument.expirationDate 
+                    ? format(selectedDocument.expirationDate, 'MMMM d, yyyy')
+                    : 'Not applicable'
+                  }
+                  {selectedDocument.expirationDate && getDocumentStatus(selectedDocument) === 'expired' && (
+                    <Badge className="ml-2 bg-red-500">Expired</Badge>
+                  )}
+                  {selectedDocument.expirationDate && getDocumentStatus(selectedDocument) === 'expiring-soon' && (
+                    <Badge className="ml-2 bg-amber-500">Expiring Soon</Badge>
+                  )}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
+                <p className="text-base">
+                  {getDocumentStatus(selectedDocument) === 'expired' && <Badge className="bg-red-500">Expired</Badge>}
+                  {getDocumentStatus(selectedDocument) === 'expiring-soon' && <Badge className="bg-amber-500">Expiring Soon</Badge>}
+                  {getDocumentStatus(selectedDocument) === 'active' && <Badge className="bg-green-500">Active</Badge>}
+                  {getDocumentStatus(selectedDocument) === 'permanent' && <Badge className="bg-blue-500">Permanent</Badge>}
+                </p>
+              </div>
+            </div>
+            {selectedDocument.description && (
+              <div className="col-span-1 md:col-span-2">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
+                <div className="bg-muted p-3 rounded-md">
+                  <p>{selectedDocument.description}</p>
+                </div>
+              </div>
+            )}
+            <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => handleEditDocumentClick(selectedDocument)}>Edit</Button>
+              <Button variant="destructive" onClick={() => handleDeleteDocumentClick(selectedDocument)}>Delete</Button>
+            </div>
+          </div>
+        </ViewDetailsModal>
+      )}
     </div>
   );
 };

@@ -1,18 +1,18 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Search, FilePlus, FileEdit, Trash2 } from "lucide-react";
+import { Calendar, Search, FilePlus, FileEdit, Trash2, Eye } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
 import { format, addDays, isAfter, isBefore, isSameDay } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import ViewDetailsModal from "./ViewDetailsModal";
 
-// Mock data for initial UI
 const MOCK_LEASES = [
   {
     id: "L001",
@@ -82,7 +82,6 @@ const getDaysUntil = (date: Date) => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
-// Get status based on upcoming date
 const getDateStatus = (date: Date) => {
   const daysUntil = getDaysUntil(date);
   if (daysUntil < 0) return "expired";
@@ -93,23 +92,37 @@ const getDateStatus = (date: Date) => {
 };
 
 const LeaseIntelligence = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterProperty, setFilterProperty] = useState("all");
   const [filterTimeframe, setFilterTimeframe] = useState("all");
   const [isAddLeaseOpen, setIsAddLeaseOpen] = useState(false);
+  const [leases, setLeases] = useState(MOCK_LEASES);
+  const [selectedLease, setSelectedLease] = useState(null);
+  const [isViewLeaseOpen, setIsViewLeaseOpen] = useState(false);
+  const [isEditLeaseOpen, setIsEditLeaseOpen] = useState(false);
+  const [isDeleteLeaseOpen, setIsDeleteLeaseOpen] = useState(false);
   
-  // Filter leases based on search term and filters
-  const filteredLeases = MOCK_LEASES.filter(lease => {
-    // Search term filtering
+  const [formData, setFormData] = useState({
+    propertyId: "",
+    propertyName: "",
+    tenantName: "",
+    unit: "",
+    startDate: "",
+    endDate: "",
+    currentRent: "",
+    renewalNoticeDate: "",
+    notes: "",
+  });
+
+  const filteredLeases = leases.filter(lease => {
     const matchesSearch = 
       lease.propertyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lease.tenantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lease.unit.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Property filtering
     const matchesProperty = filterProperty === "all" || lease.propertyId === filterProperty;
     
-    // Timeframe filtering for lease end dates
     let matchesTimeframe = true;
     const today = new Date();
     const daysUntil = getDaysUntil(lease.endDate);
@@ -125,14 +138,12 @@ const LeaseIntelligence = () => {
     return matchesSearch && matchesProperty && matchesTimeframe;
   });
 
-  // Get upcoming critical dates
   const getUpcomingDates = () => {
     const today = new Date();
     const next180Days = addDays(today, 180);
     
     return MOCK_LEASES
       .filter(lease => {
-        // Check if lease end date or renewal notice date is within the next 180 days
         const endDateInRange = isAfter(lease.endDate, today) && isBefore(lease.endDate, next180Days);
         const renewalNoticeInRange = isAfter(lease.renewalNoticeDate, today) && isBefore(lease.renewalNoticeDate, next180Days);
         return endDateInRange || renewalNoticeInRange;
@@ -141,7 +152,6 @@ const LeaseIntelligence = () => {
         const endDaysRemaining = getDaysUntil(lease.endDate);
         const renewalDaysRemaining = getDaysUntil(lease.renewalNoticeDate);
         
-        // Return both dates if they're both upcoming
         const dates = [];
         if (endDaysRemaining >= 0 && endDaysRemaining <= 180) {
           dates.push({
@@ -175,9 +185,134 @@ const LeaseIntelligence = () => {
 
   const upcomingDates = getUpcomingDates();
 
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+
+  const handlePropertySelect = (value) => {
+    const propertyName = {
+      "P001": "Oakwood Tower",
+      "P002": "Riverfront Plaza",
+      "P003": "Metro Business Center",
+      "P004": "Parkside Office Park"
+    }[value] || "";
+
+    setFormData(prev => ({
+      ...prev,
+      propertyId: value,
+      propertyName
+    }));
+  };
+
+  const handleAddLease = () => {
+    const newLease = {
+      id: `L${(leases.length + 1).toString().padStart(3, '0')}`,
+      propertyId: formData.propertyId,
+      propertyName: formData.propertyName,
+      tenantName: formData.tenantName,
+      unit: formData.unit,
+      startDate: formData.startDate ? new Date(formData.startDate) : new Date(),
+      endDate: formData.endDate ? new Date(formData.endDate) : new Date(),
+      currentRent: parseFloat(formData.currentRent) || 0,
+      renewalNoticeDate: formData.renewalNoticeDate ? new Date(formData.renewalNoticeDate) : new Date(),
+      hasTroubleTerms: false,
+    };
+
+    setLeases([...leases, newLease]);
+    setIsAddLeaseOpen(false);
+    setFormData({
+      propertyId: "",
+      propertyName: "",
+      tenantName: "",
+      unit: "",
+      startDate: "",
+      endDate: "",
+      currentRent: "",
+      renewalNoticeDate: "",
+      notes: "",
+    });
+
+    toast({
+      title: "Lease added",
+      description: `New lease for ${newLease.tenantName} has been added successfully.`
+    });
+  };
+
+  const handleEditLease = () => {
+    if (!selectedLease) return;
+
+    const updatedLeases = leases.map(lease => 
+      lease.id === selectedLease.id 
+        ? {
+            ...lease,
+            propertyId: formData.propertyId || lease.propertyId,
+            propertyName: formData.propertyName || lease.propertyName,
+            tenantName: formData.tenantName || lease.tenantName,
+            unit: formData.unit || lease.unit,
+            startDate: formData.startDate ? new Date(formData.startDate) : lease.startDate,
+            endDate: formData.endDate ? new Date(formData.endDate) : lease.endDate,
+            currentRent: parseFloat(formData.currentRent) || lease.currentRent,
+            renewalNoticeDate: formData.renewalNoticeDate ? new Date(formData.renewalNoticeDate) : lease.renewalNoticeDate,
+          }
+        : lease
+    );
+
+    setLeases(updatedLeases);
+    setIsEditLeaseOpen(false);
+    setSelectedLease(null);
+    
+    toast({
+      title: "Lease updated",
+      description: `Lease for ${formData.tenantName} has been updated successfully.`
+    });
+  };
+
+  const handleDeleteLease = () => {
+    if (!selectedLease) return;
+    
+    const updatedLeases = leases.filter(lease => lease.id !== selectedLease.id);
+    setLeases(updatedLeases);
+    setIsDeleteLeaseOpen(false);
+    setSelectedLease(null);
+    
+    toast({
+      title: "Lease deleted",
+      description: `Lease has been deleted successfully.`
+    });
+  };
+
+  const handleViewLease = (lease) => {
+    setSelectedLease(lease);
+    setIsViewLeaseOpen(true);
+  };
+
+  const handleEditLeaseClick = (lease) => {
+    setSelectedLease(lease);
+    setFormData({
+      propertyId: lease.propertyId,
+      propertyName: lease.propertyName,
+      tenantName: lease.tenantName,
+      unit: lease.unit,
+      startDate: format(lease.startDate, 'yyyy-MM-dd'),
+      endDate: format(lease.endDate, 'yyyy-MM-dd'),
+      currentRent: lease.currentRent.toString(),
+      renewalNoticeDate: format(lease.renewalNoticeDate, 'yyyy-MM-dd'),
+      notes: "",
+    });
+    setIsEditLeaseOpen(true);
+  };
+
+  const handleDeleteLeaseClick = (lease) => {
+    setSelectedLease(lease);
+    setIsDeleteLeaseOpen(true);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Critical Dates Dashboard */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -272,7 +407,6 @@ const LeaseIntelligence = () => {
         </CardContent>
       </Card>
 
-      {/* Lease Records */}
       <Card>
         <CardHeader>
           <CardTitle className="flex justify-between">
@@ -357,10 +491,13 @@ const LeaseIntelligence = () => {
                     <TableCell>{format(lease.renewalNoticeDate, 'MMM dd, yyyy')}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" onClick={() => handleViewLease(lease)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEditLeaseClick(lease)}>
                           <FileEdit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" onClick={() => handleDeleteLeaseClick(lease)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -380,17 +517,17 @@ const LeaseIntelligence = () => {
         </CardContent>
       </Card>
 
-      {/* Add Lease Dialog */}
       <Dialog open={isAddLeaseOpen} onOpenChange={setIsAddLeaseOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Add New Lease</DialogTitle>
+            <DialogDescription>Enter lease details below. Fields marked with * are required.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="property">Property</Label>
-                <Select>
+                <Label htmlFor="property">Property*</Label>
+                <Select onValueChange={handlePropertySelect}>
                   <SelectTrigger id="property">
                     <SelectValue placeholder="Select property" />
                   </SelectTrigger>
@@ -403,45 +540,273 @@ const LeaseIntelligence = () => {
                 </Select>
               </div>
               <div className="space-y-2">
+                <Label htmlFor="tenant">Tenant Name*</Label>
+                <Input 
+                  id="tenantName" 
+                  placeholder="Enter tenant name" 
+                  value={formData.tenantName}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="unit">Unit/Suite*</Label>
+              <Input 
+                id="unit" 
+                placeholder="Enter unit or suite identifier"
+                value={formData.unit}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Lease Start Date*</Label>
+                <Input 
+                  id="startDate" 
+                  type="date"
+                  value={formData.startDate}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endDate">Lease End Date*</Label>
+                <Input 
+                  id="endDate" 
+                  type="date"
+                  value={formData.endDate}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentRent">Current Rent (Monthly)*</Label>
+                <Input 
+                  id="currentRent" 
+                  type="number" 
+                  placeholder="0.00"
+                  value={formData.currentRent}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="renewalNotice">Renewal Notice Date*</Label>
+                <Input 
+                  id="renewalNoticeDate" 
+                  type="date"
+                  value={formData.renewalNoticeDate}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Key Clauses / Notes</Label>
+              <Input 
+                id="notes" 
+                placeholder="Enter any important clauses or notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddLeaseOpen(false)}>Cancel</Button>
+            <Button onClick={handleAddLease}>Add Lease</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditLeaseOpen} onOpenChange={setIsEditLeaseOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Lease</DialogTitle>
+            <DialogDescription>Update lease details below.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="property">Property</Label>
+                <Select onValueChange={handlePropertySelect} defaultValue={formData.propertyId}>
+                  <SelectTrigger id="property">
+                    <SelectValue placeholder={formData.propertyName} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="P001">Oakwood Tower</SelectItem>
+                    <SelectItem value="P002">Riverfront Plaza</SelectItem>
+                    <SelectItem value="P003">Metro Business Center</SelectItem>
+                    <SelectItem value="P004">Parkside Office Park</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="tenant">Tenant Name</Label>
-                <Input id="tenant" placeholder="Enter tenant name" />
+                <Input 
+                  id="tenantName" 
+                  placeholder="Enter tenant name" 
+                  value={formData.tenantName}
+                  onChange={handleInputChange}
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="unit">Unit/Suite</Label>
-              <Input id="unit" placeholder="Enter unit or suite identifier" />
+              <Input 
+                id="unit" 
+                placeholder="Enter unit or suite identifier"
+                value={formData.unit}
+                onChange={handleInputChange}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="startDate">Lease Start Date</Label>
-                <Input id="startDate" type="date" />
+                <Input 
+                  id="startDate" 
+                  type="date"
+                  value={formData.startDate}
+                  onChange={handleInputChange}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="endDate">Lease End Date</Label>
-                <Input id="endDate" type="date" />
+                <Input 
+                  id="endDate" 
+                  type="date"
+                  value={formData.endDate}
+                  onChange={handleInputChange}
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="currentRent">Current Rent (Monthly)</Label>
-                <Input id="currentRent" type="number" placeholder="0.00" />
+                <Input 
+                  id="currentRent" 
+                  type="number" 
+                  placeholder="0.00"
+                  value={formData.currentRent}
+                  onChange={handleInputChange}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="renewalNotice">Renewal Notice Date</Label>
-                <Input id="renewalNotice" type="date" />
+                <Input 
+                  id="renewalNoticeDate" 
+                  type="date"
+                  value={formData.renewalNoticeDate}
+                  onChange={handleInputChange}
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="notes">Key Clauses / Notes</Label>
-              <Input id="notes" placeholder="Enter any important clauses or notes" />
+              <Input 
+                id="notes" 
+                placeholder="Enter any important clauses or notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddLeaseOpen(false)}>Cancel</Button>
-            <Button onClick={() => setIsAddLeaseOpen(false)}>Add Lease</Button>
+            <Button variant="outline" onClick={() => setIsEditLeaseOpen(false)}>Cancel</Button>
+            <Button onClick={handleEditLease}>Update Lease</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isDeleteLeaseOpen} onOpenChange={setIsDeleteLeaseOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this lease? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setIsDeleteLeaseOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteLease}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {selectedLease && (
+        <ViewDetailsModal
+          isOpen={isViewLeaseOpen}
+          onClose={() => setIsViewLeaseOpen(false)}
+          title="Lease Details"
+          description={`${selectedLease.propertyName} - ${selectedLease.tenantName}`}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Property</h3>
+                <p className="text-base">{selectedLease.propertyName}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Tenant</h3>
+                <p className="text-base">{selectedLease.tenantName}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Unit/Suite</h3>
+                <p className="text-base">{selectedLease.unit}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Current Rent</h3>
+                <p className="text-base font-semibold">${selectedLease.currentRent.toLocaleString()}/month</p>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Lease Start Date</h3>
+                <p className="text-base">{format(selectedLease.startDate, 'MMMM d, yyyy')}</p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Lease End Date</h3>
+                <p className="text-base">
+                  {format(selectedLease.endDate, 'MMMM d, yyyy')}
+                  {getDateStatus(selectedLease.endDate) === 'urgent' && (
+                    <Badge className="ml-2 bg-red-500">
+                      {getDaysUntil(selectedLease.endDate)} days remaining
+                    </Badge>
+                  )}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Renewal Notice Date</h3>
+                <p className="text-base">
+                  {format(selectedLease.renewalNoticeDate, 'MMMM d, yyyy')}
+                  {getDateStatus(selectedLease.renewalNoticeDate) === 'urgent' && (
+                    <Badge className="ml-2 bg-red-500">
+                      {getDaysUntil(selectedLease.renewalNoticeDate)} days remaining
+                    </Badge>
+                  )}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Lease Term</h3>
+                <p className="text-base">
+                  {Math.round((selectedLease.endDate.getTime() - selectedLease.startDate.getTime()) / (1000 * 60 * 60 * 24 * 30))} months
+                </p>
+              </div>
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">Key Clauses & Notes</h3>
+              <div className="bg-muted p-3 rounded-md">
+                {selectedLease.hasTroubleTerms ? (
+                  <div className="text-red-500">⚠️ This lease contains terms that require attention</div>
+                ) : (
+                  <p className="text-muted-foreground italic">No special clauses or notes recorded.</p>
+                )}
+              </div>
+            </div>
+            <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
+              <Button variant="outline" onClick={() => handleEditLeaseClick(selectedLease)}>Edit</Button>
+              <Button variant="destructive" onClick={() => handleDeleteLeaseClick(selectedLease)}>Delete</Button>
+            </div>
+          </div>
+        </ViewDetailsModal>
+      )}
     </div>
   );
 };
