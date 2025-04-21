@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,7 @@ const MOCK_DOCUMENTS = [
     uploadDate: new Date("2023-01-15"),
     expirationDate: null,
     fileSize: "1.2 MB",
+    description: "",
   },
   {
     id: "D002",
@@ -32,6 +34,7 @@ const MOCK_DOCUMENTS = [
     uploadDate: new Date("2023-02-10"),
     expirationDate: new Date("2024-02-10"),
     fileSize: "890 KB",
+    description: "",
   },
   {
     id: "D003",
@@ -42,6 +45,7 @@ const MOCK_DOCUMENTS = [
     uploadDate: new Date("2023-03-22"),
     expirationDate: null,
     fileSize: "2.4 MB",
+    description: "",
   },
   {
     id: "D004",
@@ -52,6 +56,7 @@ const MOCK_DOCUMENTS = [
     uploadDate: new Date("2022-11-05"),
     expirationDate: new Date("2025-11-05"),
     fileSize: "5.7 MB",
+    description: "",
   },
   {
     id: "D005",
@@ -62,6 +67,7 @@ const MOCK_DOCUMENTS = [
     uploadDate: new Date("2023-05-18"),
     expirationDate: null,
     fileSize: "3.1 MB",
+    description: "",
   },
   {
     id: "D006",
@@ -72,6 +78,7 @@ const MOCK_DOCUMENTS = [
     uploadDate: new Date("2023-06-30"),
     expirationDate: new Date("2024-06-30"),
     fileSize: "950 KB",
+    description: "",
   },
   {
     id: "D007",
@@ -82,6 +89,7 @@ const MOCK_DOCUMENTS = [
     uploadDate: new Date("2022-08-12"),
     expirationDate: new Date("2032-08-12"),
     fileSize: "4.3 MB",
+    description: "",
   },
   {
     id: "D008",
@@ -92,6 +100,7 @@ const MOCK_DOCUMENTS = [
     uploadDate: new Date("2022-09-03"),
     expirationDate: null,
     fileSize: "8.5 MB",
+    description: "",
   }
 ];
 
@@ -126,6 +135,27 @@ const DocumentTracking = () => {
     fileName: "",
     fileSize: "1.0 MB",
   });
+
+  // Function to compute document statistics
+  const getDocumentStats = () => {
+    const total = documents.length;
+    const today = new Date();
+    
+    const expiringSoon = documents.filter(doc => {
+      if (!doc.expirationDate) return false;
+      const daysUntilExpiration = differenceInDays(doc.expirationDate, today);
+      return daysUntilExpiration > 0 && daysUntilExpiration <= 90;
+    }).length;
+    
+    const expired = documents.filter(doc => {
+      if (!doc.expirationDate) return false;
+      return isBefore(doc.expirationDate, today);
+    }).length;
+    
+    return { total, expiringSoon, expired };
+  };
+
+  const documentStats = getDocumentStats();
 
   const filteredDocuments = documents.filter(doc => {
     const matchesSearch = 
