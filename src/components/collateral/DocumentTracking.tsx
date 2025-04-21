@@ -5,12 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Search, FilePlus, FileUp, FileEdit, Trash2, AlertTriangle, Download, Eye } from "lucide-react";
+import { FileText, Search, FilePlus, FileUp, FileEdit, Trash2, AlertTriangle, Download, Eye, Sparkles } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format, addDays, isAfter, isBefore, differenceInDays } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import ViewDetailsModal from "./ViewDetailsModal";
+import AIDocumentAnalysis from "./AIDocumentAnalysis";
 
 const MOCK_DOCUMENTS = [
   {
@@ -125,6 +126,8 @@ const DocumentTracking = () => {
   const [isViewDocumentOpen, setIsViewDocumentOpen] = useState(false);
   const [isEditDocumentOpen, setIsEditDocumentOpen] = useState(false);
   const [isDeleteDocumentOpen, setIsDeleteDocumentOpen] = useState(false);
+  const [showAIAnalysis, setShowAIAnalysis] = useState(false);
+  const [documentAnalysisResults, setDocumentAnalysisResults] = useState({});
   
   const [formData, setFormData] = useState({
     propertyId: "",
@@ -310,6 +313,30 @@ const DocumentTracking = () => {
     });
   };
 
+  const handleAIAnalysisToggle = () => {
+    setShowAIAnalysis(!showAIAnalysis);
+  };
+
+  const handleAnalysisComplete = (result) => {
+    if (selectedDocument) {
+      setDocumentAnalysisResults({
+        ...documentAnalysisResults,
+        [selectedDocument.id]: result
+      });
+      
+      toast({
+        title: "AI Analysis Complete",
+        description: "Document has been analyzed successfully."
+      });
+    }
+  };
+
+  const getDocumentAnalysisStatus = (docId) => {
+    return documentAnalysisResults[docId] ? 
+      (documentAnalysisResults[docId].structuredData?.verificationStatus || "not_analyzed") : 
+      "not_analyzed";
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -354,10 +381,12 @@ const DocumentTracking = () => {
         <CardHeader>
           <CardTitle className="flex justify-between">
             <span className="flex items-center">Document Library</span>
-            <Button onClick={() => setIsAddDocumentOpen(true)}>
-              <FilePlus className="mr-2 h-4 w-4" />
-              Upload Document
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setIsAddDocumentOpen(true)}>
+                <FilePlus className="mr-2 h-4 w-4" />
+                Upload Document
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -413,12 +442,14 @@ const DocumentTracking = () => {
                   <TableHead>Upload Date</TableHead>
                   <TableHead>Expiration Date</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>AI Analysis</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredDocuments.map((doc) => {
                   const status = getDocumentStatus(doc);
+                  const analysisStatus = getDocumentAnalysisStatus(doc.id);
                   return (
                     <TableRow key={doc.id}>
                       <TableCell>{doc.propertyName}</TableCell>
@@ -433,6 +464,25 @@ const DocumentTracking = () => {
                         {status === 'expiring-soon' && <Badge className="bg-amber-500">Expiring Soon</Badge>}
                         {status === 'active' && <Badge className="bg-green-500">Active</Badge>}
                         {status === 'permanent' && <Badge className="bg-blue-500">Permanent</Badge>}
+                      </TableCell>
+                      <TableCell>
+                        {analysisStatus === 'verified' && <Badge className="bg-green-500">Verified</Badge>}
+                        {analysisStatus === 'needs_review' && <Badge className="bg-amber-500">Needs Review</Badge>}
+                        {analysisStatus === 'not_analyzed' && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 px-2" 
+                            onClick={() => {
+                              setSelectedDocument(doc);
+                              setIsViewDocumentOpen(true);
+                              setShowAIAnalysis(true);
+                            }}
+                          >
+                            <Sparkles className="h-4 w-4 text-primary mr-1" />
+                            Analyze
+                          </Button>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
@@ -455,7 +505,7 @@ const DocumentTracking = () => {
                 })}
                 {filteredDocuments.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4">
+                    <TableCell colSpan={8} className="text-center py-4">
                       No documents found matching your search criteria
                     </TableCell>
                   </TableRow>
@@ -649,71 +699,95 @@ const DocumentTracking = () => {
       {selectedDocument && (
         <ViewDetailsModal
           isOpen={isViewDocumentOpen}
-          onClose={() => setIsViewDocumentOpen(false)}
+          onClose={() => {
+            setIsViewDocumentOpen(false);
+            setShowAIAnalysis(false);
+          }}
           title="Document Details"
           description={`${selectedDocument.documentType} - ${selectedDocument.propertyName}`}
+          footerContent={
+            !showAIAnalysis ? (
+              <Button 
+                variant="outline" 
+                onClick={handleAIAnalysisToggle}
+                className="flex items-center"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                AI Document Analysis
+              </Button>
+            ) : null
+          }
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Property</h3>
-                <p className="text-base">{selectedDocument.propertyName}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Document Type</h3>
-                <p className="text-base">{selectedDocument.documentType}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">File Name</h3>
-                <p className="text-base font-mono text-sm">{selectedDocument.fileName}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">File Size</h3>
-                <p className="text-base">{selectedDocument.fileSize}</p>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Upload Date</h3>
-                <p className="text-base">{format(selectedDocument.uploadDate, 'MMMM d, yyyy')}</p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Expiration Date</h3>
-                <p className="text-base">
-                  {selectedDocument.expirationDate 
-                    ? format(selectedDocument.expirationDate, 'MMMM d, yyyy')
-                    : 'Not applicable'
-                  }
-                  {selectedDocument.expirationDate && getDocumentStatus(selectedDocument) === 'expired' && (
-                    <Badge className="ml-2 bg-red-500">Expired</Badge>
-                  )}
-                  {selectedDocument.expirationDate && getDocumentStatus(selectedDocument) === 'expiring-soon' && (
-                    <Badge className="ml-2 bg-amber-500">Expiring Soon</Badge>
-                  )}
-                </p>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
-                <p className="text-base">
-                  {getDocumentStatus(selectedDocument) === 'expired' && <Badge className="bg-red-500">Expired</Badge>}
-                  {getDocumentStatus(selectedDocument) === 'expiring-soon' && <Badge className="bg-amber-500">Expiring Soon</Badge>}
-                  {getDocumentStatus(selectedDocument) === 'active' && <Badge className="bg-green-500">Active</Badge>}
-                  {getDocumentStatus(selectedDocument) === 'permanent' && <Badge className="bg-blue-500">Permanent</Badge>}
-                </p>
-              </div>
-            </div>
-            {selectedDocument.description && (
-              <div className="col-span-1 md:col-span-2">
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
-                <div className="bg-muted p-3 rounded-md">
-                  <p>{selectedDocument.description}</p>
+          <div className="space-y-6">
+            {!showAIAnalysis ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Property</h3>
+                    <p className="text-base">{selectedDocument.propertyName}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Document Type</h3>
+                    <p className="text-base">{selectedDocument.documentType}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">File Name</h3>
+                    <p className="text-base font-mono text-sm">{selectedDocument.fileName}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">File Size</h3>
+                    <p className="text-base">{selectedDocument.fileSize}</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Upload Date</h3>
+                    <p className="text-base">{format(selectedDocument.uploadDate, 'MMMM d, yyyy')}</p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Expiration Date</h3>
+                    <p className="text-base">
+                      {selectedDocument.expirationDate 
+                        ? format(selectedDocument.expirationDate, 'MMMM d, yyyy')
+                        : 'Not applicable'
+                      }
+                      {selectedDocument.expirationDate && getDocumentStatus(selectedDocument) === 'expired' && (
+                        <Badge className="ml-2 bg-red-500">Expired</Badge>
+                      )}
+                      {selectedDocument.expirationDate && getDocumentStatus(selectedDocument) === 'expiring-soon' && (
+                        <Badge className="ml-2 bg-amber-500">Expiring Soon</Badge>
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
+                    <p className="text-base">
+                      {getDocumentStatus(selectedDocument) === 'expired' && <Badge className="bg-red-500">Expired</Badge>}
+                      {getDocumentStatus(selectedDocument) === 'expiring-soon' && <Badge className="bg-amber-500">Expiring Soon</Badge>}
+                      {getDocumentStatus(selectedDocument) === 'active' && <Badge className="bg-green-500">Active</Badge>}
+                      {getDocumentStatus(selectedDocument) === 'permanent' && <Badge className="bg-blue-500">Permanent</Badge>}
+                    </p>
+                  </div>
+                </div>
+                {selectedDocument.description && (
+                  <div className="col-span-1 md:col-span-2">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
+                    <div className="bg-muted p-3 rounded-md">
+                      <p>{selectedDocument.description}</p>
+                    </div>
+                  </div>
+                )}
+                <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
+                  <Button variant="outline" onClick={() => handleEditDocumentClick(selectedDocument)}>Edit</Button>
+                  <Button variant="destructive" onClick={() => handleDeleteDocumentClick(selectedDocument)}>Delete</Button>
                 </div>
               </div>
+            ) : (
+              <AIDocumentAnalysis 
+                document={selectedDocument} 
+                onComplete={handleAnalysisComplete}
+              />
             )}
-            <div className="col-span-1 md:col-span-2 flex justify-end gap-2 mt-4">
-              <Button variant="outline" onClick={() => handleEditDocumentClick(selectedDocument)}>Edit</Button>
-              <Button variant="destructive" onClick={() => handleDeleteDocumentClick(selectedDocument)}>Delete</Button>
-            </div>
           </div>
         </ViewDetailsModal>
       )}
