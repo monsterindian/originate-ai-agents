@@ -109,8 +109,8 @@ const CollateralAgent = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className={`lg:col-span-${showAIAssistant ? '2' : '3'}`}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className={`${showAIAssistant ? 'lg:col-span-9' : 'lg:col-span-12'}`}>
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <TabsList className="mb-4">
                 <TabsTrigger value="lease">Lease Intelligence</TabsTrigger>
@@ -133,7 +133,7 @@ const CollateralAgent = () => {
           </div>
           
           {showAIAssistant && (
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-3">
               <Card className="h-full">
                 <CardHeader>
                   <CardTitle className="flex items-center">
